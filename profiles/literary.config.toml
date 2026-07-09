@@ -1,0 +1,6 @@
+model = "REPLACE_WITH_LITERARY_MODEL_FROM_CODEX_DEBUG_MODELS"
+sandbox_mode = "read-only"
+model_verbosity = "medium"
+model_reasoning_effort = "minimal"
+approval_policy = "on-request"
+

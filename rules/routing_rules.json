@@ -1,0 +1,20 @@
+{
+  "default_profile": "standard",
+  "low_confidence_profile": "standard",
+  "high_risk_profile": "security",
+  "category_to_profile": {
+    "email": "fast",
+    "simple_text": "fast",
+    "literary": "literary",
+    "normal_coding": "standard",
+    "complex_coding": "deep",
+    "architecture": "deep",
+    "math_theory": "math",
+    "security_audit": "security",
+    "repo_operations": "repo",
+    "research": "research",
+    "grant_work": "research",
+    "unknown": "standard"
+  }
+}
+

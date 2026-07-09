@@ -1,0 +1,6 @@
+model = "REPLACE_WITH_RESEARCH_MODEL_FROM_CODEX_DEBUG_MODELS"
+sandbox_mode = "read-only"
+model_verbosity = "medium"
+model_reasoning_effort = "medium"
+approval_policy = "on-request"
+

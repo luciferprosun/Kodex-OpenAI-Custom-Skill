@@ -1,0 +1,52 @@
+{"prompt":"fix frontend bug","expected_category":"normal_coding","expected_profile":"standard","expected_risk":"low"}
+{"prompt":"repair backend api test failure","expected_category":"normal_coding","expected_profile":"standard","expected_risk":"low"}
+{"prompt":"implement a function for parsing config","expected_category":"normal_coding","expected_profile":"standard","expected_risk":"low"}
+{"prompt":"fix the frontend component state bug","expected_category":"normal_coding","expected_profile":"standard","expected_risk":"low"}
+{"prompt":"add tests for this backend api function","expected_category":"normal_coding","expected_profile":"standard","expected_risk":"low"}
+{"prompt":"refactor this multi-file module","expected_category":"complex_coding","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"plan a migration for this dependency integration","expected_category":"complex_coding","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"redesign the module dependency layout","expected_category":"complex_coding","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"multi file refactor for backend modules","expected_category":"complex_coding","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"architecture cleanup for a module migration","expected_category":"complex_coding","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"system design roadmap for task router boundaries","expected_category":"architecture","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"write a design plan for service boundaries","expected_category":"architecture","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"architecture roadmap for the wrapper","expected_category":"architecture","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"prepare system design notes","expected_category":"architecture","expected_profile":"deep","expected_risk":"low"}
+{"prompt":"prove this neutrino equation from LSC notes","expected_category":"math_theory","expected_profile":"math","expected_risk":"low"}
+{"prompt":"derive the tensor equation proof","expected_category":"math_theory","expected_profile":"math","expected_risk":"low"}
+{"prompt":"check this theorem and lemma","expected_category":"math_theory","expected_profile":"math","expected_risk":"low"}
+{"prompt":"work through the LSC neutrino derivation","expected_category":"math_theory","expected_profile":"math","expected_risk":"low"}
+{"prompt":"audit repo for secrets and sandbox risks","expected_category":"security_audit","expected_profile":"security","expected_risk":"high"}
+{"prompt":"fix frontend bug and check exposed API keys","expected_category":"security_audit","expected_profile":"security","expected_risk":"high"}
+{"prompt":"review auth token handling","expected_category":"security_audit","expected_profile":"security","expected_risk":"high"}
+{"prompt":"check password and credential exposure","expected_category":"security_audit","expected_profile":"security","expected_risk":"high"}
+{"prompt":"scan for private key and .env leakage","expected_category":"security_audit","expected_profile":"security","expected_risk":"high"}
+{"prompt":"investigate malware exploit risk","expected_category":"security_audit","expected_profile":"security","expected_risk":"high"}
+{"prompt":"commit these changes on a new branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
+{"prompt":"git merge this feature branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
+{"prompt":"prepare release tag","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
+{"prompt":"open a pull request for this branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
+{"prompt":"rebase the branch before release","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
+{"prompt":"research current sources for this topic","expected_category":"research","expected_profile":"research","expected_risk":"low"}
+{"prompt":"compare literature about model routing","expected_category":"research","expected_profile":"research","expected_risk":"low"}
+{"prompt":"investigate sources for the project","expected_category":"research","expected_profile":"research","expected_risk":"low"}
+{"prompt":"audit project references and sources","expected_category":"research","expected_profile":"research","expected_risk":"low"}
+{"prompt":"prepare grant application summary","expected_category":"grant_work","expected_profile":"research","expected_risk":"low"}
+{"prompt":"draft funding proposal outline","expected_category":"grant_work","expected_profile":"research","expected_risk":"low"}
+{"prompt":"review call for proposals requirements","expected_category":"grant_work","expected_profile":"research","expected_risk":"low"}
+{"prompt":"write grant proposal notes","expected_category":"grant_work","expected_profile":"research","expected_risk":"low"}
+{"prompt":"write an email reply","expected_category":"email","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"draft email to collaborator","expected_category":"email","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"reply to this mail politely","expected_category":"email","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"summarize this paragraph","expected_category":"simple_text","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"explain simply what this does","expected_category":"simple_text","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"shorten this text","expected_category":"simple_text","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"rewrite short version of this note","expected_category":"simple_text","expected_profile":"fast","expected_risk":"low"}
+{"prompt":"write a poem about engineering","expected_category":"literary","expected_profile":"literary","expected_risk":"low"}
+{"prompt":"write a short story with a calm tone","expected_category":"literary","expected_profile":"literary","expected_risk":"low"}
+{"prompt":"make a social post caption","expected_category":"literary","expected_profile":"literary","expected_risk":"low"}
+{"prompt":"adjust the style and tone","expected_category":"literary","expected_profile":"literary","expected_risk":"low"}
+{"prompt":"nonsense blorple without known task","expected_category":"unknown","expected_profile":"standard","expected_risk":"low"}
+{"prompt":"fix bug; rm -rf /","expected_category":"normal_coding","expected_profile":"security","expected_risk":"high"}
+{"prompt":"delete all files in this directory","expected_category":"unknown","expected_profile":"security","expected_risk":"high"}
+

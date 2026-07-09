@@ -1,0 +1,6 @@
+model = "REPLACE_WITH_REPO_MODEL_FROM_CODEX_DEBUG_MODELS"
+sandbox_mode = "workspace-write"
+model_verbosity = "medium"
+model_reasoning_effort = "medium"
+approval_policy = "on-request"
+

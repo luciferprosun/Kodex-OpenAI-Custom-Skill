@@ -1,0 +1,6 @@
+model = "REPLACE_WITH_FAST_MODEL_FROM_CODEX_DEBUG_MODELS"
+sandbox_mode = "read-only"
+model_verbosity = "low"
+model_reasoning_effort = "minimal"
+approval_policy = "on-request"
+

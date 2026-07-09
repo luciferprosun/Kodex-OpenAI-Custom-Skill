@@ -1,0 +1,22 @@
+{
+  "models": [
+    {
+      "id": "REPLACE_WITH_MODEL_ID_FROM_CODEX_DEBUG_MODELS",
+      "name": "REPLACE_WITH_MODEL_NAME_FROM_CODEX_DEBUG_MODELS",
+      "provider": "REPLACE_WITH_PROVIDER_FROM_CODEX_DEBUG_MODELS",
+      "visible": true,
+      "hidden": false,
+      "status": "available",
+      "default": false,
+      "supported_reasoning_effort": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "reasoning_summary_support": null
+    }
+  ]
+}
+

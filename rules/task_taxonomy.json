@@ -1,0 +1,137 @@
+{
+  "categories": {
+    "email": {
+      "description": "Email drafting and replies.",
+      "weighted_keywords": {
+        "email": 10,
+        "reply": 7,
+        "draft email": 10,
+        "mail": 8
+      }
+    },
+    "simple_text": {
+      "description": "Small summaries, simplification, and short rewrites.",
+      "weighted_keywords": {
+        "summarize": 7,
+        "explain simply": 8,
+        "shorten": 6,
+        "rewrite short": 6
+      }
+    },
+    "literary": {
+      "description": "Creative, literary, caption, tone, and social writing.",
+      "weighted_keywords": {
+        "poem": 10,
+        "story": 8,
+        "style": 6,
+        "tone": 6,
+        "caption": 7,
+        "social post": 8
+      }
+    },
+    "normal_coding": {
+      "description": "Normal frontend, backend, API, implementation, test, and bug-fix work.",
+      "weighted_keywords": {
+        "bug": 7,
+        "fix": 6,
+        "frontend": 7,
+        "backend": 7,
+        "api": 5,
+        "implement": 6,
+        "test": 5,
+        "function": 4
+      }
+    },
+    "complex_coding": {
+      "description": "Refactors, migrations, multi-file work, and dependency changes.",
+      "weighted_keywords": {
+        "refactor": 8,
+        "multi-file": 10,
+        "migration": 8,
+        "architecture": 8,
+        "redesign": 7,
+        "module": 5,
+        "dependency": 5
+      }
+    },
+    "architecture": {
+      "description": "System design, boundaries, design plans, and roadmaps.",
+      "weighted_keywords": {
+        "architecture": 10,
+        "system design": 10,
+        "boundaries": 7,
+        "design plan": 7,
+        "roadmap": 5
+      }
+    },
+    "math_theory": {
+      "description": "Math, proofs, LSC, neutrino notes, equations, and derivations.",
+      "weighted_keywords": {
+        "proof": 10,
+        "theorem": 10,
+        "equation": 8,
+        "lemma": 8,
+        "neutrino": 10,
+        "LSC": 10,
+        "tensor": 7,
+        "derivation": 8
+      }
+    },
+    "security_audit": {
+      "description": "Secrets, auth, credentials, malware, exploit, sandbox, and permission work.",
+      "weighted_keywords": {
+        "secret": 10,
+        "secrets": 10,
+        "token": 10,
+        "auth": 8,
+        "password": 10,
+        "api key": 10,
+        "malware": 10,
+        "exploit": 10,
+        "sandbox": 8,
+        "permission": 7,
+        "private key": 10,
+        ".env": 10
+      }
+    },
+    "repo_operations": {
+      "description": "Git, branch, commit, merge, release, tag, and pull-request operations.",
+      "weighted_keywords": {
+        "git": 7,
+        "branch": 6,
+        "commit": 7,
+        "merge": 7,
+        "rebase": 7,
+        "release": 6,
+        "tag": 5,
+        "pull request": 6
+      }
+    },
+    "research": {
+      "description": "Research, comparison, investigation, sources, literature, and project audits.",
+      "weighted_keywords": {
+        "research": 8,
+        "compare": 6,
+        "investigate": 7,
+        "sources": 6,
+        "audit project": 8,
+        "literature": 6
+      }
+    },
+    "grant_work": {
+      "description": "Grant, funding, application, proposal, and call-for-proposals work.",
+      "weighted_keywords": {
+        "grant": 10,
+        "funding": 9,
+        "application": 7,
+        "proposal": 8,
+        "call for proposals": 10
+      }
+    },
+    "unknown": {
+      "description": "Low-confidence prompts that do not match a known category.",
+      "weighted_keywords": {}
+    }
+  }
+}
+

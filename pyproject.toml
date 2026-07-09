@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-auto-model-router"
+version = "0.1.0"
+description = "Smart Prompt Check + Task Router + Model Configuration Selector for Codex"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "LuciferSun" }
+]
+dependencies = []
+
+[project.scripts]
+smart-codex = "smart_codex.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+

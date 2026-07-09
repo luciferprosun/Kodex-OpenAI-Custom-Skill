@@ -1,0 +1,6 @@
+model = "REPLACE_WITH_DEEP_MODEL_FROM_CODEX_DEBUG_MODELS"
+sandbox_mode = "workspace-write"
+model_verbosity = "high"
+model_reasoning_effort = "high"
+approval_policy = "on-request"
+
