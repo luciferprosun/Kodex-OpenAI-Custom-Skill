@@ -33,6 +33,20 @@ From the repository root:
 python -m pip install -e .
 ```
 
+After local installation, use the router command directly:
+
+```bash
+smart-codex --explain "fix frontend bug"
+```
+
+An optional local wrapper can be used for daily work:
+
+```bash
+codex-smart --explain "audit repo for secrets"
+```
+
+Do not overwrite or replace the official `codex` binary. `smart-codex` and `codex-smart` are wrappers around official Codex CLI mechanisms.
+
 For tests, install pytest if it is not already available:
 
 ```bash
@@ -44,19 +58,19 @@ python -m pip install pytest
 Dry-run is the default:
 
 ```bash
-python -m smart_codex.cli "fix frontend bug"
+smart-codex --explain "fix frontend bug"
 ```
 
 Execute Codex only when explicitly requested:
 
 ```bash
-python -m smart_codex.cli --execute "fix frontend bug"
+smart-codex --execute "fix frontend bug"
 ```
 
 Explain routing reasons:
 
 ```bash
-python -m smart_codex.cli --explain "audit this repo for secrets and sandbox risks"
+smart-codex --explain "audit this repo for secrets and sandbox risks"
 ```
 
 Override profile, model, sandbox, directory, approval policy, or config:
@@ -68,13 +82,13 @@ python -m smart_codex.cli --profile deep --model REPLACE_WITH_MODEL --sandbox wo
 Disable metadata logging:
 
 ```bash
-python -m smart_codex.cli --no-log "write an email reply"
+smart-codex --no-log "write an email reply"
 ```
 
 Audit local Codex models:
 
 ```bash
-python -m smart_codex.cli audit-models
+smart-codex audit-models
 ```
 
 ## Knowledge Library

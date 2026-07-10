@@ -45,11 +45,12 @@ Prompt handling:
 - `prompt_hash` is a SHA-256 hash of the prompt.
 - `prompt_redacted` is always `null` in V0.
 - Knowledge Library scoring preserves the raw prompt only in memory.
+- The `smart-codex` command and optional `codex-smart` wrapper use the same privacy-safe logging behavior.
 - Full private prompts should not be published.
 - Raw transcripts should remain private unless intentionally sanitized.
 
 Disable logging:
 
 ```bash
-python -m smart_codex.cli --no-log "write an email reply"
+smart-codex --no-log "write an email reply"
 ```

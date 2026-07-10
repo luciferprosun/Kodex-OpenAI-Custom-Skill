@@ -48,6 +48,8 @@ Add a deterministic JSON-backed Knowledge Library under `rules/`:
 
 V0.2 keeps all V0 boundaries: dry-run by default, `--execute` required for launch, prompt passed as one argv element, no raw prompt logging, no `shell=True`, no `danger-full-access`, no invented tools or model names, no SDK/app-server integration, and no global Codex config mutation.
 
+Local production usage is `smart-codex --explain "task"` first, then `smart-codex --execute "safe task"` only after reviewing the route. The optional `codex-smart` wrapper may delegate to `smart-codex`, but the official `codex` binary must not be overwritten or replaced.
+
 ## Postponed V1 Items
 
 - SDK integration.

@@ -35,6 +35,8 @@ Purpose: safely route Codex tasks to the appropriate local Codex CLI profile, mo
 - [x] Add tests for eval set, hard overrides, action danger, execute gate, no raw prompt logging, config validation, and no V0 `danger-full-access`
 - [x] Keep dry-run default and `--execute` gate
 - [x] Keep model placeholders instead of inventing model names
+- [x] Verify local `smart-codex` command usage
+- [x] Document optional `codex-smart` wrapper without replacing the official `codex` binary
 
 ## Postponed V1 Items
 
