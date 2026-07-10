@@ -25,7 +25,7 @@
 {"prompt":"commit these changes on a new branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
 {"prompt":"git merge this feature branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
 {"prompt":"prepare release tag","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
-{"prompt":"open a pull request for this branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"low"}
+{"prompt":"open a pull request for this branch","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
 {"prompt":"rebase the branch before release","expected_category":"repo_operations","expected_profile":"repo","expected_risk":"medium"}
 {"prompt":"research current sources for this topic","expected_category":"research","expected_profile":"research","expected_risk":"low"}
 {"prompt":"compare literature about model routing","expected_category":"research","expected_profile":"research","expected_risk":"low"}

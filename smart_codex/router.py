@@ -29,6 +29,39 @@ CATEGORY_TO_PROFILE = {
 }
 
 
+SAFETY_ACTION_DANGERS = {
+    "destructive_operation",
+    "secret_touching_operation",
+    "deployment_operation",
+    "database_operation",
+}
+
+DESTRUCTIVE_GIT_SIGNALS = (
+    "force push",
+    "push --force",
+    "push -f",
+    "reset --hard",
+    "delete branch",
+    "rewrite history",
+)
+
+DATABASE_ACTION_SIGNALS = (
+    "database",
+    "db",
+    "sql",
+    "table",
+    "schema",
+    "alembic",
+    "postgres",
+    "mysql",
+    "sqlite",
+    "drop",
+    "truncate",
+    "delete from",
+    "alter table",
+)
+
+
 @dataclass(frozen=True)
 class RoutingDecision:
     prompt_hash: str
@@ -72,12 +105,14 @@ def route_prompt(
     approval_override: str | None = None,
 ) -> RoutingDecision:
     score_card = score(prompt)
+    risk_level = score_card.risk_level
+    action_danger = score_card.action_danger
     reasons: list[str] = [
         f"classified as {score_card.category}",
         f"confidence {score_card.confidence:.2f}",
-        f"risk {score_card.risk_level}",
+        f"risk {risk_level}",
         f"complexity {score_card.complexity_level}",
-        f"action danger {score_card.action_danger}",
+        f"action danger {action_danger}",
     ]
     reasons.extend(score_card.reasons)
 
@@ -94,18 +129,58 @@ def route_prompt(
         reasons.append(f"category maps to {selected_profile} profile")
 
     override_used = False
-    high_or_critical = RISK_ORDER.get(score_card.risk_level, 0) >= RISK_ORDER["high"]
-    if high_or_critical and profile_override is None:
+    safety_forced = False
+
+    if has_destructive_git_signal(prompt):
+        action_danger = "destructive_operation"
+        risk_level = max_risk(risk_level, "critical")
         selected_profile = "security"
+        safety_forced = True
+        warning = append_warning(warning, "REQUIRES_CONFIRMATION")
+        reasons.append("destructive git signal forces security routing")
+    elif action_danger == "database_operation" and not has_database_action_signal(prompt):
+        action_danger = "read_only_analysis"
+        reasons.append("non-database migration does not trigger database action gate")
+    elif action_danger in SAFETY_ACTION_DANGERS:
+        selected_profile = "security"
+        safety_forced = True
+        warning = append_warning(warning, "REQUIRES_CONFIRMATION")
+        if action_danger == "destructive_operation":
+            risk_level = max_risk(risk_level, "critical")
+        else:
+            risk_level = max_risk(risk_level, "high")
+        reasons.append(f"{action_danger} forces security routing")
+    elif action_danger == "git_operations":
+        selected_profile = "repo"
+        risk_level = max_risk(risk_level, "medium")
+        reasons.append("git operation routes to repo profile")
+    elif action_danger == "dependency_install":
+        selected_profile = "repo"
+        risk_level = max_risk(risk_level, "medium")
+        warning = append_warning(warning, "dependency install requires confirmation")
+        reasons.append("dependency install routes to repo profile")
+    elif action_danger == "network_access":
+        if selected_profile not in {"research", "repo", "security"}:
+            selected_profile = "research" if score_card.category == "research" else "repo"
+        risk_level = max_risk(risk_level, "medium")
+        warning = append_warning(warning, "network access requires confirmation")
+        reasons.append(f"network access routes to {selected_profile} profile")
+
+    high_or_critical = RISK_ORDER.get(risk_level, 0) >= RISK_ORDER["high"]
+    if high_or_critical:
+        selected_profile = "security"
+        safety_forced = True
         reasons.append("high or critical risk routes to security profile")
 
     if profile_override is not None:
         validate_profile_override(profile_override)
-        selected_profile = profile_override
         override_used = True
-        reasons.append(f"profile override used: {profile_override}")
-        if high_or_critical:
-            warning = append_warning(warning, "high or critical risk prompt with manual profile override")
+        if safety_forced:
+            warning = append_warning(warning, "manual profile override ignored by safety gate")
+            reasons.append(f"profile override ignored by safety gate: {profile_override}")
+        else:
+            selected_profile = profile_override
+            reasons.append(f"profile override used: {profile_override}")
 
     if selected_profile not in AVAILABLE_PROFILES:
         raise ValueError(f"selected profile is not available: {selected_profile}")
@@ -116,23 +191,29 @@ def route_prompt(
     sandbox_mode = profile.sandbox_mode
     approval_policy = profile.approval_policy
 
-    if high_or_critical and profile_override is None:
+    if safety_forced:
         sandbox_mode = "read-only"
         approval_policy = "on-request"
 
     if sandbox_override is not None:
         validate_sandbox_override(sandbox_override)
-        sandbox_mode = sandbox_override
         override_used = True
-        reasons.append(f"sandbox override used: {sandbox_override}")
-        if high_or_critical and sandbox_mode != "read-only":
-            warning = append_warning(warning, "high or critical risk prompt with non-read-only sandbox override")
+        if safety_forced and sandbox_override != "read-only":
+            warning = append_warning(warning, "sandbox override ignored by safety gate")
+            reasons.append(f"sandbox override ignored by safety gate: {sandbox_override}")
+        else:
+            sandbox_mode = sandbox_override
+            reasons.append(f"sandbox override used: {sandbox_override}")
 
     if approval_override is not None:
         validate_approval_override(approval_override)
         approval_policy = approval_override
         override_used = True
         reasons.append(f"approval override used: {approval_override}")
+
+    if safety_forced:
+        sandbox_mode = "read-only"
+        approval_policy = "on-request"
 
     if model_override is not None:
         override_used = True
@@ -142,7 +223,7 @@ def route_prompt(
         prompt_hash=hash_prompt(prompt),
         category=score_card.category,
         complexity=score_card.complexity_level,
-        risk=score_card.risk_level,
+        risk=risk_level,
         selected_profile=selected_profile,
         selected_model=selected_model,
         sandbox_mode=sandbox_mode,
@@ -154,9 +235,9 @@ def route_prompt(
         override_used=override_used,
         dry_run=dry_run,
         warning=warning,
-        risk_level=score_card.risk_level,
+        risk_level=risk_level,
         complexity_level=score_card.complexity_level,
-        action_danger=score_card.action_danger,
+        action_danger=action_danger,
         evidence_requirement=score_card.evidence_requirement,
         context_requirement=score_card.context_requirement,
         repo_impact=score_card.repo_impact,
@@ -164,7 +245,7 @@ def route_prompt(
         destructiveness=score_card.destructiveness,
         execution_scope=score_card.execution_scope,
         score_source=score_card.source,
-    )
+)
 
 
 def append_warning(existing: str | None, addition: str) -> str:
@@ -173,6 +254,22 @@ def append_warning(existing: str | None, addition: str) -> str:
     if addition in existing:
         return existing
     return f"{existing}; {addition}"
+
+
+def max_risk(current: str, minimum: str) -> str:
+    current_value = RISK_ORDER.get(current, 0)
+    minimum_value = RISK_ORDER.get(minimum, 0)
+    return current if current_value >= minimum_value else minimum
+
+
+def has_destructive_git_signal(prompt: str) -> bool:
+    normalized = prompt.lower()
+    return any(signal in normalized for signal in DESTRUCTIVE_GIT_SIGNALS)
+
+
+def has_database_action_signal(prompt: str) -> bool:
+    normalized = prompt.lower()
+    return any(signal in normalized for signal in DATABASE_ACTION_SIGNALS)
 
 
 def dedupe(items: list[str]) -> list[str]:

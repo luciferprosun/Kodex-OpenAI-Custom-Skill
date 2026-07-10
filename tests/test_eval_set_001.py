@@ -24,3 +24,16 @@ def test_eval_set_001_routes_as_expected():
                 )
     assert not failures, "\n".join(failures)
 
+
+def test_eval_set_001_pull_request_risk_stays_medium():
+    path = Path(__file__).resolve().parents[1] / "rules" / "eval_set_001.jsonl"
+    prompt = "open a pull request for this branch"
+    cases = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    match = next(item for item in cases if item["prompt"] == prompt)
+
+    assert match["expected_risk"] == "medium"
+    assert route_prompt(prompt).risk == "medium"
