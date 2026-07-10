@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.2",
+  "order": [
+    {
+      "rule": "hard_override_always_wins"
+    },
+    {
+      "rule": "security_beats_coding_on_tie"
+    },
+    {
+      "rule": "destructive_beats_convenience"
+    },
+    {
+      "rule": "math_theory_beats_normal_text",
+      "signals": [
+        "proof",
+        "equation",
+        "tensor",
+        "neutrino",
+        "lsc"
+      ]
+    },
+    {
+      "rule": "grant_work_beats_simple_text",
+      "signals": [
+        "funding",
+        "proposal",
+        "budget",
+        "grant",
+        "nlnet"
+      ]
+    },
+    {
+      "rule": "architecture_beats_normal_coding",
+      "signals": [
+        "system",
+        "module boundary",
+        "refactor",
+        "architecture"
+      ]
+    },
+    {
+      "rule": "repo_release_beats_writing",
+      "signals": [
+        "commit",
+        "push",
+        "tag",
+        "release"
+      ]
+    },
+    {
+      "rule": "unknown_routes_standard_with_warning_unless_risk"
+    },
+    {
+      "rule": "unknown_with_risk_signal_routes_security"
+    }
+  ]
+}

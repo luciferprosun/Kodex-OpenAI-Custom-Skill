@@ -1,0 +1,167 @@
+{
+  "schema_version": "0.2",
+  "dimensions": {
+    "task_category": {
+      "type": "enum",
+      "values": [
+        "email",
+        "simple_text",
+        "literary",
+        "normal_coding",
+        "complex_coding",
+        "architecture",
+        "math_theory",
+        "security_audit",
+        "repo_operations",
+        "research",
+        "grant_work",
+        "unknown",
+        "debugging",
+        "testing",
+        "dependency_management",
+        "release_management",
+        "documentation",
+        "data_analysis",
+        "legal_admin",
+        "financial_admin",
+        "system_admin",
+        "incident_response",
+        "secret_handling",
+        "prompt_engineering"
+      ]
+    },
+    "risk_level": {
+      "type": "enum",
+      "values": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "complexity_level": {
+      "type": "enum",
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "execution_scope": {
+      "type": "enum",
+      "values": [
+        "single_file",
+        "module",
+        "repo",
+        "system",
+        "network",
+        "unknown"
+      ]
+    },
+    "repo_impact": {
+      "type": "enum",
+      "values": [
+        "none",
+        "local",
+        "remote"
+      ]
+    },
+    "security_sensitivity": {
+      "type": "enum",
+      "values": [
+        "none",
+        "low",
+        "high",
+        "critical"
+      ]
+    },
+    "destructiveness": {
+      "type": "enum",
+      "values": [
+        "none",
+        "soft",
+        "hard",
+        "critical"
+      ]
+    },
+    "evidence_requirement": {
+      "type": "enum",
+      "values": [
+        "none",
+        "light",
+        "source_required",
+        "multi_source",
+        "official_source_only"
+      ]
+    },
+    "context_requirement": {
+      "type": "enum",
+      "values": [
+        "small",
+        "medium",
+        "large",
+        "unknown"
+      ]
+    },
+    "math_reasoning_requirement": {
+      "type": "enum",
+      "values": [
+        "none",
+        "light",
+        "heavy"
+      ]
+    },
+    "creative_requirement": {
+      "type": "enum",
+      "values": [
+        "none",
+        "light",
+        "heavy"
+      ]
+    },
+    "research_requirement": {
+      "type": "enum",
+      "values": [
+        "none",
+        "light",
+        "heavy"
+      ]
+    },
+    "approval_requirement": {
+      "type": "enum",
+      "values": [
+        "on-request",
+        "mandatory"
+      ]
+    },
+    "confidence_level": {
+      "type": "enum",
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "action_danger": {
+      "type": "enum",
+      "values": [
+        "read_only_analysis",
+        "write_local_files",
+        "run_tests",
+        "git_operations",
+        "network_access",
+        "dependency_install",
+        "database_operation",
+        "deployment_operation",
+        "destructive_operation",
+        "secret_touching_operation",
+        "unknown"
+      ]
+    }
+  },
+  "thresholds": {
+    "confidence_high": 0.35,
+    "confidence_medium": 0.15,
+    "mixed_margin": 0.2
+  }
+}

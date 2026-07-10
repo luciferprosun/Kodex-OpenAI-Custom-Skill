@@ -1,0 +1,161 @@
+{
+  "schema_version": "0.2",
+  "levels": {
+    "read_only_analysis": {
+      "signals": [
+        "explain",
+        "review",
+        "analyze",
+        "audit",
+        "summarize",
+        "what does"
+      ],
+      "allowed_profiles": [
+        "fast",
+        "standard",
+        "deep",
+        "math",
+        "security",
+        "literary",
+        "research",
+        "repo"
+      ],
+      "sandbox": "read-only",
+      "approval": "on-request"
+    },
+    "write_local_files": {
+      "signals": [
+        "edit file",
+        "write file",
+        "create file",
+        "implement",
+        "fix bug",
+        "add function"
+      ],
+      "allowed_profiles": [
+        "standard",
+        "deep",
+        "repo",
+        "fast"
+      ],
+      "sandbox": "workspace-write",
+      "approval": "on-request"
+    },
+    "run_tests": {
+      "signals": [
+        "pytest",
+        "run tests",
+        "npm test",
+        "unit test"
+      ],
+      "allowed_profiles": [
+        "standard",
+        "deep",
+        "repo"
+      ],
+      "sandbox": "workspace-write",
+      "approval": "on-request"
+    },
+    "git_operations": {
+      "signals": [
+        "git commit",
+        "branch",
+        "merge",
+        "pull request",
+        "tag"
+      ],
+      "allowed_profiles": [
+        "repo"
+      ],
+      "sandbox": "workspace-write",
+      "approval": "on-request"
+    },
+    "network_access": {
+      "signals": [
+        "fetch url",
+        "download",
+        "curl",
+        "wget",
+        "pip install",
+        "npm install"
+      ],
+      "allowed_profiles": [
+        "repo",
+        "research",
+        "security"
+      ],
+      "sandbox": "workspace-write",
+      "approval": "on-request"
+    },
+    "dependency_install": {
+      "signals": [
+        "pip install",
+        "npm install",
+        "add dependency",
+        "update dependencies"
+      ],
+      "allowed_profiles": [
+        "repo",
+        "standard"
+      ],
+      "sandbox": "workspace-write",
+      "approval": "on-request"
+    },
+    "database_operation": {
+      "signals": [
+        "migration",
+        "alter table",
+        "drop table",
+        "truncate table",
+        "delete from"
+      ],
+      "allowed_profiles": [
+        "security"
+      ],
+      "sandbox": "read-only",
+      "approval": "on-request"
+    },
+    "deployment_operation": {
+      "signals": [
+        "deploy to prod",
+        "production deploy",
+        "publish to pypi",
+        "npm publish"
+      ],
+      "allowed_profiles": [
+        "security"
+      ],
+      "sandbox": "read-only",
+      "approval": "on-request"
+    },
+    "destructive_operation": {
+      "signals": [
+        "rm -rf",
+        "wipe",
+        "drop table",
+        "force push",
+        "delete all"
+      ],
+      "allowed_profiles": [
+        "security"
+      ],
+      "sandbox": "read-only",
+      "approval": "on-request"
+    },
+    "secret_touching_operation": {
+      "signals": [
+        ".env",
+        "private key",
+        "api key",
+        "github token",
+        "ssh key",
+        "password"
+      ],
+      "allowed_profiles": [
+        "security"
+      ],
+      "sandbox": "read-only",
+      "approval": "on-request"
+    }
+  }
+}

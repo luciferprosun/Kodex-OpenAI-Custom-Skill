@@ -24,6 +24,18 @@ Purpose: safely route Codex tasks to the appropriate local Codex CLI profile, mo
 - [x] Run full test suite
 - [x] Run acceptance CLI commands
 
+## V0.2 Knowledge Library Checklist
+
+- [x] Add JSON Knowledge Library rules
+- [x] Add weighted category scoring
+- [x] Add hard safety overrides before normal classification
+- [x] Add independent action danger dimension
+- [x] Add `low`, `medium`, `high`, and `critical` risk levels
+- [x] Add `eval_set_002.jsonl`
+- [x] Add tests for eval set, hard overrides, action danger, execute gate, no raw prompt logging, config validation, and no V0 `danger-full-access`
+- [x] Keep dry-run default and `--execute` gate
+- [x] Keep model placeholders instead of inventing model names
+
 ## Postponed V1 Items
 
 - [ ] SDK integration

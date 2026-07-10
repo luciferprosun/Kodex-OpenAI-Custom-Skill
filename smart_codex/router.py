@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 
-from .classifier import classify_prompt
 from .profiles import (
     AVAILABLE_PROFILES,
     load_profile,
@@ -11,7 +10,7 @@ from .profiles import (
     validate_profile_override,
     validate_sandbox_override,
 )
-from .risk import assess_risk
+from .scorer import RISK_ORDER, score
 
 
 CATEGORY_TO_PROFILE = {
@@ -47,6 +46,16 @@ class RoutingDecision:
     override_used: bool
     dry_run: bool
     warning: str | None
+    risk_level: str
+    complexity_level: str
+    action_danger: str
+    evidence_requirement: str
+    context_requirement: str
+    repo_impact: str
+    security_sensitivity: str
+    destructiveness: str
+    execution_scope: str
+    score_source: str
 
 
 def hash_prompt(prompt: str) -> str:
@@ -62,37 +71,41 @@ def route_prompt(
     sandbox_override: str | None = None,
     approval_override: str | None = None,
 ) -> RoutingDecision:
-    classification = classify_prompt(prompt)
-    risk = assess_risk(prompt, classification.category)
+    score_card = score(prompt)
     reasons: list[str] = [
-        f"classified as {classification.category}",
-        f"confidence {classification.confidence:.2f}",
-        f"risk {risk.risk}",
-        f"complexity {risk.complexity}",
+        f"classified as {score_card.category}",
+        f"confidence {score_card.confidence:.2f}",
+        f"risk {score_card.risk_level}",
+        f"complexity {score_card.complexity_level}",
+        f"action danger {score_card.action_danger}",
     ]
-    reasons.extend(risk.reasons)
+    reasons.extend(score_card.reasons)
 
-    warning = classification.warning
-    selected_profile = CATEGORY_TO_PROFILE.get(classification.category, "standard")
-    if classification.category == "unknown" or classification.confidence <= 0.30:
+    warning = "; ".join(score_card.warnings) if score_card.warnings else None
+    selected_profile = score_card.profile
+    if score_card.category == "unknown":
         selected_profile = "standard"
         warning = warning or "low confidence route"
         reasons.append("low confidence route uses standard profile")
+    elif score_card.category == "email":
+        selected_profile = "fast"
+        reasons.append("V0 compatibility maps email to fast profile")
     else:
         reasons.append(f"category maps to {selected_profile} profile")
 
     override_used = False
-    if risk.risk == "high" and profile_override is None:
+    high_or_critical = RISK_ORDER.get(score_card.risk_level, 0) >= RISK_ORDER["high"]
+    if high_or_critical and profile_override is None:
         selected_profile = "security"
-        reasons.append("high risk routes to security profile")
+        reasons.append("high or critical risk routes to security profile")
 
     if profile_override is not None:
         validate_profile_override(profile_override)
         selected_profile = profile_override
         override_used = True
         reasons.append(f"profile override used: {profile_override}")
-        if risk.risk == "high":
-            warning = append_warning(warning, "high risk prompt with manual profile override")
+        if high_or_critical:
+            warning = append_warning(warning, "high or critical risk prompt with manual profile override")
 
     if selected_profile not in AVAILABLE_PROFILES:
         raise ValueError(f"selected profile is not available: {selected_profile}")
@@ -103,7 +116,7 @@ def route_prompt(
     sandbox_mode = profile.sandbox_mode
     approval_policy = profile.approval_policy
 
-    if risk.risk == "high" and profile_override is None:
+    if high_or_critical and profile_override is None:
         sandbox_mode = "read-only"
         approval_policy = "on-request"
 
@@ -112,8 +125,8 @@ def route_prompt(
         sandbox_mode = sandbox_override
         override_used = True
         reasons.append(f"sandbox override used: {sandbox_override}")
-        if risk.risk == "high" and sandbox_mode != "read-only":
-            warning = append_warning(warning, "high risk prompt with non-read-only sandbox override")
+        if high_or_critical and sandbox_mode != "read-only":
+            warning = append_warning(warning, "high or critical risk prompt with non-read-only sandbox override")
 
     if approval_override is not None:
         validate_approval_override(approval_override)
@@ -127,20 +140,30 @@ def route_prompt(
 
     return RoutingDecision(
         prompt_hash=hash_prompt(prompt),
-        category=classification.category,
-        complexity=risk.complexity,
-        risk=risk.risk,
+        category=score_card.category,
+        complexity=score_card.complexity_level,
+        risk=score_card.risk_level,
         selected_profile=selected_profile,
         selected_model=selected_model,
         sandbox_mode=sandbox_mode,
         approval_policy=approval_policy,
         reasoning_effort=profile.model_reasoning_effort,
         model_verbosity=profile.model_verbosity,
-        confidence=classification.confidence,
+        confidence=score_card.confidence,
         decision_reasons=dedupe(reasons),
         override_used=override_used,
         dry_run=dry_run,
         warning=warning,
+        risk_level=score_card.risk_level,
+        complexity_level=score_card.complexity_level,
+        action_danger=score_card.action_danger,
+        evidence_requirement=score_card.evidence_requirement,
+        context_requirement=score_card.context_requirement,
+        repo_impact=score_card.repo_impact,
+        security_sensitivity=score_card.security_sensitivity,
+        destructiveness=score_card.destructiveness,
+        execution_scope=score_card.execution_scope,
+        score_source=score_card.source,
     )
 
 
@@ -160,4 +183,3 @@ def dedupe(items: list[str]) -> list[str]:
             seen.add(item)
             result.append(item)
     return result
-

@@ -5,6 +5,7 @@ import json
 import shlex
 import sys
 
+from .knowledge import ConfigError
 from .launcher import build_codex_command, run_codex_command
 from .logging_safe import write_decision_log
 from .model_audit import audit_models
@@ -49,6 +50,9 @@ def main(argv: list[str] | None = None) -> int:
             sandbox_override=args.sandbox,
             approval_override=args.ask_for_approval,
         )
+    except ConfigError as exc:
+        print(json.dumps({"ok": False, "error": "CONFIG_ERROR", "detail": str(exc)}, indent=2))
+        return 2
     except ValueError as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, indent=2))
         return 2
@@ -85,6 +89,7 @@ def print_decision(decision, argv: list[str], *, explain: bool) -> None:
     print(f"category: {decision.category}")
     print(f"risk: {decision.risk}")
     print(f"complexity: {decision.complexity}")
+    print(f"action_danger: {decision.action_danger}")
     print(f"selected_profile: {decision.selected_profile}")
     print(f"selected_model: {decision.selected_model}")
     print(f"sandbox_mode: {decision.sandbox_mode}")
@@ -102,4 +107,3 @@ def print_decision(decision, argv: list[str], *, explain: bool) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

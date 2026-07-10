@@ -1,0 +1,243 @@
+{
+  "schema_version": "0.2",
+  "triggers": [
+    {
+      "group": "secrets_keys",
+      "terms": [
+        "secret",
+        "api key",
+        "token",
+        "private key",
+        ".env",
+        "credential",
+        "-----BEGIN.*PRIVATE KEY-----"
+      ],
+      "risk": "critical",
+      "category": "secret_handling",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "direct credential exposure risk"
+    },
+    {
+      "group": "auth_identity",
+      "terms": [
+        "auth",
+        "oauth",
+        "ssh key",
+        "password",
+        "refresh token",
+        "jwt secret",
+        "jwt token"
+      ],
+      "risk": "high",
+      "category": "security_audit",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "identity or access surface"
+    },
+    {
+      "group": "malware_exploit",
+      "terms": [
+        "malware",
+        "exploit",
+        "sandbox escape",
+        "reverse shell",
+        "ransomware",
+        "payload"
+      ],
+      "risk": "critical",
+      "category": "security_audit",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "malicious or offensive security content"
+    },
+    {
+      "group": "destructive_fs",
+      "terms": [
+        "rm\\s+-rf",
+        "delete all",
+        "remove all",
+        "wipe",
+        "format disk",
+        "drop .*table",
+        "drop table",
+        "truncate table"
+      ],
+      "risk": "critical",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "irreversible data loss risk"
+    },
+    {
+      "group": "elevated_privilege",
+      "terms": [
+        "sudo\\s+",
+        "chmod",
+        "chown",
+        "root permission",
+        "chmod 777"
+      ],
+      "risk": "high",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "host-level privilege or permission mutation"
+    },
+    {
+      "group": "production_changes",
+      "terms": [
+        "production deploy",
+        "deploy to prod",
+        "deploy .*production",
+        "deploy .*prod",
+        "production release",
+        "release publishing",
+        "publish to pypi",
+        "publish .*pypi",
+        "npm publish"
+      ],
+      "risk": "high",
+      "category": "release_management",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "irreversible public or production impact"
+    },
+    {
+      "group": "github_cloud_credentials",
+      "terms": [
+        "github token",
+        "GITHUB_TOKEN",
+        "ghp_",
+        "gho_",
+        "AWS_SECRET",
+        "AZURE_KEY",
+        "GCP.*key",
+        "cloud credentials",
+        "aws credentials"
+      ],
+      "risk": "critical",
+      "category": "secret_handling",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "cloud or GitHub credential exposure"
+    },
+    {
+      "group": "database_ops",
+      "terms": [
+        "database migration",
+        "alembic upgrade",
+        "ALTER TABLE.*DROP",
+        "drop .*table",
+        "drop database",
+        "truncate table",
+        "delete from users"
+      ],
+      "risk": "high",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "database schema or data mutation risk"
+    },
+    {
+      "group": "payment_billing",
+      "terms": [
+        "process payment",
+        "charge card",
+        "billing record",
+        "refund",
+        "stripe key",
+        "invoice payment"
+      ],
+      "risk": "high",
+      "category": "financial_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "financial irreversibility or sensitive billing data"
+    },
+    {
+      "group": "legal_pii",
+      "terms": [
+        "personal data",
+        "PII",
+        "GDPR",
+        "legal document",
+        "privacy policy leak",
+        "data subject access request",
+        "email list"
+      ],
+      "risk": "high",
+      "category": "legal_admin",
+      "profile": "research",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "privacy or legal sensitivity"
+    },
+    {
+      "group": "force_push",
+      "terms": [
+        "force push",
+        "git push --force",
+        "push -f",
+        "rewrite history"
+      ],
+      "risk": "critical",
+      "category": "repo_operations",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "irreversible git history rewrite"
+    },
+    {
+      "group": "pipe_to_shell",
+      "terms": [
+        "curl .*\\| bash",
+        "wget .*\\| sh",
+        "\\| bash",
+        "\\| sh",
+        "shell one-liner",
+        "execute .*shell .*permissions",
+        "eval\\("
+      ],
+      "risk": "critical",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "unverified remote code execution pattern"
+    }
+  ]
+}

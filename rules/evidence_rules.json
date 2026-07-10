@@ -1,0 +1,66 @@
+{
+  "schema_version": "0.2",
+  "levels": {
+    "none": {
+      "signals": [
+        "rewrite",
+        "rephrase",
+        "shorten",
+        "poem",
+        "email"
+      ],
+      "router_effect": {
+        "suggest_search": false
+      }
+    },
+    "light": {
+      "signals": [
+        "fix this bug",
+        "local file",
+        "stack trace"
+      ],
+      "router_effect": {
+        "inspect_local_files_first": true
+      }
+    },
+    "source_required": {
+      "signals": [
+        "changelog",
+        "documentation says",
+        "source",
+        "citation"
+      ],
+      "router_effect": {
+        "suggest_sources": true
+      }
+    },
+    "multi_source": {
+      "signals": [
+        "compare",
+        "survey",
+        "best practices",
+        "benchmark",
+        "landscape"
+      ],
+      "router_effect": {
+        "suggest_multiple_sources": true,
+        "verbosity": "high"
+      }
+    },
+    "official_source_only": {
+      "signals": [
+        "latest",
+        "current version",
+        "official docs",
+        "openai codex config",
+        "grant eligibility",
+        "cve",
+        "compliance"
+      ],
+      "router_effect": {
+        "official_only": true,
+        "warn_if_offline": true
+      }
+    }
+  }
+}

@@ -18,6 +18,15 @@ def decision_to_log_entry(decision: RoutingDecision) -> dict[str, object]:
         "category": data["category"],
         "complexity": data["complexity"],
         "risk": data["risk"],
+        "risk_level": data.get("risk_level", data["risk"]),
+        "complexity_level": data.get("complexity_level", data["complexity"]),
+        "action_danger": data.get("action_danger"),
+        "evidence_requirement": data.get("evidence_requirement"),
+        "context_requirement": data.get("context_requirement"),
+        "repo_impact": data.get("repo_impact"),
+        "security_sensitivity": data.get("security_sensitivity"),
+        "destructiveness": data.get("destructiveness"),
+        "execution_scope": data.get("execution_scope"),
         "selected_profile": data["selected_profile"],
         "selected_model": data["selected_model"],
         "reasoning_effort": data["reasoning_effort"],
@@ -28,6 +37,7 @@ def decision_to_log_entry(decision: RoutingDecision) -> dict[str, object]:
         "override_used": data["override_used"],
         "dry_run": data["dry_run"],
         "warning": data["warning"],
+        "source": data.get("score_source"),
     }
 
 
@@ -45,4 +55,3 @@ def write_decision_log(
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(entry, sort_keys=True) + "\n")
     return True
-
