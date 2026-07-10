@@ -1,6 +1,6 @@
-# codex-auto-model-router
+# Codex Patch Smart Router
 
-Smart Prompt Check + Task Router + Model Configuration Selector for Codex.
+Codex Patch Smart Router is a safe local router for Codex that detects prompt type, task weight, complexity, and risk, then selects the appropriate Codex model, profile, sandbox, and settings before launching a Codex task.
 
 This project builds a safe local Python CLI wrapper named `smart-codex` around the official `codex` CLI. V0 classifies a prompt, estimates risk and complexity, selects a conservative profile, explains the route, builds the planned Codex command, and logs only privacy-safe metadata.
 
@@ -22,6 +22,7 @@ This project builds a safe local Python CLI wrapper named `smart-codex` around t
 - Not an SDK or app-server integration in V0.
 - Not an AIOA, AOIA-Core, LSC, grant, or website portal integration.
 - Not a system that stores private prompts or touches secrets.
+- Not an OpenAI internal patch.
 
 ## Installation
 

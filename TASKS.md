@@ -1,5 +1,9 @@
 # Tasks
 
+Project: Codex Patch Smart Router.
+
+Purpose: safely route Codex tasks to the appropriate local Codex CLI profile, model, sandbox, and settings from prompt type, complexity, and risk.
+
 ## V0 Checklist
 
 - [x] Create repository structure

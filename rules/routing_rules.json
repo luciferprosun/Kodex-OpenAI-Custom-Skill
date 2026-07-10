@@ -1,4 +1,7 @@
 {
+  "project": "codex-patch-smart-router",
+  "display_name": "Codex Patch Smart Router",
+  "purpose": "Route Codex prompts by type, complexity, and risk to a safe profile, model, sandbox, and approval policy.",
   "default_profile": "standard",
   "low_confidence_profile": "standard",
   "high_risk_profile": "security",
@@ -17,4 +20,3 @@
     "unknown": "standard"
   }
 }
-

@@ -1,5 +1,7 @@
 # Routing Examples
 
+These examples show Codex Patch Smart Router planning official Codex CLI invocations without executing them by default.
+
 ```bash
 python -m smart_codex.cli "fix frontend bug"
 ```
@@ -33,4 +35,3 @@ Expected route:
 - profile: `security`
 - sandbox: `read-only`
 - dry-run unless `--execute` is passed
-

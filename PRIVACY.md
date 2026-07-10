@@ -1,11 +1,13 @@
 # Privacy
 
+Project: Codex Patch Smart Router.
+
 V0 stores privacy-safe routing metadata only.
 
 Default log path:
 
 ```text
-~/.codex-auto-model-router/decisions.jsonl
+~/.codex-patch-smart-router/decisions.jsonl
 ```
 
 Log fields:
@@ -40,4 +42,3 @@ Disable logging:
 ```bash
 python -m smart_codex.cli --no-log "write an email reply"
 ```
-

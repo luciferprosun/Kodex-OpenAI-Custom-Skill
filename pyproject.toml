@@ -3,9 +3,9 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "codex-auto-model-router"
+name = "codex-patch-smart-router"
 version = "0.1.0"
-description = "Smart Prompt Check + Task Router + Model Configuration Selector for Codex"
+description = "Safe local router that selects Codex model, profile, sandbox, and settings from prompt risk and complexity"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -16,7 +16,10 @@ dependencies = []
 [project.scripts]
 smart-codex = "smart_codex.cli:main"
 
+[tool.setuptools.packages.find]
+include = ["smart_codex*"]
+exclude = ["examples*", "profiles*", "rules*", "tests*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-

@@ -1,4 +1,8 @@
-# Project Main Plan - codex-auto-model-router
+# Project Main Plan - Codex Patch Smart Router
+
+Codex Patch Smart Router is a safe local wrapper around official Codex CLI mechanisms. It routes prompts by task type, task weight, complexity, and risk before choosing the Codex profile, model, sandbox, approval policy, and config settings used for the next task.
+
+It is not AIOA, AOIA-Core, portal work, website work, a Codex fork, an OpenAI internal patch, a jailbreak, or an uncontrolled auto-agent.
 
 ## Phase 0 - Repository Scaffold
 
@@ -40,4 +44,3 @@ Run all tests, verify dry-run commands, document known limitations, and keep glo
 - `danger-full-access`.
 - Web, MCP, and tool configuration.
 - GitHub release workflow.
-

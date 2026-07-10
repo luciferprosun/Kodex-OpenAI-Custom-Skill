@@ -3,6 +3,59 @@
     {
       "default": null,
       "hidden": false,
+      "id": "gpt-5.6-sol",
+      "name": "GPT-5.6-Sol",
+      "provider": null,
+      "reasoning_summary_support": null,
+      "status": null,
+      "supported_reasoning_effort": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ],
+      "visible": true
+    },
+    {
+      "default": null,
+      "hidden": false,
+      "id": "gpt-5.6-terra",
+      "name": "GPT-5.6-Terra",
+      "provider": null,
+      "reasoning_summary_support": null,
+      "status": null,
+      "supported_reasoning_effort": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ],
+      "visible": true
+    },
+    {
+      "default": null,
+      "hidden": false,
+      "id": "gpt-5.6-luna",
+      "name": "GPT-5.6-Luna",
+      "provider": null,
+      "reasoning_summary_support": null,
+      "status": null,
+      "supported_reasoning_effort": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "visible": true
+    },
+    {
+      "default": null,
+      "hidden": false,
       "id": "gpt-5.5",
       "name": "GPT-5.5",
       "provider": null,
