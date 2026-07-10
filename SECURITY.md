@@ -15,7 +15,7 @@ Security boundaries:
 - Do not use `danger-full-access` in V0 runtime profiles.
 - Do not run destructive execution automatically.
 - Do not let routing imply `execute now`; only `launcher.py` honors execution, and only when `--execute` is explicitly passed.
-- Do not overwrite or replace the official `codex` binary; use `smart-codex` or the optional `codex-smart` wrapper.
+- Do not delete or mutate the official Codex package; if the local `codex` wrapper is enabled, preserve the original entry point as `codex-real`.
 - Security profiles default to `read-only`.
 - High-risk actions require human confirmation through Codex approval behavior.
 

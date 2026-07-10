@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -8,4 +9,5 @@ PROFILES_DIR = PACKAGE_ROOT / "profiles"
 LOG_DIR = Path.home() / ".codex-patch-smart-router"
 LOG_FILE = LOG_DIR / "decisions.jsonl"
 
-CODEX_BINARY = "codex"
+DEFAULT_CODEX_REAL_BINARY = Path.home() / ".local" / "bin" / "codex-real"
+CODEX_BINARY = os.environ.get("CODEX_REAL_BINARY", str(DEFAULT_CODEX_REAL_BINARY))

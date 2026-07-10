@@ -45,7 +45,15 @@ An optional local wrapper can be used for daily work:
 codex-smart --explain "audit repo for secrets"
 ```
 
-Do not overwrite or replace the official `codex` binary. `smart-codex` and `codex-smart` are wrappers around official Codex CLI mechanisms.
+For local patched-Codex workflow, `$HOME/.local/bin/codex` may be a router wrapper that delegates prompt tasks to `smart-codex`. The original Codex entry point is preserved as `$HOME/.local/bin/codex-real`, and the router uses `codex-real` internally for `--execute`.
+
+```bash
+codex --explain "fix frontend bug"
+codex --execute "safe small task"
+codex-real --help
+```
+
+Do not delete or mutate the official Codex package. The local `codex` wrapper is only a PATH-level router entry point.
 
 For tests, install pytest if it is not already available:
 
@@ -106,6 +114,7 @@ The main eval file is `rules/eval_set_002.jsonl`. Add one JSON object per line w
 - `smart-codex` never uses `shell=True`.
 - Commands are built as argument lists.
 - Prompts are passed as one argument.
+- Local `codex` wrapper execution calls the preserved `codex-real` entry point to avoid recursion.
 - V0 rejects `danger-full-access`.
 - Risk levels are `low`, `medium`, `high`, and `critical`.
 - High-risk and critical-risk routes use `read-only` sandbox and `on-request` approval.

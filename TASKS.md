@@ -37,6 +37,7 @@ Purpose: safely route Codex tasks to the appropriate local Codex CLI profile, mo
 - [x] Keep model placeholders instead of inventing model names
 - [x] Verify local `smart-codex` command usage
 - [x] Document optional `codex-smart` wrapper without replacing the official `codex` binary
+- [x] Support local patched `codex` wrapper with preserved `codex-real` execution path
 
 ## Postponed V1 Items
 
