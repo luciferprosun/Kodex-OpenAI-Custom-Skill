@@ -1,12 +1,21 @@
-# Codex Patch Smart Router
+# Kodex OpenAI Custom Skill
 
-Codex Patch Smart Router is a safe local router for Codex that detects prompt type, task weight, complexity, and risk, then selects the appropriate Codex model, profile, sandbox, and settings before launching a Codex task.
+**Independent community project for OpenAI Codex. Not affiliated with, maintained by, or endorsed by OpenAI.**
 
-This project builds a safe local Python CLI wrapper named `smart-codex` around the official `codex` CLI. V0.2 classifies a prompt with a deterministic Knowledge Library, estimates risk and complexity, scores action danger independently, selects a conservative profile, explains the route, builds the planned Codex command, and logs only privacy-safe metadata.
+Kodex OpenAI Custom Skill combines a Smart Prompt Check, Task Router, and Model Configuration Selector for Codex repository work. Its deterministic Router Core classifies task weight, category, complexity, risk, action danger, context, and evidence requirements, then recommends a conservative profile, sandbox, and approval policy.
+
+The current repository-local Codex custom skill is advisory: it invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. It does not automatically change the active model, profile, sandbox, or approval policy. Project-local lifecycle hooks are planned for Phase 5 to add deterministic pre-execution gates within their officially supported coverage.
+
+The standalone `smart-codex` CLI remains available for explicit dry-run routing and approved launch workflows.
+
+The internal Python package, import paths, rules, and standalone commands intentionally retain their Codex Patch Smart Router identifiers for compatibility.
 
 ## What It Is
 
 - A deterministic local router for Codex CLI usage.
+- A repository-local Codex custom skill under `.agents/skills/`.
+- A Smart Prompt Check and Task Router for repository work.
+- A Model Configuration Selector that recommends settings without claiming they were applied.
 - A dry-run-first safety wrapper.
 - A profile selector for task categories such as coding, research, writing, math, security, and repo operations.
 - A JSON-backed Knowledge Library in `rules/` for prompt weights, hard safety triggers, action danger, complexity, context, evidence, tie breakers, and profile policy.
@@ -24,6 +33,21 @@ This project builds a safe local Python CLI wrapper named `smart-codex` around t
 - Not an AIOA, AOIA-Core, LSC, grant, or website portal integration.
 - Not a system that stores private prompts or touches secrets.
 - Not an OpenAI internal patch.
+- Not an official OpenAI project or an OpenAI-endorsed integration.
+
+## Codex Custom Skill
+
+Start Codex from the repository root. The skill can be invoked explicitly with:
+
+```text
+$codex-patch-smart-router Analyze only: fix a frontend bug and check for exposed API keys.
+```
+
+Implicit selection is model-selected and advisory, not a guaranteed security interceptor. The deterministic adapter reads the complete task through standard input and never calls the standalone launcher:
+
+```bash
+./.venv/bin/python .agents/skills/codex-patch-smart-router/scripts/route_prompt.py --stdin
+```
 
 ## Installation
 
@@ -39,21 +63,13 @@ After local installation, use the router command directly:
 smart-codex --explain "fix frontend bug"
 ```
 
-An optional local wrapper can be used for daily work:
+An optional standalone command can be used for daily work:
 
 ```bash
 codex-smart --explain "audit repo for secrets"
 ```
 
-For local patched-Codex workflow, `$HOME/.local/bin/codex` may be a router wrapper that delegates prompt tasks to `smart-codex`. The original Codex entry point is preserved as `$HOME/.local/bin/codex-real`, and the router uses `codex-real` internally for `--execute`.
-
-```bash
-codex --explain "fix frontend bug"
-codex --execute "safe small task"
-codex-real --help
-```
-
-Do not delete or mutate the official Codex package. The local `codex` wrapper is only a PATH-level router entry point.
+Do not replace or mutate the official `codex` executable.
 
 For tests, install pytest if it is not already available:
 

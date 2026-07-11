@@ -2,6 +2,11 @@
 
 Phase 1 ends with documentation only. Every later phase must start from a clean worktree, run the existing suite, and use a separate commit. No phase may rename or replace the real `codex` command.
 
+Checkpoint status:
+
+- Phase 4: **COMPLETE**
+- Phase 5: **NEXT**
+
 ## Phase 2: Skill scaffold
 
 Status: implemented and validated on 2026-07-11 on `feature/custom-skill-v0-1`.
