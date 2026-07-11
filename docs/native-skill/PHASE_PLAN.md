@@ -52,10 +52,21 @@ Revert the Phase 2 commit or remove only the two repository-local skill files. R
 
 ## Phase 3: Skill adapter implementation
 
+Status: implemented and validated on 2026-07-11 on `feature/custom-skill-adapter-v0-1`.
+
+Validation evidence:
+
+- The adapter reads the complete prompt from standard input and passes it to the existing `smart_codex.router.route_prompt` API as one Python string.
+- Success output uses the stable advisory JSON schema `0.1.0`; input and configuration errors fail closed with sanitized JSON and exit status 2.
+- Privacy, shell-metacharacter, configuration-error, and no-launcher tests passed.
+- `/skills` continued to discover the repository-local skill, and three explicit analysis-only invocations used the adapter without performing the requested tasks.
+- The full suite completed with 83 tests, including both eval sets and hard-safety override coverage.
+- No Router Core, hook, plugin, marketplace, global Codex configuration, or Codex binary change was made.
+
 ### Files changed
 
 - `.agents/skills/codex-patch-smart-router/scripts/route_prompt.py`
-- `tests/test_skill_adapter.py`
+- `tests/test_custom_skill_adapter.py`
 - minimal updates to `SKILL.md` and `routing-policy.md` for the settled input/output contract
 
 Do not alter the Router Core unless a separately reviewed defect is proven. Do not add hooks.
@@ -63,10 +74,10 @@ Do not alter the Router Core unless a separately reviewed defect is proven. Do n
 ### Acceptance criteria
 
 - Adapter imports or safely invokes `smart_codex.router.route_prompt` from the repository.
-- Prompt is passed as one string through structured stdin or one argv element.
+- Prompt is read from standard input and passed as one string; it is never placed in process arguments or a temporary file.
 - Adapter contains no scoring terms, profile map, hard override, or duplicate rules.
-- Output is stable JSON with bounded routing fields and an explicit `advisory: true` marker for settings that cannot be applied natively.
-- `ConfigError` returns a sanitized `CONFIG_ERROR` and no launch/execution instruction.
+- Output is stable JSON with bounded routing fields and a documented advisory-only contract.
+- `ConfigError` returns sanitized `config_error` JSON and no launch/execution instruction.
 - Adapter never imports or invokes `launcher.py` and cannot honor `--execute`.
 - No raw prompt is logged or returned in decision metadata.
 
@@ -91,7 +102,7 @@ Do not alter the Router Core unless a separately reviewed defect is proven. Do n
 
 Revert the Phase 3 commit. The instruction-only Phase 2 skill remains usable, or revert Phase 2 as well for complete removal.
 
-## Phase 4: Skill tests
+## Phase 4: Implicit invocation and trigger-quality evaluation
 
 ### Files changed
 
@@ -105,9 +116,9 @@ No hook or plugin file is created.
 
 - `/skills` shows exactly one `codex-patch-smart-router` entry in a new repository session.
 - `$codex-patch-smart-router` invokes the expected workflow.
-- Positive prompts activate the skill explicitly and produce core-parity decisions.
+- Positive prompts activate the skill implicitly at an acceptable rate and produce core-parity decisions.
 - Negative prompts demonstrate that unrelated work does not need the skill.
-- Implicit activation, if enabled, is conservative and traceable to `description`.
+- Implicit activation is conservative and traceable to `description`.
 - Skill changes are detected automatically or after the documented restart fallback.
 - No user/global skill or config file is modified.
 

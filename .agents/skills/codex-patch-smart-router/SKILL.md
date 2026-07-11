@@ -30,17 +30,40 @@ Do not use it merely to rewrite a harmless sentence unless the user explicitly r
 
 ## Workflow
 
-1. Inspect the task without executing it. When the user says "analyze only" or "without executing," do not call tools, run commands, or read files; classify only the supplied task text using this loaded skill.
-2. Identify the task category, risk level, complexity level, action danger, repository impact, evidence requirement, context requirement, and confidence level. Use one existing category label: email, simple_text, literary, normal_coding, complex_coding, architecture, math_theory, security_audit, repo_operations, research, grant_work, unknown, debugging, testing, dependency_management, release_management, documentation, data_analysis, legal_admin, financial_admin, system_admin, incident_response, secret_handling, or prompt_engineering. Do not invent a blended category label.
-3. Use exactly one existing action-danger label: read_only_analysis, write_local_files, run_tests, git_operations, network_access, dependency_install, database_operation, deployment_operation, destructive_operation, or secret_touching_operation.
-4. Apply hard safety precedence to secrets and credentials, destructive filesystem operations, force push or history rewrite, production deployment or publishing, destructive database operations, privileged system operations, and pipe-to-shell execution.
-5. For high or critical risk, recommend the security profile, a read-only sandbox, on-request approval, and explicit human confirmation.
-6. For low or medium risk, recommend the appropriate existing profile: fast, standard, deep, math, security, literary, research, or repo.
-7. State the recommendation before implementation.
-8. Never claim that the skill has already changed the active model, profile, sandbox, or approval policy.
-9. Never execute automatically.
-10. Never request or print secret values.
-11. Treat any router configuration failure as fail-closed and stop before implementation.
+1. Inspect the supplied task without executing the underlying request.
+2. Invoke the deterministic adapter with the complete task text through standard input.
+3. Read only the adapter's JSON result; do not reproduce routing rules in the skill.
+4. Render the routing recommendation before planning or implementation.
+5. Stop on adapter errors or confirmation-required results.
+6. Continue only when permitted by the decision behavior below and by the current Codex session.
+
+## Deterministic adapter
+
+For an explicitly invoked routing task, use:
+
+```text
+python .agents/skills/codex-patch-smart-router/scripts/route_prompt.py --stdin
+```
+
+When the repository-local `.venv/bin/python` exists, use it as the interpreter for the same interface:
+
+```text
+./.venv/bin/python .agents/skills/codex-patch-smart-router/scripts/route_prompt.py --stdin
+```
+
+Do not install Python or create an alias when the bare `python` command is unavailable.
+
+Pass the complete task text through standard input as one UTF-8 string. Do not place it in shell arguments, split it into words, pipe it through a helper command, or write it to a temporary file. Read the returned JSON and render the `SMART ROUTER DECISION` block from its fields.
+
+The adapter is advisory only. It does not launch Codex, execute the task, or change the active model, profile, sandbox, or approval policy.
+
+Apply this decision behavior in order:
+
+1. If `status != ok`, show the sanitized error and stop; do not continue the task.
+2. If `requires_confirmation == true`, show the routing block and stop for explicit human confirmation; do not continue the task.
+3. If the user's request says "analyze only" or "without executing," show the routing block and stop.
+4. Otherwise, show the routing block and continue only within the current Codex session's already-granted permissions.
+5. Never claim that recommended settings were applied.
 
 ## Required output
 
@@ -52,10 +75,9 @@ Category: <category>
 Risk: <low | medium | high | critical>
 Complexity: <low | medium | high>
 Action danger: <action danger>
-Repository impact: <impact>
 Evidence requirement: <requirement>
 Context requirement: <requirement>
-Confidence: <level or score>
+Confidence: <score>
 Recommended profile: <fast | standard | deep | math | security | literary | research | repo>
 Recommended sandbox: <read-only | workspace-write>
 Recommended approval: <on-request>
@@ -63,7 +85,7 @@ Confirmation required: <yes | no>
 Application status: advisory only; current Codex settings are unchanged
 ```
 
-If the user requested "analyze only" or "without executing," stop after the routing block and one brief safety note; do not perform the underlying task. Otherwise, continue only within the permissions already available in the current Codex session.
+Do not perform the underlying task when the decision behavior requires a stop.
 
 ## Safety invariants
 
@@ -80,4 +102,4 @@ If the user requested "analyze only" or "without executing," stop after the rout
 
 ## Reference
 
-Read [references/routing-policy.md](references/routing-policy.md) only when detailed category, precedence, or profile guidance is needed and the user has not requested a tool-free analysis. Keep the executable Knowledge Library in the repository root as the source of truth; do not copy it into this skill.
+Read [references/routing-policy.md](references/routing-policy.md) only when detailed category, precedence, profile, or adapter-contract guidance is needed. Keep the executable Knowledge Library in the repository root as the source of truth; do not copy it into this skill.

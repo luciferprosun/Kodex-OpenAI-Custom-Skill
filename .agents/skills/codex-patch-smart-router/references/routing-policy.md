@@ -81,11 +81,54 @@ Examples:
 
 Apply the same distinction to force push, deployment, publishing, database modification, permissions, and secret handling.
 
+## Adapter contract
+
+Run the repository-local adapter with:
+
+```text
+python .agents/skills/codex-patch-smart-router/scripts/route_prompt.py --stdin
+```
+
+Use `./.venv/bin/python` in place of `python` when that repository-local interpreter exists. Do not install an interpreter or create a shell alias for adapter execution.
+
+Send the complete prompt as one UTF-8 string through standard input until EOF. Do not put the prompt in process arguments, split it for a shell, pipe it through another command, or store it in a temporary file.
+
+Successful output uses schema version `0.1.0`, status `ok`, and source `codex-patch-smart-router-core`. The stable success fields are:
+
+- `prompt_hash`;
+- `category`;
+- `risk_level`;
+- `complexity_level`;
+- `action_danger`;
+- `recommended_profile`;
+- `recommended_sandbox`;
+- `recommended_approval`;
+- `evidence_requirement`;
+- `context_requirement`;
+- `confidence`;
+- `mixed_categories`;
+- `requires_confirmation`;
+- `warnings`.
+
+The adapter maps these fields explicitly from the final Router Core decision. The current public decision does not expose mixed-category detail, so `mixed_categories` remains an empty list rather than triggering a second scoring pass.
+
+| Status | Exit code | Meaning |
+|---|---:|---|
+| `ok` | 0 | An advisory decision was produced. |
+| `input_error` | 2 | Input was missing, invalid, or not supplied through the supported interface. |
+| `config_error` | 2 | The Knowledge Library or Router Core configuration could not be loaded. |
+| `internal_error` | 3 | The Router Core could not produce a decision. |
+
+All error messages are static and sanitized. An error result never contains the raw prompt or an executable command.
+
+Set `requires_confirmation` when risk is high or critical, when action danger is destructive, secret-touching, deployment, or database work, or when the Router Core emits `REQUIRES_CONFIRMATION`. This flag is advisory and never means confirmation has already been given.
+
 ## Limitations
 
 - This skill does not automatically change the active model.
 - This skill does not automatically change the active profile or sandbox.
 - This skill does not automatically change the approval policy.
 - This skill does not intercept every possible Codex tool path.
-- This skill provides an advisory workflow in Phase 2.
+- This skill and its deterministic adapter are advisory only.
+- The adapter does not launch Codex or execute the requested task.
 - Lifecycle hooks and plugin packaging belong to later phases.
