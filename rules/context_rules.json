@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.2",
+  "levels": {
+    "small": {
+      "signals": [
+        "single file",
+        "in classifier.py",
+        "in router.py",
+        "one function",
+        "typo"
+      ],
+      "router_effect": {
+        "min_profile": "fast"
+      }
+    },
+    "medium": {
+      "signals": [
+        "module",
+        "stack trace",
+        "traceback",
+        "tests",
+        "readme",
+        "spec",
+        "several files"
+      ],
+      "router_effect": {
+        "min_profile": "standard",
+        "inspect_first": true
+      }
+    },
+    "large": {
+      "signals": [
+        "whole repo",
+        "all services",
+        "architecture diagram",
+        "dependency graph",
+        "entire codebase",
+        "all files"
+      ],
+      "router_effect": {
+        "min_profile": "deep",
+        "require_inspect_first": true
+      }
+    },
+    "unknown": {
+      "signals": [
+        "as discussed",
+        "like last time",
+        "do the thing",
+        "make it better"
+      ],
+      "router_effect": {
+        "warning": "context_unknown",
+        "confidence_penalty": 0.15
+      }
+    }
+  }
+}

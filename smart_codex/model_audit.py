@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 from typing import Any, Callable
 
-from .config import CODEX_BINARY, RULES_DIR
+from .config import CODEX_BINARY, PROFILES_DIR, RULES_DIR
 
 
 Runner = Callable[..., subprocess.CompletedProcess[str]]
@@ -59,7 +59,17 @@ def audit_models(
         "error": None if completed.returncode == 0 else f"codex debug models returned {completed.returncode}",
         "models": models,
         "output_path": str(output),
+        "profile_placeholders_remaining": profile_placeholders_remaining(),
     }
+
+
+def profile_placeholders_remaining(profiles_dir: Path = PROFILES_DIR) -> list[str]:
+    placeholders: list[str] = []
+    for path in sorted(profiles_dir.glob("*.config.toml")):
+        text = path.read_text(encoding="utf-8")
+        if "REPLACE_WITH_" in text:
+            placeholders.append(path.name)
+    return placeholders
 
 
 def extract_json_from_text(text: str) -> Any | None:

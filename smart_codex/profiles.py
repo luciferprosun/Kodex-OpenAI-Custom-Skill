@@ -11,7 +11,7 @@ ALLOWED_SANDBOX = {"read-only", "workspace-write", "danger-full-access"}
 ALLOWED_V0_SANDBOX = {"read-only", "workspace-write"}
 ALLOWED_VERBOSITY = {"low", "medium", "high"}
 ALLOWED_REASONING_EFFORT = {"minimal", "low", "medium", "high", "xhigh"}
-ALLOWED_APPROVAL_POLICY = {"untrusted", "on-request", "never"}
+ALLOWED_APPROVAL_POLICY = {"on-request"}
 
 AVAILABLE_PROFILES = {
     "fast",
@@ -39,6 +39,7 @@ def load_profile(profile_name: str, profiles_dir: Path = PROFILES_DIR) -> Profil
     if profile_name not in AVAILABLE_PROFILES:
         raise ValueError(f"unknown profile: {profile_name}")
 
+    validate_profile_policy_file()
     path = profiles_dir / f"{profile_name}.config.toml"
     with path.open("rb") as handle:
         data = tomllib.load(handle)
@@ -109,3 +110,8 @@ def validate_approval_override(approval_policy: str) -> None:
     if approval_policy not in ALLOWED_APPROVAL_POLICY:
         raise ValueError(f"invalid approval policy: {approval_policy}")
 
+
+def validate_profile_policy_file() -> None:
+    from .knowledge import load_rules
+
+    load_rules()

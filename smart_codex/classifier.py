@@ -344,3 +344,20 @@ def has_math_notation(prompt: str) -> bool:
     if any(character in prompt for character in math_symbols):
         return True
     return bool(re.search(r"\\[a-zA-Z]+\{", prompt))
+
+
+def classify_prompt_weighted(prompt: str) -> Classification:
+    from .knowledge import load_rules
+    from .scorer import score_categories
+
+    rules = load_rules()
+    category, scores, confidence, _confidence_level, _mixed, top_categories = score_categories(prompt, rules)
+    matched_keywords = top_categories[0].matched_terms if top_categories else []
+    warning = "low confidence route" if category == "unknown" or confidence <= 0.30 else None
+    return Classification(
+        category=category,
+        confidence=round(confidence, 4),
+        matched_keywords=matched_keywords,
+        scores=scores,
+        warning=warning,
+    )

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
+from .scorer import OverrideResult, check_hard_override as _check_hard_override
+
 
 HIGH_RISK_PATTERNS = [
     (r"\bsecrets?\b", "secret material"),
@@ -49,6 +51,15 @@ def assess_risk(prompt: str, category: str) -> RiskAssessment:
     text = re.sub(r"\s+", " ", prompt.lower()).strip()
     reasons: list[str] = []
 
+    override = check_hard_override(prompt)
+    if override is not None:
+        reasons.extend([override.reason, f"hard override: {override.group}"])
+        return RiskAssessment(
+            risk="high",
+            complexity="medium" if override.risk in {"high", "critical"} else "low",
+            reasons=dedupe(reasons),
+        )
+
     risk = "low"
     for pattern, reason in HIGH_RISK_PATTERNS:
         if re.search(pattern, text, flags=re.IGNORECASE):
@@ -86,6 +97,10 @@ def assess_risk(prompt: str, category: str) -> RiskAssessment:
     return RiskAssessment(risk=risk, complexity=complexity, reasons=dedupe(reasons))
 
 
+def check_hard_override(prompt: str) -> OverrideResult | None:
+    return _check_hard_override(prompt)
+
+
 def dedupe(items: list[str]) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
@@ -94,4 +109,3 @@ def dedupe(items: list[str]) -> list[str]:
             seen.add(item)
             result.append(item)
     return result
-

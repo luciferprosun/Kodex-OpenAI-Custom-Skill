@@ -1,0 +1,620 @@
+{
+  "schema_version": "0.2",
+  "categories": {
+    "email": {
+      "default_profile": "literary",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {
+        "email": 10,
+        "reply": 8,
+        "reply to": 8,
+        "draft email": 10,
+        "follow-up email": 12,
+        "compose mail": 9,
+        "meeting invite": 6,
+        "subject line": 7
+      },
+      "weak": {
+        "message": 4,
+        "send": 3,
+        "inbox": 4
+      },
+      "negative": {
+        "code": -5,
+        "repo": -4,
+        "terminal": -4
+      }
+    },
+    "simple_text": {
+      "default_profile": "fast",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {
+        "rephrase": 8,
+        "rewrite short": 8,
+        "shorten": 8,
+        "summarize": 7,
+        "translate": 7,
+        "spellcheck": 6
+      },
+      "weak": {
+        "text": 3,
+        "wording": 3,
+        "explain simply": 5,
+        "what is": 4
+      },
+      "negative": {
+        "function": -4,
+        "class": -4,
+        "sudo": -8
+      }
+    },
+    "literary": {
+      "default_profile": "literary",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {
+        "poem": 10,
+        "story": 8,
+        "narrative": 7,
+        "tone": 6,
+        "caption": 7,
+        "social post": 8
+      },
+      "weak": {
+        "creative": 4,
+        "style": 4,
+        "rewrite": 3
+      },
+      "negative": {
+        "test": -4,
+        "deploy": -8,
+        "json": -4,
+        "regex": -4
+      }
+    },
+    "normal_coding": {
+      "default_profile": "standard",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {
+        "off-by-one": 8,
+        "fix bug": 8,
+        "frontend bug": 8,
+        "settings page": 6,
+        "onclick handler": 8,
+        "malformed json": 7,
+        "add validation": 7,
+        "helper function": 8,
+        "backend": 7,
+        "add function": 7,
+        "implement function": 7,
+        "write script": 6,
+        "api endpoint": 6
+      },
+      "weak": {
+        "code": 3,
+        "script": 3,
+        "function": 3,
+        "class": 3,
+        "ui": 3,
+        "test": 2
+      },
+      "negative": {
+        "architecture": -6,
+        "whole repo": -6,
+        "proof": -6,
+        "secret": -10
+      }
+    },
+    "complex_coding": {
+      "default_profile": "deep",
+      "risk": "medium",
+      "complexity": "high",
+      "strong": {
+        "refactor": 8,
+        "multi-file": 10,
+        "refactor module": 9,
+        "payment module": 6,
+        "order module": 6,
+        "caching layer": 9,
+        "api gateway": 8,
+        "downstream services": 8,
+        "implement feature across": 10,
+        "integrate": 7,
+        "migration": 8,
+        "database migration": 9
+      },
+      "weak": {
+        "large change": 4,
+        "overhaul": 5,
+        "module": 3,
+        "dependency": 3
+      },
+      "negative": {
+        "one line": -6,
+        "typo": -8,
+        "poem": -8
+      }
+    },
+    "architecture": {
+      "default_profile": "deep",
+      "risk": "medium",
+      "complexity": "high",
+      "strong": {
+        "system design": 10,
+        "architecture": 9,
+        "redesign the module": 10,
+        "module structure": 8,
+        "redesign module boundaries": 10,
+        "design plan": 8,
+        "service boundaries": 8,
+        "module boundary": 8,
+        "adr": 8,
+        "diagram": 6
+      },
+      "weak": {
+        "structure": 4,
+        "pattern": 4,
+        "roadmap": 3
+      },
+      "negative": {
+        "typo": -8,
+        "css": -5,
+        "small copy": -5
+      }
+    },
+    "math_theory": {
+      "default_profile": "math",
+      "risk": "low",
+      "complexity": "high",
+      "strong": {
+        "derive": 8,
+        "proof": 10,
+        "theorem": 10,
+        "equation": 8,
+        "tensor": 9,
+        "neutrino": 10,
+        "lsc": 10,
+        "gallium anomaly": 9,
+        "anisotropy": 8
+      },
+      "weak": {
+        "derivation": 5,
+        "calculate": 4,
+        "formula": 4,
+        "matrix": 4
+      },
+      "negative": {
+        "dom": -5,
+        "frontend": -5,
+        "email": -8
+      }
+    },
+    "security_audit": {
+      "default_profile": "security",
+      "risk": "high",
+      "complexity": "medium",
+      "strong": {
+        "secret": 10,
+        "api key": 10,
+        "token": 10,
+        "private key": 10,
+        "auth": 8,
+        "oauth": 8,
+        "sandbox": 8,
+        "malware": 10,
+        "exploit": 10,
+        "vulnerability": 9,
+        "ssh key": 10,
+        "password": 9,
+        "cve": 8
+      },
+      "weak": {
+        "api keys": 6,
+        "hardcoded": 5,
+        "leakage": 6,
+        "permissions": 5,
+        "login": 4,
+        "access": 4,
+        "credential": 6,
+        "secure": 3
+      },
+      "negative": {
+        "poem": -8,
+        "color": -4,
+        "layout": -4
+      }
+    },
+    "repo_operations": {
+      "default_profile": "repo",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {
+        "git commit": 8,
+        "commit": 7,
+        "branch": 6,
+        "new branch": 8,
+        "open a pull request": 8,
+        "open pull requests": 8,
+        "list all open pull requests": 10,
+        "merge": 7,
+        "rebase": 7,
+        "squash": 7,
+        "pull request": 6,
+        "tag": 5,
+        "push": 5
+      },
+      "weak": {
+        "git": 4,
+        "pr": 3,
+        "remote": 3
+      },
+      "negative": {
+        "poem": -6,
+        "text only": -4,
+        "rm -rf": -10
+      }
+    },
+    "research": {
+      "default_profile": "research",
+      "risk": "low",
+      "complexity": "medium",
+      "strong": {
+        "research": 8,
+        "current landscape": 9,
+        "compare options": 8,
+        "survey": 7,
+        "landscape": 7,
+        "literature": 7,
+        "literature review": 8,
+        "study": 5
+      },
+      "weak": {
+        "investigate": 5,
+        "sources": 5,
+        "find": 3,
+        "search": 3
+      },
+      "negative": {
+        "compile": -4,
+        "execute": -6,
+        "fix typo": -4
+      }
+    },
+    "grant_work": {
+      "default_profile": "research",
+      "risk": "low",
+      "complexity": "medium",
+      "strong": {
+        "eligibility criteria": 8,
+        "grant": 10,
+        "funding": 9,
+        "nlnet": 10,
+        "proposal": 8,
+        "budget justification": 9,
+        "call for proposals": 10
+      },
+      "weak": {
+        "application": 5,
+        "reviewer": 4,
+        "submission": 4,
+        "foundation": 5
+      },
+      "negative": {
+        "bash": -5,
+        "shell": -8,
+        "debug": -4
+      }
+    },
+    "unknown": {
+      "default_profile": "standard",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {},
+      "weak": {},
+      "negative": {}
+    },
+    "debugging": {
+      "default_profile": "standard",
+      "risk": "low",
+      "complexity": "medium",
+      "strong": {
+        "stack trace": 9,
+        "traceback": 9,
+        "null pointer": 8,
+        "segfault": 8,
+        "why does this fail": 7,
+        "crash": 7
+      },
+      "weak": {
+        "error": 4,
+        "broken": 3,
+        "debug": 5,
+        "fails when": 5
+      },
+      "negative": {
+        "new feature": -6,
+        "poem": -8
+      }
+    },
+    "testing": {
+      "default_profile": "standard",
+      "risk": "low",
+      "complexity": "medium",
+      "strong": {
+        "unit test": 8,
+        "pytest": 8,
+        "test coverage": 7,
+        "integration test": 7,
+        "e2e": 6
+      },
+      "weak": {
+        "test": 3,
+        "assert": 3,
+        "fixture": 4
+      },
+      "negative": {
+        "delete database": -10,
+        "deploy": -8
+      }
+    },
+    "dependency_management": {
+      "default_profile": "repo",
+      "risk": "medium",
+      "complexity": "medium",
+      "strong": {
+        "bump the requests library": 10,
+        "add a new dependency": 10,
+        "jwt parsing": 8,
+        "npm audit": 8,
+        "fix vulnerabilities": 7,
+        "pip install": 8,
+        "npm install": 8,
+        "requirements.txt": 7,
+        "package.json": 7,
+        "bump dependency": 8,
+        "update dependencies": 8,
+        "cve in": 8
+      },
+      "weak": {
+        "package": 4,
+        "library": 3,
+        "lockfile": 4,
+        "version bump": 4
+      },
+      "negative": {
+        "abstract": -4,
+        "theory": -4
+      }
+    },
+    "release_management": {
+      "default_profile": "repo",
+      "risk": "medium",
+      "complexity": "low",
+      "strong": {
+        "cut a new release": 10,
+        "bump the version number": 8,
+        "generate a changelog": 7,
+        "cut release": 9,
+        "publish to pypi": 10,
+        "npm publish": 10,
+        "tag version": 8,
+        "release publishing": 10,
+        "production release": 10,
+        "deploy to production": 10
+      },
+      "weak": {
+        "release": 5,
+        "version": 3,
+        "changelog": 4,
+        "ci/cd": 4
+      },
+      "negative": {
+        "draft outline": -4
+      }
+    },
+    "documentation": {
+      "default_profile": "fast",
+      "risk": "low",
+      "complexity": "low",
+      "strong": {
+        "readme": 8,
+        "docstring": 8,
+        "usage guide": 7,
+        "api docs": 7,
+        "documentation": 7
+      },
+      "weak": {
+        "document": 4,
+        "comment": 3,
+        "explain code": 4
+      },
+      "negative": {
+        "execute": -8,
+        "run": -5
+      }
+    },
+    "data_analysis": {
+      "default_profile": "standard",
+      "risk": "low",
+      "complexity": "medium",
+      "strong": {
+        "parse this csv": 8,
+        "monthly averages": 7,
+        "analyze this dataset": 8,
+        "outliers": 6,
+        "analyze csv": 8,
+        "compute distribution": 7,
+        "correlation matrix": 8,
+        "confusion matrix": 8,
+        "pandas": 6,
+        "dataset": 5
+      },
+      "weak": {
+        "data": 3,
+        "plot": 4,
+        "statistics": 4,
+        "eval_set": 3
+      },
+      "negative": {
+        "delete data": -10,
+        "personal data": -8
+      }
+    },
+    "legal_admin": {
+      "default_profile": "research",
+      "risk": "medium",
+      "complexity": "medium",
+      "strong": {
+        "license": 8,
+        "gdpr": 9,
+        "compliance": 8,
+        "contract clause": 8,
+        "privacy policy": 8,
+        "copyright": 6
+      },
+      "weak": {
+        "legal": 4,
+        "terms of service": 5,
+        "tos": 4
+      },
+      "negative": {
+        "execute": -6,
+        "run command": -6
+      }
+    },
+    "financial_admin": {
+      "default_profile": "security",
+      "risk": "medium",
+      "complexity": "low",
+      "strong": {
+        "budget justification": 8,
+        "infrastructure costs": 8,
+        "cloud hosting bill": 8,
+        "invoice line items": 8,
+        "trading bot": 5,
+        "payment": 9,
+        "billing": 8,
+        "invoice": 7,
+        "refund": 9,
+        "stripe": 9,
+        "charge card": 10
+      },
+      "weak": {
+        "cost estimate": 4,
+        "budget": 4,
+        "financial": 4
+      },
+      "negative": {
+        "poem": -8
+      }
+    },
+    "system_admin": {
+      "default_profile": "security",
+      "risk": "high",
+      "complexity": "low",
+      "strong": {
+        "system user": 8,
+        "restrict its permissions": 8,
+        "outbound traffic": 7,
+        "docker daemon": 7,
+        "sudo": 10,
+        "chmod": 9,
+        "chown": 9,
+        "systemctl": 8,
+        "firewall rule": 8,
+        "useradd": 8,
+        "cron": 6
+      },
+      "weak": {
+        "service": 4,
+        "daemon": 4,
+        "server": 3,
+        "log rotation": 4
+      },
+      "negative": {}
+    },
+    "incident_response": {
+      "default_profile": "security",
+      "risk": "high",
+      "complexity": "medium",
+      "strong": {
+        "production is down": 10,
+        "deploy broke prod": 10,
+        "rollback plan": 8,
+        "incident": 9,
+        "breach": 10,
+        "prod is down": 10,
+        "outage": 9,
+        "rollback now": 9,
+        "malware": 10,
+        "leaked token": 10
+      },
+      "weak": {
+        "urgent": 4,
+        "alert": 4,
+        "forensics": 6,
+        "mitigation": 5
+      },
+      "negative": {
+        "feature": -4,
+        "roadmap": -4
+      }
+    },
+    "secret_handling": {
+      "default_profile": "security",
+      "risk": "critical",
+      "complexity": "low",
+      "strong": {
+        "generate a new api key": 10,
+        "rotate key": 10,
+        "generate token": 10,
+        "store secret": 10,
+        "add .env": 10,
+        "private key": 10,
+        "github token": 10,
+        "ssh key": 10,
+        "password": 9
+      },
+      "weak": {
+        "credential value": 6,
+        "secret value": 6,
+        "vault": 5
+      },
+      "negative": {
+        "example key": -6,
+        "placeholder": -5,
+        "fake token": -6
+      }
+    },
+    "prompt_engineering": {
+      "default_profile": "deep",
+      "risk": "low",
+      "complexity": "high",
+      "strong": {
+        "risk-scoring taxonomy": 9,
+        "smart router": 7,
+        "json schema": 8,
+        "routing rules file": 9,
+        "eval case": 8,
+        "eval_set_002": 8,
+        "category_weights.json": 9,
+        "scoring": 6,
+        "prompt taxonomy": 9,
+        "classification prompt": 8,
+        "routing rules": 9,
+        "scoring table": 8,
+        "system message": 7,
+        "few-shot": 6
+      },
+      "weak": {
+        "prompt design": 5,
+        "eval prompt": 5,
+        "reduce false positives": 5
+      },
+      "negative": {}
+    }
+  }
+}

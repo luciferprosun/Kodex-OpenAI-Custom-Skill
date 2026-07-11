@@ -1,0 +1,53 @@
+{
+  "schema_version": "0.2",
+  "high": [
+    "refactor across",
+    "multiple modules",
+    "architecture",
+    "system design",
+    "proof",
+    "tensor",
+    "whole repo",
+    "all services",
+    "migration",
+    "dependency graph",
+    "whole production system",
+    "commit history",
+    "all production services"
+  ],
+  "medium": [
+    "rewrite this scene",
+    "noir detective tone",
+    "malformed json",
+    "add validation",
+    "multi-file",
+    "integrate",
+    "several files",
+    "stack trace",
+    "traceback",
+    "database",
+    "database migration",
+    "drop table",
+    "drop .*table",
+    "production",
+    "publish",
+    "merge",
+    "tag",
+    "force push",
+    "vulnerabilities",
+    "npm audit",
+    "eval case",
+    "personal data",
+    "gdpr",
+    "grant",
+    "proposal"
+  ],
+  "low": [
+    "single line",
+    "typo",
+    "small change",
+    "rename variable",
+    "shorten",
+    "rephrase"
+  ]
+}

@@ -2,7 +2,7 @@
 
 Project: Codex Patch Smart Router.
 
-V0 is a safe local wrapper around official Codex CLI mechanisms.
+V0.2 is a safe local wrapper around official Codex CLI mechanisms.
 
 Security boundaries:
 
@@ -14,10 +14,14 @@ Security boundaries:
 - Do not use `shell=True`.
 - Do not use `danger-full-access` in V0 runtime profiles.
 - Do not run destructive execution automatically.
+- Do not let routing imply `execute now`; only `launcher.py` honors execution, and only when `--execute` is explicitly passed.
+- Do not delete or mutate the official Codex package; if the local `codex` wrapper is enabled, preserve the original entry point as `codex-real`.
 - Security profiles default to `read-only`.
 - High-risk actions require human confirmation through Codex approval behavior.
 
-High-risk prompts containing secrets, credentials, sandbox, malware, exploit, destructive file operations, or permission changes route to the `security` profile with:
+Hard safety overrides run before normal category scoring. High-risk and critical-risk prompts containing secrets, credentials, force push, production deployment, release publishing, sandbox escape, malware, exploit, destructive file/database operations, pipe-to-shell patterns, or permission changes route conservatively with:
 
 - `sandbox_mode = "read-only"`
 - `approval_policy = "on-request"`
+
+Knowledge Library config errors are fail-closed `CONFIG_ERROR` states. A malformed rule file must not silently fall back to a weaker route or launch Codex.

@@ -1,0 +1,116 @@
+{
+  "schema_version": "0.2",
+  "profiles": {
+    "fast": {
+      "task_categories": [
+        "simple_text",
+        "documentation"
+      ],
+      "sandbox_mode": "read-only",
+      "model_reasoning_effort": "minimal",
+      "model_verbosity": "low",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_FAST_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "standard": {
+      "task_categories": [
+        "normal_coding",
+        "debugging",
+        "testing",
+        "dependency_management",
+        "data_analysis",
+        "unknown"
+      ],
+      "sandbox_mode": "workspace-write",
+      "model_reasoning_effort": "medium",
+      "model_verbosity": "medium",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_STANDARD_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "deep": {
+      "task_categories": [
+        "complex_coding",
+        "architecture",
+        "prompt_engineering"
+      ],
+      "sandbox_mode": "workspace-write",
+      "model_reasoning_effort": "high",
+      "model_verbosity": "high",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_DEEP_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "math": {
+      "task_categories": [
+        "math_theory"
+      ],
+      "sandbox_mode": "read-only",
+      "model_reasoning_effort": "high",
+      "model_verbosity": "high",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_MATH_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "security": {
+      "task_categories": [
+        "security_audit",
+        "secret_handling",
+        "system_admin",
+        "incident_response",
+        "financial_admin"
+      ],
+      "sandbox_mode": "read-only",
+      "model_reasoning_effort": "high",
+      "model_verbosity": "high",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_SECURITY_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "literary": {
+      "task_categories": [
+        "literary",
+        "email"
+      ],
+      "sandbox_mode": "read-only",
+      "model_reasoning_effort": "minimal",
+      "model_verbosity": "medium",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_LITERARY_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "research": {
+      "task_categories": [
+        "research",
+        "grant_work",
+        "legal_admin"
+      ],
+      "sandbox_mode": "read-only",
+      "model_reasoning_effort": "high",
+      "model_verbosity": "high",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_RESEARCH_MODEL_FROM_CODEX_DEBUG_MODELS"
+    },
+    "repo": {
+      "task_categories": [
+        "repo_operations",
+        "release_management",
+        "dependency_management"
+      ],
+      "sandbox_mode": "workspace-write",
+      "model_reasoning_effort": "medium",
+      "model_verbosity": "medium",
+      "approval_policy": "on-request",
+      "model": "REPLACE_WITH_REPO_MODEL_FROM_CODEX_DEBUG_MODELS"
+    }
+  },
+  "forbidden_v0": {
+    "sandbox_mode": [
+      "danger-full-access"
+    ],
+    "approval_policy": [
+      "auto",
+      "never"
+    ],
+    "model_names": [
+      "gpt-4o-mini",
+      "fake-model",
+      "example-model"
+    ]
+  }
+}
