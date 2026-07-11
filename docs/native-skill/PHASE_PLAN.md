@@ -4,6 +4,17 @@ Phase 1 ends with documentation only. Every later phase must start from a clean 
 
 ## Phase 2: Skill scaffold
 
+Status: implemented and validated on 2026-07-11 on `feature/custom-skill-v0-1`.
+
+Validation evidence:
+
+- Official skill validator accepted the frontmatter and directory.
+- `skills/list` reported the skill as enabled with repository scope.
+- The TUI `/skills` browser displayed `codex-patch-smart-router` without a restart.
+- Five explicit analysis-only invocations produced the expected advisory routes without performing the underlying tasks.
+- The scaffold tests passed and the full suite completed with 71 tests.
+- No script, hook, plugin, marketplace, global configuration, or Codex binary change was made.
+
 ### Files changed
 
 - `.agents/skills/codex-patch-smart-router/SKILL.md`
