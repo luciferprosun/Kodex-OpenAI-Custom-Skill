@@ -1,0 +1,55 @@
+# Official Source Matrix
+
+Checked on 2026-07-11 unless another version/date is shown. "High" means the current release documentation and/or local CLI directly establishes the claim. "Medium" means the architecture must still verify behavior against the installed runtime.
+
+| Claim | Official source | Version/date checked | Confidence | Implementation consequence |
+|---|---|---|---|---|
+| Local Codex version is 0.144.1. | Local `codex --version` | `codex-cli 0.144.1`, 2026-07-11 | High | All local acceptance tests target this release first. |
+| Hooks and plugins are stable and enabled in this installation. | Local `codex features list` | 0.144.1, 2026-07-11 | High | No feature flag mutation is planned. |
+| Running `codex features` without a subcommand prints help. | Local `codex features` | 0.144.1, 2026-07-11 | High | Use `codex features list` in future diagnostics. |
+| A skill requires a directory with `SKILL.md`; frontmatter requires `name` and `description`. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Phase 2 creates only the minimum valid scaffold first. |
+| `scripts/`, `references/`, `assets/`, and `agents/openai.yaml` are optional skill content. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Keep only files with a demonstrated runtime purpose. |
+| Repository skills are discovered from `.agents/skills` from `cwd` through repository root. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Use `.agents/skills/codex-patch-smart-router/`. |
+| User-authored global skills live under `$HOME/.agents/skills`. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Do not install under user scope during repo-local tests. |
+| Skills can be selected via `/skills` or `$skill-name`, and implicitly by `description`. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Test explicit invocation before implicit routing. |
+| Skill loading uses progressive disclosure. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Keep `SKILL.md` focused and load one reference only when needed. |
+| Skill file changes are auto-detected; restart if an update is absent. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Phase 4 uses a new session as a deterministic fallback. |
+| `agents/openai.yaml` controls UI metadata, invocation policy, and declared tool dependencies. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Defer it; it cannot provide model/profile/sandbox switching. |
+| Skill scripts are optional; instructions are preferred unless deterministic behavior is needed. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | One thin deterministic Python adapter is justified. |
+| Hooks are discovered from `hooks.json`, inline config, and enabled plugins. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Project-local tests use `.codex/hooks.json`; no global config. |
+| Project hooks require the project config layer to be trusted. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Trust is a deliberate Phase 5 manual checkpoint. |
+| Hook trust is bound to the exact definition/hash and changed hooks require review again. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Every adapter change invalidates prior trust and must be re-reviewed. |
+| Plugin hooks use the same non-managed trust review. | [Hooks](https://learn.chatgpt.com/docs/hooks), [Build plugins](https://learn.chatgpt.com/docs/build-plugins) | 2026-07-11 | High as documented; runtime test pending | Installation never implies trust. |
+| Only command hook handlers execute today; async, prompt, and agent handlers do not. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Implement synchronous Python command adapters with explicit timeouts. |
+| Every command hook receives JSON on `stdin` with session, cwd, event, model, and permission metadata. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Parse structured input; ignore `transcript_path`. |
+| `UserPromptSubmit` includes `turn_id` and `prompt`; its matcher is ignored. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Route every submitted prompt when the hook is enabled. |
+| `UserPromptSubmit` can add developer `additionalContext` or block a prompt. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | This is the native pre-prompt adapter surface. |
+| Exit 0 with no output continues; exit 2 plus stderr blocks supported blocking events. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High for documented statuses | Do not infer safe behavior for arbitrary non-zero statuses. |
+| `PreToolUse` currently covers simple Bash, `apply_patch`, and MCP calls, with incomplete `unified_exec` coverage and no WebSearch interception. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Describe it as a guardrail, not a complete enforcement boundary. |
+| `PreToolUse` can deny and can rewrite supported inputs with `updatedInput`. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High as documented; local coverage test pending | Test each exact tool path before enabling enforcement. |
+| `PermissionRequest` runs only when Codex is about to request approval. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | It cannot protect actions that require no approval. |
+| Permission decisions are allow, deny, or no decision; any deny wins. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | V0.3 uses deny/defer only and preserves normal approval. |
+| The full transcript format is not a stable hook API. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Never parse or read transcript files. |
+| Every plugin has `.codex-plugin/plugin.json`; `name` is its stable required identifier, and a minimal skill plugin points at `./skills/`. | [Build plugins](https://learn.chatgpt.com/docs/build-plugins), [official manifest reference](https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/plugin-creator/references/plugin-json-spec.md) | 2026-07-11 | High | Phase 6 creates a minimal named manifest before presentation metadata. |
+| Plugin component paths start with `./`, are root-relative, and stay inside the plugin root. | [Build plugins](https://learn.chatgpt.com/docs/build-plugins) | 2026-07-11 | High | No manifest path may reach into an external repo checkout. |
+| Default plugin hooks path is `hooks/hooks.json`; release docs describe a manifest override, while official plugin-creator instructions warn that validation may reject `hooks`. | [Hooks](https://learn.chatgpt.com/docs/hooks), [Build plugins](https://learn.chatgpt.com/docs/build-plugins), [plugin-creator instructions](https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/plugin-creator/SKILL.md) | 2026-07-11 | Medium due official-source conflict | Use the default path and omit the manifest `hooks` field until local validation proves support. |
+| Plugin hook commands receive `PLUGIN_ROOT` and writable `PLUGIN_DATA`. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Resolve packaged code from `PLUGIN_ROOT`; avoid persistent data in V0.3. |
+| Repo marketplace metadata lives at `$REPO_ROOT/.agents/plugins/marketplace.json`. | [Build plugins](https://learn.chatgpt.com/docs/build-plugins) | 2026-07-11 | High | Create only in Phase 7, after explicit installation-test approval. |
+| CLI can add/remove installed plugins and add/list/upgrade/remove marketplace sources. | Local `codex plugin add/remove/marketplace --help` | 0.144.1, 2026-07-11 | High | Use supported commands; do not hand-edit global config. |
+| Local plugin changes require refresh/restart and a new task/session for deterministic validation. | [Build plugins](https://learn.chatgpt.com/docs/build-plugins) | 2026-07-11 | High for desktop; Medium for CLI hot reload | Phase 7 starts a new CLI session and checks all slash browsers. |
+| Skills-only plugins can be publicly submitted. | [Submit plugins](https://learn.chatgpt.com/docs/submit-plugins) | 2026-07-11 | High | No MCP server is required for this product. |
+| Public submission requires a final skill tree, starter prompts, five positive and three negative tests, identity/listing/policy material, and scanning. | [Submit plugins](https://learn.chatgpt.com/docs/submit-plugins) | 2026-07-11 | High | Reserve publisher and submission work for Phase 8. |
+| A skill has no documented API to change the active model/profile/sandbox. | [Build skills](https://learn.chatgpt.com/docs/build-skills) | 2026-07-11 | High | Routing recommendations remain advisory in the normal TUI. |
+| `UserPromptSubmit` receives active model metadata but has no output field to replace model/profile/sandbox. | [Hooks](https://learn.chatgpt.com/docs/hooks) | 2026-07-11 | High | Hooks add context/block; they do not reconfigure the turn. |
+| App Server `thread/start` accepts model, approval policy, and sandbox values. | [Codex App Server](https://learn.chatgpt.com/docs/app-server) | 2026-07-11 | High | Dynamic pre-thread application requires a custom App Server client. |
+| App Server is intended for deep custom clients and exposes authentication, approvals, history, and streamed events. | [Codex App Server](https://learn.chatgpt.com/docs/app-server) | 2026-07-11 | High | Postpone its larger security/protocol surface beyond V0.3. |
+| Main-branch generated schemas may contain fields not in the installed release. | [Hooks](https://learn.chatgpt.com/docs/hooks), [openai/codex config schema](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) | 2026-07-11 | High | Release docs and local tests outrank speculative main-branch fields. |
+| Official repository issues have reported plugin-hook loading gaps in earlier releases. | [Issue 17331](https://github.com/openai/codex/issues/17331), [Issue 16430](https://github.com/openai/codex/issues/16430) | Issues reviewed 2026-07-11 | Medium/current status uncertain | Phase 6/7 must prove hook discovery on 0.144.1 before shipping. |
+| The disposable TUI could not reach slash commands without authentication. | Isolated local run with temporary `CODEX_HOME` | 0.144.1, 2026-07-11 | High | `/skills`, `/plugins`, `/hooks` remain explicit Phase 4/5/7 checks; no credentials were copied or read. |
+
+## Source handling notes
+
+- No blog, Reddit, forum summary, or third-party tutorial was used for an architecture decision.
+- Official GitHub issues are used only to identify test risks and known historical gaps.
+- The current release documentation is the behavior contract; local 0.144.1 tests must resolve any discrepancy.
+- No authentication file, `.env`, API key, token, SSH private key, or secret was opened.
