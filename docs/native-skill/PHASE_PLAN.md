@@ -104,11 +104,23 @@ Revert the Phase 3 commit. The instruction-only Phase 2 skill remains usable, or
 
 ## Phase 4: Implicit invocation and trigger-quality evaluation
 
+Status: implemented and validated on 2026-07-11 on `feature/custom-skill-implicit-eval-v0-1`.
+
+Validation evidence:
+
+- A 36-case activation dataset covers 24 expected activations, 12 expected non-activations, and 7 safety-critical cases.
+- New ephemeral Codex sessions produced a 100% positive activation rate, an 8.33% negative false-positive rate, and a 100% safety-critical activation rate.
+- The baseline description met every target, so no evidence-unsupported description change was made.
+- Explicit security and low-risk invocation regressions both used the adapter, rendered the required decision, and stopped without performing the underlying task.
+- The full suite completed with 86 tests, no prompt log was created, and the global Codex configuration fingerprint remained unchanged.
+- No Router Core, adapter, hook, plugin, marketplace, MCP, global skill, or Codex binary change was made.
+
 ### Files changed
 
-- `tests/test_skill_contract.py`
-- `tests/fixtures/skill_prompts.jsonl` only if existing eval fixtures cannot express activation expectations
-- documentation corrections discovered by runtime testing
+- `rules/skill_activation_eval_001.jsonl`
+- `tests/test_skill_activation_eval_schema.py`
+- `docs/native-skill/IMPLICIT_INVOCATION_EVAL.md`
+- this phase-plan status update
 
 No hook or plugin file is created.
 
@@ -124,11 +136,11 @@ No hook or plugin file is created.
 
 ### Tests
 
-- Full automated suite.
-- Explicit invocation matrix: benign coding, security audit, secret-touching request, destructive Git request, unknown prompt, and malformed configuration.
-- Negative activation matrix for unrelated writing/general chat.
-- New-session discovery from repository root and one nested directory.
-- Verify no prompt content appears in project logs.
+- Static JSONL schema, uniqueness, count, safety, secret-pattern, and no-explicit-hint checks.
+- A new ephemeral, read-only Codex session for each of the 36 curated activation cases.
+- Explicit invocation regressions for a secret-sensitive task and a harmless email task.
+- Existing scaffold and adapter suites plus the full 86-test repository suite.
+- Safety scans for shell prompt handling, unrestricted sandbox use, unsupported capability claims, prompt logs, and forbidden Phase 5/6 artifacts.
 
 ### Stop conditions
 
@@ -140,7 +152,7 @@ No hook or plugin file is created.
 
 ### Rollback
 
-Disable implicit invocation in a later optional `agents/openai.yaml` only if that file is justified; otherwise narrow the description. If behavior remains unreliable, revert Phase 4 corrections and keep explicit invocation only. Revert Phase 2/3 to remove the skill entirely.
+Revert the Phase 4 evaluation commit to remove the dataset, schema tests, report, and status update. The Phase 3 skill and adapter remain unchanged. Revert Phase 2/3 separately only if the repository-local skill itself must be removed.
 
 ## Phase 5: Project-local hooks
 
