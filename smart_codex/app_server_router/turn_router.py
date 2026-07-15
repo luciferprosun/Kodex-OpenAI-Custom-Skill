@@ -7,6 +7,7 @@ from typing import Any
 
 from smart_codex.router import RoutingDecision, route_prompt
 
+from .model_policy import CandidateScore
 from .policy_mapper import AppliedPolicy, PolicyError, PolicyMapper
 
 
@@ -26,6 +27,17 @@ class RoutedTurn:
     sandbox_mode: str
     approval_policy: object
     reasons: tuple[str, ...]
+    candidate_scores: tuple[CandidateScore, ...] = ()
+    rejected_candidates: dict[str, tuple[str, ...]] | None = None
+    fallback_order: tuple[str, ...] = ()
+    selection_confidence: str = "unknown"
+    switch_confidence: str = "unknown"
+    previous_model: str | None = None
+    score_margin: float = 0.0
+    switch_reason: str = "unknown"
+    selection_explanation: str = "capability_aware_live_selection"
+    drift_warnings: tuple[str, ...] = ()
+    migration_warning: str | None = None
 
 
 def _safe_original_model(value: object) -> str | None:
@@ -43,6 +55,7 @@ def _apply_collaboration_mode_overrides(
     *,
     model: str,
     effort: str,
+    test_instruction: str | None,
 ) -> None:
     """Align precedence-bearing TUI settings with top-level overrides.
 
@@ -64,6 +77,28 @@ def _apply_collaboration_mode_overrides(
         raise RoutingFailure("turn/start collaboration settings are malformed")
     settings["model"] = model
     settings["reasoning_effort"] = effort
+    if test_instruction is not None:
+        existing = settings.get("developer_instructions")
+        if existing is not None and not isinstance(existing, str):
+            raise RoutingFailure("turn/start developer instructions are malformed")
+        if not existing:
+            settings["developer_instructions"] = test_instruction
+        elif test_instruction not in existing:
+            settings["developer_instructions"] = f"{existing.rstrip()}\n\n{test_instruction}"
+
+
+def _has_supported_routed_context(params: object) -> bool:
+    if not isinstance(params, dict):
+        return False
+    if "collaborationMode" not in params or params.get("collaborationMode") is None:
+        return False
+    collaboration_mode = params.get("collaborationMode")
+    if not isinstance(collaboration_mode, dict) or not isinstance(
+        collaboration_mode.get("settings"),
+        dict,
+    ):
+        raise RoutingFailure("turn/start collaboration mode is malformed")
+    return True
 
 
 def extract_turn_input(params: object) -> tuple[str, tuple[str, ...]]:
@@ -108,19 +143,33 @@ class TurnRouter:
     def __init__(self, mapper: PolicyMapper):
         self.mapper = mapper
 
-    def route_message(self, message: object) -> RoutedTurn:
+    def route_message(
+        self,
+        message: object,
+        *,
+        previous_model: str | None = None,
+    ) -> RoutedTurn:
         if not isinstance(message, dict) or message.get("method") != "turn/start":
             raise RoutingFailure("only turn/start can be routed")
         request_id = message.get("id")
         if isinstance(request_id, bool) or not isinstance(request_id, (str, int)):
             raise RoutingFailure("turn/start request id is malformed")
-        prompt, modalities = extract_turn_input(message.get("params"))
+        raw_params = message.get("params")
+        prompt, modalities = extract_turn_input(raw_params)
+        supports_routed_context = _has_supported_routed_context(raw_params)
+        params_for_previous = raw_params if isinstance(raw_params, dict) else {}
+        original_for_policy = _safe_original_model(params_for_previous.get("model"))
+        if original_for_policy is not None and self.mapper.registry.get(original_for_policy) is None:
+            original_for_policy = None
+        effective_previous = previous_model or original_for_policy
         try:
             decision: RoutingDecision = route_prompt(prompt, dry_run=True)
             applied: AppliedPolicy = self.mapper.apply(
                 decision,
                 prompt,
                 required_modalities=modalities,
+                previous_model=effective_previous,
+                supports_routed_context=supports_routed_context,
             )
         except (PolicyError, ValueError, RuntimeError) as exc:
             raise RoutingFailure("turn/start could not be classified safely") from exc
@@ -164,6 +213,7 @@ class TurnRouter:
             params,
             model=applied.model.model,
             effort=applied.effort,
+            test_instruction=applied.test_instruction,
         )
 
         return RoutedTurn(
@@ -177,4 +227,15 @@ class TurnRouter:
             sandbox_mode=sandbox_mode,
             approval_policy=approval_policy,
             reasons=applied.reasons,
+            candidate_scores=applied.candidate_scores,
+            rejected_candidates=applied.rejected_candidates,
+            fallback_order=applied.fallback_order,
+            selection_confidence=applied.selection_confidence,
+            switch_confidence=applied.switch_confidence,
+            previous_model=applied.previous_model,
+            score_margin=applied.score_margin,
+            switch_reason=applied.switch_reason,
+            selection_explanation=applied.selection_explanation,
+            drift_warnings=applied.drift_warnings,
+            migration_warning=applied.migration_warning,
         )

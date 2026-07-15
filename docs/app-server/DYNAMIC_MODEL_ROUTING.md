@@ -170,6 +170,13 @@ The event file contained hashes and the fields described above, not the prompt
 text. This proves real rotation for that installed-version acceptance run; it
 does not remove the experimental transport warning or the version pin.
 
+Phase 5.3 repeated acceptance from Sol / `max` with exactly 12 harmless turns.
+All 12 outgoing settings were backend-accepted and matched a subsequent
+`active_settings` event, including observed Luna, Terra, Sol, and Spark
+rotation. The complete task-class table, two post-soak calibration corrections,
+and retained protective-skill stops are documented in
+[`MODEL_CALIBRATION_EVAL.md`](MODEL_CALIBRATION_EVAL.md#original-tui-12-turn-soak).
+
 ## Known limitations
 
 - WebSocket transport is experimental and unsupported.

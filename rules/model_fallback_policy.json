@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.3.0",
+  "description": "Fallback class order after live hard-capability filtering.",
+  "class_order": {
+    "spark": ["spark", "luna", "terra", "compatibility", "sol"],
+    "luna": ["luna", "terra", "compatibility", "sol", "spark"],
+    "terra": ["terra", "compatibility", "sol", "luna", "spark"],
+    "sol": ["sol", "terra", "compatibility", "luna", "spark"],
+    "compatibility": ["compatibility", "sol", "terra", "luna", "spark"]
+  },
+  "legacy_models": {
+    "gpt-5.4": "gpt-5.6-terra",
+    "gpt-5.4-mini": "gpt-5.6-luna"
+  },
+  "legacy_profiles": ["legacy_terra", "legacy_luna"],
+  "hidden_use_default": false,
+  "unknown_model_default": "reject",
+  "migration_warning": "legacy_model_selected_for_explicit_compatibility"
+}

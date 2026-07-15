@@ -41,6 +41,10 @@ class LiveModel:
     is_default: bool
     ordinal: int
     available: bool = True
+    supports_personality: bool = False
+    service_tiers: tuple[str, ...] = ()
+    default_service_tier: str | None = None
+    availability_notice: bool = False
 
     @property
     def routable(self) -> bool:
@@ -61,7 +65,13 @@ class RegistrySnapshot:
 class ModelRegistry:
     """Live capability metadata. No prompt or credential data is retained."""
 
-    def __init__(self, models: Iterable[LiveModel], *, codex_version: str):
+    def __init__(
+        self,
+        models: Iterable[LiveModel],
+        *,
+        codex_version: str,
+        temporarily_unavailable: Iterable[str] = (),
+    ):
         ordered = tuple(models)
         if not ordered:
             raise RegistryError("model/list returned no models")
@@ -74,6 +84,10 @@ class ModelRegistry:
                 lookup[key] = item
         self._models = ordered
         self._lookup = lookup
+        unavailable = set(temporarily_unavailable)
+        if any(value not in lookup for value in unavailable):
+            raise RegistryError("temporary availability overlay names an unknown model")
+        self._temporarily_unavailable = unavailable
         self.retrieved_at = datetime.now(timezone.utc).isoformat()
         self.codex_version = _safe_text(codex_version, limit=80)
 
@@ -83,6 +97,7 @@ class ModelRegistry:
         data: object,
         *,
         codex_version: str,
+        temporarily_unavailable: Iterable[str] = (),
     ) -> "ModelRegistry":
         if not isinstance(data, list):
             raise RegistryError("model/list result.data must be an array")
@@ -122,6 +137,30 @@ class ModelRegistry:
             is_default = raw.get("isDefault")
             if not isinstance(hidden, bool) or not isinstance(is_default, bool):
                 raise RegistryError(f"model {model_id} has malformed visibility metadata")
+            supports_personality = raw.get("supportsPersonality", False)
+            if not isinstance(supports_personality, bool):
+                raise RegistryError(f"model {model_id} has malformed personality metadata")
+            service_tiers_raw = raw.get("serviceTiers", [])
+            if not isinstance(service_tiers_raw, list):
+                raise RegistryError(f"model {model_id} has malformed service tier metadata")
+            service_tiers: list[str] = []
+            for tier in service_tiers_raw:
+                if not isinstance(tier, dict):
+                    raise RegistryError(f"model {model_id} has malformed service tier")
+                tier_id = _safe_token(tier.get("id"), "service tier")
+                if tier_id not in service_tiers:
+                    service_tiers.append(tier_id)
+            default_service_tier_raw = raw.get("defaultServiceTier")
+            default_service_tier = (
+                None
+                if default_service_tier_raw is None
+                else _safe_token(default_service_tier_raw, "default service tier")
+            )
+            if default_service_tier is not None and default_service_tier not in service_tiers:
+                raise RegistryError(f"model {model_id} default service tier is unsupported")
+            availability_notice = raw.get("availabilityNux") is not None
+            if raw.get("availabilityNux") is not None and not isinstance(raw.get("availabilityNux"), dict):
+                raise RegistryError(f"model {model_id} has malformed availability metadata")
             models.append(
                 LiveModel(
                     id=model_id,
@@ -136,9 +175,17 @@ class ModelRegistry:
                     input_modalities=modalities,
                     is_default=is_default,
                     ordinal=ordinal,
+                    supports_personality=supports_personality,
+                    service_tiers=tuple(service_tiers),
+                    default_service_tier=default_service_tier,
+                    availability_notice=availability_notice,
                 )
             )
-        return cls(models, codex_version=codex_version)
+        return cls(
+            models,
+            codex_version=codex_version,
+            temporarily_unavailable=temporarily_unavailable,
+        )
 
     def get(self, model_id_or_slug: str) -> LiveModel | None:
         return self._lookup.get(model_id_or_slug)
@@ -146,11 +193,34 @@ class ModelRegistry:
     def all(self) -> tuple[LiveModel, ...]:
         return self._models
 
+    def mark_temporarily_unavailable(self, model_id_or_slug: str) -> None:
+        model = self.get(model_id_or_slug)
+        if model is None:
+            raise RegistryError("cannot mark an unknown model unavailable")
+        self._temporarily_unavailable.update({model.id, model.model})
+
+    def clear_temporarily_unavailable(self, model_id_or_slug: str) -> None:
+        model = self.get(model_id_or_slug)
+        if model is None:
+            raise RegistryError("cannot clear availability for an unknown model")
+        self._temporarily_unavailable.discard(model.id)
+        self._temporarily_unavailable.discard(model.model)
+
+    def is_available(self, model: LiveModel) -> bool:
+        return (
+            model.available
+            and model.id not in self._temporarily_unavailable
+            and model.model not in self._temporarily_unavailable
+        )
+
+    def is_routable(self, model: LiveModel) -> bool:
+        return self.is_available(model) and not model.hidden
+
     def compatible(self, required_modalities: Iterable[str]) -> list[LiveModel]:
         return [
             item
             for item in self._models
-            if item.routable and item.supports(required_modalities)
+            if self.is_routable(item) and item.supports(required_modalities)
         ]
 
     def snapshot(self) -> RegistrySnapshot:

@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.3.0",
+  "description": "Reasoning effort is selected independently from model identity and action authority.",
+  "ladder": ["minimal", "low", "medium", "high", "xhigh", "max", "ultra"],
+  "profile_default": {
+    "spark": "low",
+    "luna": "low",
+    "terra": "medium",
+    "sol": "high",
+    "compatibility": "high",
+    "legacy_terra": "medium",
+    "legacy_luna": "low"
+  },
+  "profile_default_ceiling": {
+    "spark": "medium",
+    "luna": "max",
+    "terra": "ultra",
+    "sol": "ultra",
+    "compatibility": "xhigh",
+    "legacy_terra": "xhigh",
+    "legacy_luna": "xhigh"
+  },
+  "category_baseline": {
+    "email": "low",
+    "simple_text": "low",
+    "literary": "low",
+    "documentation": "low",
+    "normal_coding": "medium",
+    "testing": "medium",
+    "debugging": "high",
+    "dependency_management": "medium",
+    "repo_operations": "medium",
+    "data_analysis": "medium",
+    "grant_work": "high",
+    "research": "high",
+    "complex_coding": "high",
+    "architecture": "xhigh",
+    "math_theory": "xhigh",
+    "security_audit": "high",
+    "incident_response": "high",
+    "unknown": "medium"
+  },
+  "ultra_allowed_profiles": ["terra", "sol"],
+  "ultra_requires": ["delegation", "parallel_workstreams", "non_deterministic"],
+  "luna_forbidden_efforts": ["ultra"]
+}

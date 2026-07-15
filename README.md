@@ -4,12 +4,14 @@
 
 Kodex OpenAI Custom Skill combines a Smart Prompt Check, Task Router, and Model Configuration Selector for Codex repository work. Its deterministic Router Core classifies task weight, category, complexity, risk, action danger, context, and evidence requirements, then recommends a conservative profile, sandbox, and approval policy.
 
-The repository-local Codex custom skill invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. Phase 1 through Phase 4.1 are complete. Phase 5 project-local lifecycle hooks are implemented, with manual review and trust acceptance still pending. Phase 6 plugin packaging is next and has not started.
+The repository-local Codex custom skill invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. Phases through 5.3 are complete, including the calibrated dynamic model/effort policy, its 180-case evaluation, and a 12-turn routed-TUI soak. Phase 6 plugin packaging is next and has not started.
 
 Skill and hook recommendations remain advisory. The opt-in App Server manager
 adds a separate localhost layer that applies actual per-turn model, effort,
 sandbox, and approval overrides before forwarding `turn/start`. Hooks preserve
-normal human approval and remain defense-in-depth.
+normal human approval and remain defense-in-depth. Model availability,
+visibility, modalities, upgrade targets, and supported efforts are refreshed
+from live App Server metadata at startup.
 
 The standalone `smart-codex` CLI remains available for explicit dry-run routing and approved launch workflows.
 
@@ -90,7 +92,10 @@ WebSocket App Server transport is experimental and unsupported.
 See [dynamic routing](docs/app-server/DYNAMIC_MODEL_ROUTING.md), [local routed
 TUI](docs/app-server/LOCAL_ROUTED_TUI.md), [security
 model](docs/app-server/SECURITY_MODEL.md), and
-[rollback](docs/app-server/ROLLBACK.md).
+[rollback](docs/app-server/ROLLBACK.md). Phase 5.3 policy details are in [model
+selection policy](docs/app-server/MODEL_SELECTION_POLICY.md), [calibration
+evaluation](docs/app-server/MODEL_CALIBRATION_EVAL.md), [fallbacks](docs/app-server/MODEL_FALLBACKS.md),
+and [drift/refresh](docs/app-server/MODEL_DRIFT_AND_REFRESH.md).
 
 ## Installation
 
@@ -168,6 +173,13 @@ The main eval file is `rules/eval_set_002.jsonl`. Add one JSON object per line w
 ./.venv/bin/pytest tests/test_eval_set_002.py
 ```
 
+The App Server calibration set is `rules/model_selection_eval_001.jsonl` with
+180 acceptable-route cases. Run it with:
+
+```bash
+./.venv/bin/pytest tests/test_model_selection_calibration_eval.py
+```
+
 ## Safety Model
 
 - `smart-codex` never uses `shell=True`.
@@ -191,5 +203,8 @@ The main eval file is `rules/eval_set_002.jsonl`. Add one JSON object per line w
 - Profile TOML files intentionally keep model placeholders in the public repo.
 - V0 does not install profiles into global Codex config.
 - App Server routed mode is isolated, localhost-only, experimental, and opt-in.
+- Installed App Server `model/list` currently omits context-window values;
+  reviewed exact-model context classes and conservative future-model defaults
+  cover that gap without overriding live availability or capability fields.
 - Project-local hooks cover only their configured, release-supported event and
   tool paths; existing sandboxing and human approval remain authoritative.

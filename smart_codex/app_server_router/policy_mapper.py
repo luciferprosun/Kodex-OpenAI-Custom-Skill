@@ -5,9 +5,19 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 import re
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from .model_registry import LiveModel, ModelRegistry
+from .effort_policy import EffortPolicy, EffortPolicyError, EffortSelection
+from .model_policy import (
+    CandidateScore,
+    ModelPolicy,
+    ModelPolicyError,
+    ModelSelection,
+    default_fallback_policy_path,
+    default_selection_policy_path,
+)
+from .prompt_features import TaskFeatures, extract_task_features
 
 
 class PolicyError(RuntimeError):
@@ -55,10 +65,33 @@ class AppliedPolicy:
     sandbox_policy: dict[str, object]
     approval_policy: object
     reasons: tuple[str, ...]
+    candidate_scores: tuple[CandidateScore, ...] = ()
+    rejected_candidates: dict[str, tuple[str, ...]] | None = None
+    fallback_order: tuple[str, ...] = ()
+    selection_confidence: str = "unknown"
+    switch_confidence: str = "unknown"
+    previous_model: str | None = None
+    score_margin: float = 0.0
+    switch_reason: str = "unknown"
+    selection_explanation: str = "capability_aware_live_selection"
+    selection_summary: str = ""
+    drift_warnings: tuple[str, ...] = ()
+    migration_warning: str | None = None
+    test_instruction: str | None = None
+
+
+SPARK_TEST_INSTRUCTION = (
+    "Smart Router requirement: run the smallest relevant test and report its "
+    "result before treating this targeted code edit as complete."
+)
 
 
 def _default_policy_path() -> Path:
     return Path(__file__).resolve().parents[2] / "rules" / "app_server_model_policy.json"
+
+
+def _default_effort_policy_path() -> Path:
+    return Path(__file__).resolve().parents[2] / "rules" / "reasoning_effort_policy.json"
 
 
 def _string_list(
@@ -184,6 +217,13 @@ def _load_policy(path: Path | None = None) -> dict[str, Any]:
     return value
 
 
+def _load_json_policy(path: Path) -> object:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise PolicyError(f"cannot load dynamic policy {path.name}") from exc
+
+
 def _matches_any(prompt: str, patterns: object) -> bool:
     if not isinstance(patterns, list):
         raise PolicyError("policy signal list is malformed")
@@ -205,10 +245,25 @@ class PolicyMapper:
         requirements: RuntimeRequirements,
         *,
         policy_path: Path | None = None,
+        selection_policy_path: Path | None = None,
+        effort_policy_path: Path | None = None,
+        fallback_policy_path: Path | None = None,
+        allowed_models: tuple[str, ...] | None = None,
+        context_capacity_overrides: Mapping[str, str] | None = None,
     ):
         self.registry = registry
         self.requirements = requirements
         self.policy = _load_policy(policy_path)
+        self.model_policy = ModelPolicy.from_paths(
+            registry,
+            selection_path=selection_policy_path or default_selection_policy_path(),
+            fallback_path=fallback_policy_path or default_fallback_policy_path(),
+            allowed_models=allowed_models,
+            context_capacity_overrides=context_capacity_overrides,
+        )
+        self.effort_policy = EffortPolicy(
+            _load_json_policy(effort_policy_path or _default_effort_policy_path())
+        )
 
     def apply(
         self,
@@ -216,78 +271,58 @@ class PolicyMapper:
         prompt: str,
         *,
         required_modalities: Iterable[str],
+        previous_model: str | None = None,
+        supports_routed_context: bool = False,
     ) -> AppliedPolicy:
         category = str(getattr(decision, "category", "unknown"))
-        complexity = str(getattr(decision, "complexity_level", "medium"))
-        risk = str(getattr(decision, "risk_level", "low"))
-        action_danger = str(getattr(decision, "action_danger", "read_only_analysis"))
-        context = str(getattr(decision, "context_requirement", "unknown"))
-
-        route_class = self.policy["category_classes"].get(category, "terra")
-        reasons = [f"Router Core category {category} maps to {route_class}"]
-
-        rapid = _matches_any(prompt, self.policy["rapid_edit_signals"])
-        spark_safe = (
-            rapid
-            and complexity in {"low", "medium"}
-            and risk in {"low", "medium"}
-            and context in {"small", "medium"}
-            and action_danger
-            not in {
-                "secret_touching_operation",
-                "destructive_operation",
-                "database_operation",
-                "deployment_operation",
-            }
-            and set(required_modalities) <= {"text"}
-        )
-        if spark_safe:
-            route_class = "spark"
-            reasons.append("small targeted rapid edit is eligible for Spark")
-        elif category in {"research", "grant_work"} and (
-            complexity == "high"
-            or _matches_any(prompt, self.policy["deep_research_signals"])
-        ):
-            route_class = "sol"
-            reasons.append("research depth requires the frontier capability class")
-
-        model, selection_reason = self._select_model(
-            route_class,
-            tuple(required_modalities),
-        )
-        reasons.append(selection_reason)
-
-        desired_effort = self.policy["effort_by_category"].get(category, "medium")
-        if route_class == "spark":
-            desired_effort = "low"
-        delegation = _matches_any(prompt, self.policy["delegation_signals"])
-        deterministic_eval = _matches_any(
+        features: TaskFeatures = extract_task_features(
             prompt,
-            self.policy["deterministic_eval_signals"],
+            decision,
+            required_modalities=required_modalities,
         )
-        if (
-            delegation
-            and not deterministic_eval
-            and category
-            in {
-                "architecture",
-                "complex_coding",
-                "security_audit",
-                "research",
-                "incident_response",
-            }
-            and "ultra" in model.supported_efforts
-        ):
-            desired_effort = "ultra"
-            reasons.append("explicit delegation benefits this complex task")
-        elif delegation and deterministic_eval:
-            reasons.append("delegation suppressed for deterministic evaluation")
-
-        effort = self._nearest_effort(model, desired_effort)
-        if effort != desired_effort:
-            reasons.append(
-                f"unsupported effort {desired_effort} resolved to nearest live effort {effort}"
+        try:
+            selection: ModelSelection = self.model_policy.select(
+                features,
+                previous_model=previous_model,
+                supports_routed_context=supports_routed_context,
             )
+            effort_selection: EffortSelection = self.effort_policy.select(
+                selection.selected.model,
+                selection.selected.profile,
+                features,
+            )
+        except (ModelPolicyError, EffortPolicyError) as exc:
+            raise PolicyError("dynamic model policy could not produce a safe live route") from exc
+
+        route_class = selection.selected.profile.name
+        model = selection.selected.model
+        effort = effort_selection.selected
+        reasons = [
+            f"Router Core category {category} is evaluated independently from authority",
+            selection.explanation.summary,
+            f"model switch reason {selection.switch_reason}",
+            f"reasoning effort reason {effort_selection.reason_code}",
+        ]
+        if effort_selection.selected != effort_selection.desired:
+            reasons.append(
+                f"unsupported effort {effort_selection.desired} resolved to nearest live effort {effort_selection.selected}"
+            )
+        if effort_selection.delegation_reason is not None:
+            reasons.append(
+                "explicit delegation benefits this complex task: "
+                + effort_selection.delegation_reason
+            )
+        elif features.need_for_delegation and features.deterministic_eval:
+            reasons.append("delegation suppressed for deterministic evaluation")
+        if selection.selected.migration_warning is not None:
+            reasons.append(selection.selected.migration_warning)
+        if any(
+            "upgrade_target" in reason
+            for values in selection.rejected_candidates.values()
+            for reason in values
+        ):
+            reasons.append("live upgrade target replaces a deprecated candidate")
+        reasons.extend(f"capability drift {warning}" for warning in selection.drift_warnings)
 
         sandbox_mode = self._resolve_sandbox(str(getattr(decision, "sandbox_mode", "read-only")))
         approval = self._resolve_approval(getattr(decision, "approval_policy", "on-request"))
@@ -300,89 +335,22 @@ class PolicyMapper:
             sandbox_policy=sandbox_policy,
             approval_policy=approval,
             reasons=tuple(reasons),
+            candidate_scores=selection.candidate_scores,
+            rejected_candidates=selection.rejected_candidates,
+            fallback_order=selection.fallback_order,
+            selection_confidence=selection.selection_confidence,
+            switch_confidence=selection.switch_confidence,
+            previous_model=selection.previous_model,
+            score_margin=selection.score_margin,
+            switch_reason=selection.switch_reason,
+            selection_explanation=selection.explanation.code,
+            selection_summary=selection.explanation.summary,
+            drift_warnings=selection.drift_warnings,
+            migration_warning=selection.selected.migration_warning,
+            test_instruction=(
+                SPARK_TEST_INSTRUCTION if selection.requires_test_instruction else None
+            ),
         )
-
-    def _select_model(
-        self,
-        desired_class: str,
-        required_modalities: tuple[str, ...],
-    ) -> tuple[LiveModel, str]:
-        compatible = self.registry.compatible(required_modalities)
-        if not compatible:
-            raise PolicyError("no visible live model supports the turn input modalities")
-        class_order = self.policy["fallback_classes"].get(desired_class)
-        if not isinstance(class_order, list) or not class_order:
-            raise PolicyError(f"no fallback classes configured for {desired_class}")
-        for capability_class in class_order:
-            candidates = [
-                item
-                for item in compatible
-                if self._matches_class(item, str(capability_class))
-            ]
-            if not candidates:
-                continue
-            candidates.sort(key=lambda item: self._candidate_key(item, str(capability_class)))
-            selected = candidates[0]
-            if selected.deprecated and selected.upgrade_target:
-                replacement = self.registry.get(selected.upgrade_target)
-                if (
-                    replacement is not None
-                    and replacement.routable
-                    and replacement.supports(required_modalities)
-                ):
-                    return replacement, (
-                        f"live upgrade target {replacement.model} replaces deprecated "
-                        f"candidate {selected.model}"
-                    )
-            fallback = "" if capability_class == desired_class else f" fallback class {capability_class}"
-            return selected, f"selected live{fallback} model {selected.model}"
-
-        compatible.sort(key=lambda item: (item.deprecated, not item.is_default, item.ordinal))
-        selected = compatible[0]
-        return selected, f"selected generic live fallback model {selected.model}"
-
-    def _matches_class(self, model: LiveModel, capability_class: str) -> bool:
-        if "spark" in model.model.lower() and capability_class != "spark":
-            return False
-        config = self.policy["model_classes"].get(capability_class)
-        if not isinstance(config, dict):
-            raise PolicyError(f"unknown capability class {capability_class}")
-        preferred = config.get("preferred_ids", [])
-        if model.model in preferred or model.id in preferred:
-            return True
-        haystack = " ".join(
-            [model.id, model.model, model.display_name, model.description]
-        ).lower()
-        patterns = config.get("patterns", [])
-        return any(
-            isinstance(pattern, str) and pattern.lower() in haystack
-            for pattern in patterns
-        )
-
-    def _candidate_key(self, model: LiveModel, capability_class: str) -> tuple[object, ...]:
-        config = self.policy["model_classes"][capability_class]
-        preferred = config.get("preferred_ids", [])
-        try:
-            preference = preferred.index(model.model)
-        except ValueError:
-            preference = len(preferred) + model.ordinal
-        return (model.deprecated, preference, not model.is_default, model.ordinal)
-
-    def _nearest_effort(self, model: LiveModel, desired: str) -> str:
-        ladder = self.policy["effort_ladder"]
-        if desired in model.supported_efforts:
-            return desired
-        if desired not in ladder:
-            return model.default_effort
-        desired_index = ladder.index(desired)
-        ranked = [
-            (abs(ladder.index(item) - desired_index), ladder.index(item), item)
-            for item in model.supported_efforts
-            if item in ladder
-        ]
-        if not ranked:
-            return model.default_effort
-        return min(ranked)[2]
 
     def _resolve_sandbox(self, requested: str) -> str:
         allowed_local = self.policy["local_policy"]["allowed_sandbox_modes"]

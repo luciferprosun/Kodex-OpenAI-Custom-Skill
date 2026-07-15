@@ -25,6 +25,8 @@ LOG_FIELDS = {
     "category",
     "route_class",
     "original_model",
+    "previous_model",
+    "new_model",
     "selected_model",
     "forwarded_model",
     "active_model",
@@ -33,6 +35,14 @@ LOG_FIELDS = {
     "sandbox",
     "approval",
     "error_code",
+    "score_margin",
+    "switch_reason",
+    "selection_confidence",
+    "switch_confidence",
+    "selection_explanation",
+    "fallback_model",
+    "drift_warning",
+    "migration_warning",
 }
 
 

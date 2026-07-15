@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 
@@ -105,6 +106,33 @@ def test_router_package_has_no_shell_global_config_or_binary_mutation() -> None:
     ]
     for value in forbidden:
         assert value not in source
+
+
+def test_router_package_has_no_dynamic_execution_or_provider_credential_reads() -> None:
+    credential_markers = {
+        "OPENAI_API_KEY",
+        "CODEX_API_KEY",
+        ".codex/auth",
+        "provider_token",
+        "shlex.split(",
+    }
+    for path in PACKAGE.rglob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        assert not credential_markers.intersection(source.split())
+        for marker in credential_markers:
+            assert marker not in source
+        tree = ast.parse(source, filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            if isinstance(node.func, ast.Name):
+                assert node.func.id not in {"eval", "exec"}
+            for keyword in node.keywords:
+                assert not (
+                    keyword.arg == "shell"
+                    and isinstance(keyword.value, ast.Constant)
+                    and keyword.value.value is True
+                )
 
 
 def test_opt_in_launchers_leave_normal_codex_untouched() -> None:

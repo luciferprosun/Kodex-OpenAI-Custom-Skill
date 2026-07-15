@@ -7,7 +7,9 @@ Checkpoint status:
 - Phase 4: **COMPLETE**
 - Phase 4.1: **COMPLETE**
 - Phase 5: **IMPLEMENTED — MANUAL TRUST ACCEPTANCE PENDING**
-- Phase 6: **NEXT**
+- Phase 5.2: **COMPLETE — OPT-IN APP SERVER ROUTING PROVEN**
+- Phase 5.3: **COMPLETE — CALIBRATED POLICY AND ROUTED-TUI SOAK ACCEPTED**
+- Phase 6: **NEXT — OPT-IN PLUGIN PACKAGING**
 
 ## Phase 2: Skill scaffold
 

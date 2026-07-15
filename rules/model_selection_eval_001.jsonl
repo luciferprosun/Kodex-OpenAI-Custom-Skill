@@ -1,0 +1,180 @@
+{"id":"w001","group":"trivial_writing","prompt":"Correct this sentence: She go to work every day.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w002","group":"trivial_writing","prompt":"Fix the grammar in this short paragraph.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w003","group":"trivial_writing","prompt":"Proofread this one sentence for spelling.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w004","group":"trivial_writing","prompt":"Rephrase this sentence in a friendlier tone.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w005","group":"trivial_writing","prompt":"Rewrite this short note more clearly.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w006","group":"trivial_writing","prompt":"Shorten this paragraph to two sentences.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w007","group":"trivial_writing","prompt":"Translate this short greeting into Polish.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w008","group":"trivial_writing","prompt":"Summarize these two short paragraphs.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w009","group":"trivial_writing","prompt":"Classify these five labels as positive or negative.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w010","group":"trivial_writing","prompt":"Extract the three dates from this short text.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w011","group":"trivial_writing","prompt":"Convert this comma-separated list into bullets.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w012","group":"trivial_writing","prompt":"Fix the punctuation in this sentence.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w013","group":"trivial_writing","prompt":"Correct the capitalization in this heading.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w014","group":"trivial_writing","prompt":"Rewrite this one-line status update professionally.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w015","group":"trivial_writing","prompt":"Draft a two-sentence thank-you email.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w016","group":"trivial_writing","prompt":"Write a short subject line for a meeting reminder.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w017","group":"trivial_writing","prompt":"Summarize this harmless security policy sentence.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w018","group":"trivial_writing","prompt":"Add the word production to this documentation sentence.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w019","group":"trivial_writing","prompt":"Write documentation explaining why credentials must not be logged.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w020","group":"trivial_writing","prompt":"Review this sentence: never read private keys.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w021","group":"trivial_writing","prompt":"Add the sentence Do not expose tokens to the README text.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w022","group":"trivial_writing","prompt":"Publish a summary in this chat only.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w023","group":"trivial_writing","prompt":"Draft a simple email asking for a meeting time.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w024","group":"trivial_writing","prompt":"Send the approved draft using the connected email account.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w025","group":"trivial_writing","prompt":"Use the connected Gmail account to send the approved draft. Do not access credentials.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w026","group":"trivial_writing","prompt":"Turn this short table row into JSON.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"w027","group":"trivial_writing","prompt":"Classify this support ticket into one of three queues.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w028","group":"trivial_writing","prompt":"Extract the action item from this one-line note.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w029","group":"trivial_writing","prompt":"Rewrite this caption without changing its meaning.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"w030","group":"trivial_writing","prompt":"Summarize this short grant question in one sentence.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium","high"]}
+{"id":"l001","group":"luna_simple","prompt":"Explain one simple Python function in a short paragraph.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l002","group":"luna_simple","prompt":"Explain what this one-line list comprehension does.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l003","group":"luna_simple","prompt":"Describe this small regular expression in plain language.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l004","group":"luna_simple","prompt":"Write a simple deterministic Python script that renames one file.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l005","group":"luna_simple","prompt":"Write one simple unit test for a pure add function.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l006","group":"luna_simple","prompt":"Create a small deterministic script that converts CSV headers to lowercase.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l007","group":"luna_simple","prompt":"Explain why this boolean condition is true.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l008","group":"luna_simple","prompt":"Summarize this short README section.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l009","group":"luna_simple","prompt":"Draft a concise docstring for this small helper function.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l010","group":"luna_simple","prompt":"Write harmless documentation for one command-line flag.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l011","group":"luna_simple","prompt":"Explain this one-line code assignment.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l012","group":"luna_simple","prompt":"Classify these small error messages by component.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l013","group":"luna_simple","prompt":"Transform these five dictionary keys to snake case.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l014","group":"luna_simple","prompt":"Answer this basic question about Python tuples.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l015","group":"luna_simple","prompt":"Explain the difference between a list and a tuple briefly.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l016","group":"luna_simple","prompt":"Write a two-line example of joining strings in Python.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l017","group":"luna_simple","prompt":"Create a simple classification table from these labels.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l018","group":"luna_simple","prompt":"Explain this small configuration option without editing files.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l019","group":"luna_simple","prompt":"Draft a short changelog sentence for a harmless typo fix.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l020","group":"luna_simple","prompt":"Write one simple test case for a deterministic formatter.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l021","group":"luna_simple","prompt":"Explain this single-file constant declaration.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l022","group":"luna_simple","prompt":"Summarize the purpose of this tiny utility module.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l023","group":"luna_simple","prompt":"Write a small deterministic JSON normalization script.","acceptable_profiles":["luna"],"acceptable_efforts":["low","medium"]}
+{"id":"l024","group":"luna_simple","prompt":"Explain one simple shell pipeline without running it.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"l025","group":"luna_simple","prompt":"Create a harmless one-paragraph usage example for this helper.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"s001","group":"spark_targeted","prompt":"Change one button label in a single UI file.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s002","group":"spark_targeted","prompt":"Change the button text in one code file.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s003","group":"spark_targeted","prompt":"Rename one CSS class in a single-file component.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s004","group":"spark_targeted","prompt":"Make one small UI spacing adjustment in this code file.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s005","group":"spark_targeted","prompt":"Fix one isolated off-by-one bug in a single function and run its unit test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s006","group":"spark_targeted","prompt":"Correct one targeted null check in a single function and run one test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s007","group":"spark_targeted","prompt":"Rename one local variable in a single code file.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s008","group":"spark_targeted","prompt":"Change one tooltip copy string in this UI code.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s009","group":"spark_targeted","prompt":"Adjust one form field label in a single component.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s010","group":"spark_targeted","prompt":"Fix one isolated comparison operator in this function and run the focused test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s011","group":"spark_targeted","prompt":"Make a targeted one-line code edit to the formatter.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s012","group":"spark_targeted","prompt":"Change a single menu label in this frontend code.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s013","group":"spark_targeted","prompt":"Fix one isolated typo in a function name and update its single call site.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s014","group":"spark_targeted","prompt":"Prototype one small targeted UI interaction; tests are not required.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s015","group":"spark_targeted","prompt":"Make one rapid targeted code edit to hide an unused icon.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s016","group":"spark_targeted","prompt":"Change one placeholder string in a single form component.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s017","group":"spark_targeted","prompt":"Fix one isolated return value in a single helper and run one unit test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s018","group":"spark_targeted","prompt":"Rename one route constant in a single code file.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s019","group":"spark_targeted","prompt":"Adjust one targeted CSS color token in this component.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s020","group":"spark_targeted","prompt":"Fix one small isolated string transformation and run its unit test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s021","group":"spark_targeted","prompt":"Change one aria-label in a single UI code file.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s022","group":"spark_targeted","prompt":"Make one small targeted edit to a loading message.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s023","group":"spark_targeted","prompt":"Fix one isolated default argument in a single function and run one test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s024","group":"spark_targeted","prompt":"Change one icon title in this single-file component.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"s025","group":"spark_targeted","prompt":"Perform one rapid isolated code correction in a small fixture and run its focused test.","acceptable_profiles":["spark"],"acceptable_efforts":["low","medium"]}
+{"id":"tc001","group":"terra_coding","prompt":"Fix the failing unit test in this repository.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc002","group":"terra_coding","prompt":"Fix five failing tests across three modules.","acceptable_profiles":["terra"],"acceptable_efforts":["high","xhigh"]}
+{"id":"tc003","group":"terra_coding","prompt":"Repair ordinary validation logic across several files and run the tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc004","group":"terra_coding","prompt":"Implement a normal feature across three small modules with unit tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high","xhigh"]}
+{"id":"tc005","group":"terra_coding","prompt":"Review a medium-sized pull request for correctness and tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc006","group":"terra_coding","prompt":"Update an ordinary dependency and repair the affected tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc007","group":"terra_coding","prompt":"Add a routine API endpoint with validation and unit tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc008","group":"terra_coding","prompt":"Fix a normal frontend bug and verify the component tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc009","group":"terra_coding","prompt":"Repair a typical backend serialization bug and run tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc010","group":"terra_coding","prompt":"Refactor validation code across several files without changing architecture.","acceptable_profiles":["terra"],"acceptable_efforts":["high","xhigh"]}
+{"id":"tc011","group":"terra_coding","prompt":"Add logging to three modules and update their tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc012","group":"terra_coding","prompt":"Repair a routine database adapter bug in two files and run unit tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc013","group":"terra_coding","prompt":"Implement pagination in an existing endpoint with normal tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc014","group":"terra_coding","prompt":"Review and clean up a medium utility module.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc015","group":"terra_coding","prompt":"Fix several lint failures across three files and run checks.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc016","group":"terra_coding","prompt":"Add a normal configuration option and document its implementation.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc017","group":"terra_coding","prompt":"Repair an ordinary cache invalidation bug with focused tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc018","group":"terra_coding","prompt":"Implement a small professional feature touching three files.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc019","group":"terra_coding","prompt":"Diagnose three related test failures with a clear stack trace.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc020","group":"terra_coding","prompt":"Repair normal type errors in several TypeScript files.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc021","group":"terra_coding","prompt":"Update the package lockfile and verify ordinary integration tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc022","group":"terra_coding","prompt":"Add a routine CLI subcommand with parsing and tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc023","group":"terra_coding","prompt":"Fix a medium-sized fixture loader and its tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc024","group":"terra_coding","prompt":"Review repository maintenance changes across several files.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc025","group":"terra_coding","prompt":"Implement ordinary retry handling in two modules and test it.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc026","group":"terra_coding","prompt":"Repair a standard authorization check in three files with tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc027","group":"terra_coding","prompt":"Add normal metrics instrumentation to several handlers.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc028","group":"terra_coding","prompt":"Fix a routine HTTP timeout bug and run the unit tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc029","group":"terra_coding","prompt":"Migrate a medium configuration module to a new API without redesigning it.","acceptable_profiles":["terra"],"acceptable_efforts":["high","xhigh"]}
+{"id":"tc030","group":"terra_coding","prompt":"Improve ordinary error handling across three service files.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc031","group":"terra_coding","prompt":"Repair several deterministic parser tests across two modules.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc032","group":"terra_coding","prompt":"Add a normal feature flag with implementation and tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc033","group":"terra_coding","prompt":"Review a typical dependency update and its regression tests.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tc034","group":"terra_coding","prompt":"Fix ordinary test isolation issues in several fixtures.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tc035","group":"terra_coding","prompt":"Implement a moderate refactor across three files with tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high","xhigh"]}
+{"id":"tr001","group":"terra_research","prompt":"Research three suitable grants and compare eligibility with sources.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr002","group":"terra_research","prompt":"Research suitable funding programs for the AIOA project.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr003","group":"terra_research","prompt":"Compare three current Python web frameworks using official sources.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr004","group":"terra_research","prompt":"Investigate two bounded deployment options and verify their documentation.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr005","group":"terra_research","prompt":"Research a bounded technical question about WebSocket backpressure with sources.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr006","group":"terra_research","prompt":"Find three current accessibility funding programs and compare deadlines.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr007","group":"terra_research","prompt":"Review current official guidance for one library migration.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr008","group":"terra_research","prompt":"Compare two ordinary cloud logging services with cited documentation.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr009","group":"terra_research","prompt":"Research a short list of open-source testing tools and verify maintenance status.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr010","group":"terra_research","prompt":"Use the connected issue tracker to summarize five open technical issues without editing them.","acceptable_profiles":["terra","luna"],"acceptable_efforts":["medium","high"]}
+{"id":"tr011","group":"terra_research","prompt":"Inspect repository history and compare two implementation approaches.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"tr012","group":"terra_research","prompt":"Research current package compatibility for a bounded dependency update.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr013","group":"terra_research","prompt":"Compare eligibility for three regional innovation grants with sources.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr014","group":"terra_research","prompt":"Verify the current official API behavior for one endpoint and summarize it.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr015","group":"terra_research","prompt":"Research ordinary CI providers for this medium repository and compare features.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr016","group":"terra_research","prompt":"Find three relevant standards for a bounded accessibility feature and cite them.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr017","group":"terra_research","prompt":"Investigate a normal external-tool workflow and verify its documented limits.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr018","group":"terra_research","prompt":"Research two suitable nonprofit funding calls and compare basic eligibility.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr019","group":"terra_research","prompt":"Compare three current code-formatting tools for a Python repository.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}
+{"id":"tr020","group":"terra_research","prompt":"Answer a short grant question about open-source accessibility tools.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"sf001","group":"sol_frontier","prompt":"Redesign authentication across several services.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf002","group":"sol_frontier","prompt":"Redesign this multi-module authorization architecture.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf003","group":"sol_frontier","prompt":"Plan a large cross-module refactor across all services.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf004","group":"sol_frontier","prompt":"Diagnose a difficult distributed bug with an uncertain root cause across several services.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf005","group":"sol_frontier","prompt":"Audit a complex security architecture across multiple trust boundaries.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf006","group":"sol_frontier","prompt":"Build a sourced global grant strategy with legal constraints across regions.","acceptable_profiles":["sol"],"acceptable_efforts":["high","xhigh","max"],"critical_underroute":true}
+{"id":"sf007","group":"sol_frontier","prompt":"Design a novel algorithm for distributed reconciliation and analyze tradeoffs.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf008","group":"sol_frontier","prompt":"Prove a difficult theorem and check each assumption carefully.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf009","group":"sol_frontier","prompt":"Perform complex incident analysis across all production services without executing changes.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf010","group":"sol_frontier","prompt":"Synthesize a very large mixed-domain context with ambiguous requirements.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf011","group":"sol_frontier","prompt":"Perform the final independent safety audit of the whole router.","acceptable_profiles":["sol"],"acceptable_efforts":["max"],"critical_underroute":true}
+{"id":"sf012","group":"sol_frontier","prompt":"Conduct a final project-wide engineering review of the entire codebase.","acceptable_profiles":["sol"],"acceptable_efforts":["max"],"critical_underroute":true}
+{"id":"sf013","group":"sol_frontier","prompt":"Design service boundaries for a complex multi-module platform.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf014","group":"sol_frontier","prompt":"Investigate an intermittent concurrency failure with several plausible causes.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf015","group":"sol_frontier","prompt":"Threat model a complex authentication system across multiple services.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf016","group":"sol_frontier","prompt":"Create a broad strategic research synthesis across legal technical and funding domains.","acceptable_profiles":["sol"],"acceptable_efforts":["high","xhigh","max"],"critical_underroute":true}
+{"id":"sf017","group":"sol_frontier","prompt":"Derive a difficult mathematical model for a nonlinear system.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf018","group":"sol_frontier","prompt":"Plan a repo-wide migration involving many modules and uncertain compatibility.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf019","group":"sol_frontier","prompt":"Review a large cross-service patch with complex security implications.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf020","group":"sol_frontier","prompt":"Analyze a broad production incident with ambiguous telemetry across all services.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf021","group":"sol_frontier","prompt":"Redesign data flow across a multi-service architecture with difficult tradeoffs.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf022","group":"sol_frontier","prompt":"Perform deep security reasoning about several exploit chains and trust boundaries.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf023","group":"sol_frontier","prompt":"Synthesize a comprehensive global policy strategy from many verified sources.","acceptable_profiles":["sol"],"acceptable_efforts":["high","xhigh","max"],"critical_underroute":true}
+{"id":"sf024","group":"sol_frontier","prompt":"Design a novel fault-tolerant protocol and formally analyze failure modes.","acceptable_profiles":["sol"],"acceptable_efforts":["xhigh","max"],"critical_underroute":true}
+{"id":"sf025","group":"sol_frontier","prompt":"Perform a final independent security review of the entire authorization architecture.","acceptable_profiles":["sol"],"acceptable_efforts":["max"],"critical_underroute":true}
+{"id":"u001","group":"ultra_delegation","prompt":"Split a large independent research and implementation program among multiple agents in parallel.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u002","group":"ultra_delegation","prompt":"Delegate four independent architecture review workstreams to multiple agents in parallel.","acceptable_profiles":["sol"],"acceptable_efforts":["ultra"]}
+{"id":"u003","group":"ultra_delegation","prompt":"Use subagents to divide a large research program into several independent workstreams in parallel.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u004","group":"ultra_delegation","prompt":"Delegate a large cross-module audit to multiple agents, one independent workstream per agent.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u005","group":"ultra_delegation","prompt":"Split a large implementation and test program among four independent subagents in parallel.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u006","group":"ultra_delegation","prompt":"Delegate comprehensive global research across several independent workstreams to multiple agents.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u007","group":"ultra_delegation","prompt":"Use multiple agents in parallel for a large architecture, testing, and documentation program.","acceptable_profiles":["sol"],"acceptable_efforts":["ultra"]}
+{"id":"u008","group":"ultra_delegation","prompt":"Delegate many independent repository review workstreams to subagents in parallel.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u009","group":"ultra_delegation","prompt":"Split a large incident-analysis program into four independent workstreams and delegate them in parallel.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"u010","group":"ultra_delegation","prompt":"Delegate a large research and engineering program to multiple agents with independent parallel workstreams.","acceptable_profiles":["terra","sol"],"acceptable_efforts":["ultra"]}
+{"id":"f001","group":"fallback_migration","fixture":"spark_missing","prompt":"Change one button label in a single UI file.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"f002","group":"fallback_migration","fixture":"spark_hidden","prompt":"Fix one isolated function and run its unit test.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["medium","high"]}
+{"id":"f003","group":"fallback_migration","fixture":"spark_rate_limited","prompt":"Make one rapid targeted code edit to a button label.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"f004","group":"fallback_migration","fixture":"sol_missing","prompt":"Redesign authentication across several services.","acceptable_profiles":["terra","compatibility"],"acceptable_efforts":["high","xhigh"]}
+{"id":"f005","group":"fallback_migration","fixture":"terra_missing","prompt":"Fix five failing tests across three modules.","acceptable_profiles":["compatibility","sol"],"acceptable_efforts":["high","xhigh"]}
+{"id":"f006","group":"fallback_migration","fixture":"luna_missing","prompt":"Correct this sentence for grammar.","acceptable_profiles":["terra","compatibility"],"acceptable_efforts":["low","medium"]}
+{"id":"f007","group":"fallback_migration","fixture":"effort_changed","prompt":"Redesign this multi-module authorization architecture.","acceptable_profiles":["sol"],"acceptable_efforts":["high"]}
+{"id":"f008","group":"fallback_migration","fixture":"unknown_model_added","prompt":"Fix a routine backend test failure.","acceptable_profiles":["terra"],"acceptable_efforts":["medium","high"]}
+{"id":"f009","group":"fallback_migration","fixture":"spark_image","prompt":"Change one button label using the attached screenshot.","acceptable_profiles":["luna","terra"],"acceptable_efforts":["low","medium"]}
+{"id":"f010","group":"fallback_migration","fixture":"legacy_upgrade","prompt":"Implement a routine feature in three files with tests.","acceptable_profiles":["terra"],"acceptable_efforts":["high"]}

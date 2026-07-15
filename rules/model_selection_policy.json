@@ -1,0 +1,131 @@
+{
+  "schema_version": "0.3.0",
+  "description": "Deterministic capability-aware model scoring. Live model/list availability, visibility, modalities, upgrades and reasoning efforts are authoritative.",
+  "size_classes": ["tiny", "small", "medium", "large", "xlarge", "unknown"],
+  "switch_threshold": 8.0,
+  "confidence_thresholds": {
+    "high": 16.0,
+    "medium": 8.0
+  },
+  "profiles": {
+    "spark": {
+      "exact_models": ["gpt-5.3-codex-spark"],
+      "family_patterns": ["(?:^|[-.])spark(?:$|[-.])"],
+      "strength": 1,
+      "context_capacity": "medium",
+      "latency": 3,
+      "quality": 1,
+      "tool_capacity": 1,
+      "coding_only": true,
+      "preview": true,
+      "expected_modalities": ["text"],
+      "expected_efforts": ["low", "medium", "high", "xhigh"]
+    },
+    "luna": {
+      "exact_models": ["gpt-5.6-luna"],
+      "family_patterns": ["(?:^|[-.])luna(?:$|[-.])"],
+      "strength": 1,
+      "context_capacity": "xlarge",
+      "latency": 2,
+      "quality": 1,
+      "tool_capacity": 2,
+      "coding_only": false,
+      "preview": false,
+      "expected_modalities": ["text", "image"],
+      "expected_efforts": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "terra": {
+      "exact_models": ["gpt-5.6-terra"],
+      "family_patterns": ["(?:^|[-.])terra(?:$|[-.])"],
+      "strength": 2,
+      "context_capacity": "xlarge",
+      "latency": 2,
+      "quality": 2,
+      "tool_capacity": 3,
+      "coding_only": false,
+      "preview": false,
+      "expected_modalities": ["text", "image"],
+      "expected_efforts": ["low", "medium", "high", "xhigh", "max", "ultra"]
+    },
+    "sol": {
+      "exact_models": ["gpt-5.6-sol"],
+      "family_patterns": ["(?:^|[-.])sol(?:$|[-.])"],
+      "strength": 3,
+      "context_capacity": "xlarge",
+      "latency": 1,
+      "quality": 3,
+      "tool_capacity": 3,
+      "coding_only": false,
+      "preview": false,
+      "expected_modalities": ["text", "image"],
+      "expected_efforts": ["low", "medium", "high", "xhigh", "max", "ultra"]
+    },
+    "compatibility": {
+      "exact_models": ["gpt-5.5"],
+      "family_patterns": ["^gpt-5\\.5(?:$|[-.])"],
+      "strength": 3,
+      "context_capacity": "large",
+      "latency": 1,
+      "quality": 2,
+      "tool_capacity": 3,
+      "coding_only": false,
+      "preview": false,
+      "expected_modalities": ["text", "image"],
+      "expected_efforts": ["low", "medium", "high", "xhigh"]
+    },
+    "legacy_terra": {
+      "exact_models": ["gpt-5.4"],
+      "family_patterns": [],
+      "strength": 2,
+      "context_capacity": "large",
+      "latency": 1,
+      "quality": 2,
+      "tool_capacity": 3,
+      "coding_only": false,
+      "preview": false,
+      "expected_modalities": ["text", "image"],
+      "expected_efforts": ["low", "medium", "high", "xhigh"]
+    },
+    "legacy_luna": {
+      "exact_models": ["gpt-5.4-mini"],
+      "family_patterns": [],
+      "strength": 1,
+      "context_capacity": "large",
+      "latency": 2,
+      "quality": 1,
+      "tool_capacity": 2,
+      "coding_only": false,
+      "preview": false,
+      "expected_modalities": ["text", "image"],
+      "expected_efforts": ["low", "medium", "high", "xhigh"]
+    }
+  },
+  "task_targets": {
+    "simple": "luna",
+    "rapid_code": "spark",
+    "professional": "terra",
+    "frontier": "sol"
+  },
+  "scoring": {
+    "base": 40.0,
+    "capability_fit": 10.0,
+    "exact_task_fit": 28.0,
+    "adjacent_task_fit": 12.0,
+    "complexity_exact": 12.0,
+    "context_fit": 8.0,
+    "latency_unit": 5.0,
+    "quality_unit": 5.0,
+    "tool_fit": 8.0,
+    "modality_fit": 8.0,
+    "availability_fit": 8.0,
+    "continuity_bonus": 4.0,
+    "switch_cost": -1.0,
+    "preview_penalty": -6.0,
+    "migration_penalty": -40.0,
+    "overqualification_unit": -9.0,
+    "underqualification_unit": -24.0,
+    "explicit_preference_bonus": 80.0,
+    "nonpreferred_explicit_penalty": -20.0,
+    "fallback_step_penalty": -4.0
+  }
+}

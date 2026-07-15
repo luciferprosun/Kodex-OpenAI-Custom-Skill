@@ -50,10 +50,34 @@ V0.2 keeps all V0 boundaries: dry-run by default, `--execute` required for launc
 
 Local production usage is `smart-codex --explain "task"` first, then `smart-codex --execute "safe task"` only after reviewing the route. For patched-Codex workflow, the local PATH-level `codex` wrapper may delegate prompt tasks to `smart-codex`, while the original Codex entry point remains available as `codex-real` for router execution and emergency bypass.
 
+## Phase 5.2 - Opt-in App Server Routing
+
+Implemented on a separate opt-in path without changing the historical V0.2
+wrapper. A localhost JSON-RPC proxy discovers live App Server models, preserves
+approval traffic and streaming notifications, and applies actual supported
+per-turn model/effort/sandbox/approval fields for the original Codex TUI.
+
+## Phase 5.3 - Dynamic Policy Calibration
+
+Implemented as a deterministic, capability-aware, dynamically refreshed policy:
+
+- hard live capability filtering before model scoring;
+- Sol/Terra/Luna/Spark task boundaries and GPT-5.5/legacy fallbacks;
+- independent live-supported effort selection;
+- explainable candidate scores and controlled model-switch hysteresis;
+- 180 curated acceptable-route cases plus drift, fallback, privacy, and safety
+  regression coverage;
+- no safety-rule duplication, global configuration mutation, binary change,
+  prompt persistence, or automatic approval.
+
+## Phase 6 - Plugin Packaging
+
+Not started. Phase 5.3 is accepted; package the opt-in surface next without
+making routed mode globally mandatory.
+
 ## Postponed V1 Items
 
 - SDK integration.
-- App-server integration.
 - Local LLM judge.
 - Learned classifier.
 - Automatic profile installer.

@@ -90,8 +90,18 @@ class AppServerProxy:
                 continue
             method = message.get("method")
             if method == "turn/start":
+                params = message.get("params")
+                thread_id = params.get("threadId") if isinstance(params, dict) else None
+                active_model = (
+                    state.thread_models.get(thread_id, (None, None))[0]
+                    if isinstance(thread_id, str)
+                    else None
+                )
                 try:
-                    routed = self.turn_router.route_message(message)
+                    routed = self.turn_router.route_message(
+                        message,
+                        previous_model=active_model,
+                    )
                 except RoutingFailure:
                     await frontend.send_text(encode_message(routing_error(message.get("id"))))
                     self.events.emit(
@@ -104,8 +114,6 @@ class AppServerProxy:
                     continue
                 request_id = message.get("id")
                 state.pending_turns[request_id] = routed
-                params = message.get("params")
-                thread_id = params.get("threadId") if isinstance(params, dict) else None
                 original_model = routed.original_model
                 if original_model is None and isinstance(thread_id, str):
                     original_model = state.thread_models.get(thread_id, (None, None))[0]
@@ -124,6 +132,20 @@ class AppServerProxy:
                         "effort": routed.effort,
                         "sandbox": routed.sandbox_mode,
                         "approval": routed.approval_policy,
+                        "previous_model": routed.previous_model,
+                        "new_model": routed.selected_model,
+                        "score_margin": routed.score_margin,
+                        "switch_reason": routed.switch_reason,
+                        "selection_confidence": routed.selection_confidence,
+                        "switch_confidence": routed.switch_confidence,
+                        "selection_explanation": routed.selection_explanation,
+                        "fallback_model": (
+                            routed.fallback_order[0] if routed.fallback_order else None
+                        ),
+                        "drift_warning": (
+                            routed.drift_warnings[0] if routed.drift_warnings else None
+                        ),
+                        "migration_warning": routed.migration_warning,
                     }
                 )
                 await backend.send_text(encode_message(routed.message))
@@ -187,6 +209,13 @@ class AppServerProxy:
                     "forwarded_model": routed.selected_model,
                     "effort": routed.effort,
                     "error_code": error_code,
+                    "previous_model": routed.previous_model,
+                    "new_model": routed.selected_model,
+                    "score_margin": routed.score_margin,
+                    "switch_reason": routed.switch_reason,
+                    "selection_confidence": routed.selection_confidence,
+                    "switch_confidence": routed.switch_confidence,
+                    "selection_explanation": routed.selection_explanation,
                 }
             )
 
