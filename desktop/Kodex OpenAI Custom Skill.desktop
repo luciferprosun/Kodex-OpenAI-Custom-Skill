@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Kodex OpenAI Custom Skill
+Comment=Open the original Codex TUI through the opt-in localhost Smart Router
+Exec=/home/l/codex-patch-smart-router/scripts/start-routed-codex
+Path=/home/l/codex-patch-smart-router
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;

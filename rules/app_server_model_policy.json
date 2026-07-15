@@ -1,0 +1,116 @@
+{
+  "schema_version": "0.1.0",
+  "description": "Declarative capability-class preferences. Live model/list metadata is authoritative.",
+  "effort_ladder": [
+    "minimal",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+  ],
+  "model_classes": {
+    "spark": {
+      "preferred_ids": ["gpt-5.3-codex-spark"],
+      "patterns": ["spark", "ultra-fast coding"]
+    },
+    "luna": {
+      "preferred_ids": ["gpt-5.6-luna", "gpt-5.4-mini"],
+      "patterns": ["luna", "mini", "fast and affordable", "cost-efficient"]
+    },
+    "terra": {
+      "preferred_ids": ["gpt-5.6-terra", "gpt-5.4"],
+      "patterns": ["terra", "balanced", "everyday coding", "strong model"]
+    },
+    "sol": {
+      "preferred_ids": ["gpt-5.6-sol", "gpt-5.5"],
+      "patterns": ["sol", "frontier", "complex coding", "research and real-world"]
+    }
+  },
+  "fallback_classes": {
+    "spark": ["spark", "luna", "terra", "sol"],
+    "luna": ["luna", "terra", "sol", "spark"],
+    "terra": ["terra", "sol", "luna", "spark"],
+    "sol": ["sol", "terra", "luna", "spark"]
+  },
+  "category_classes": {
+    "email": "luna",
+    "simple_text": "luna",
+    "literary": "luna",
+    "documentation": "luna",
+    "normal_coding": "terra",
+    "debugging": "terra",
+    "testing": "terra",
+    "dependency_management": "terra",
+    "repo_operations": "terra",
+    "data_analysis": "terra",
+    "grant_work": "terra",
+    "research": "terra",
+    "complex_coding": "sol",
+    "architecture": "sol",
+    "math_theory": "sol",
+    "security_audit": "sol",
+    "secret_handling": "sol",
+    "incident_response": "sol",
+    "system_admin": "sol",
+    "release_management": "sol",
+    "financial_admin": "sol",
+    "legal_admin": "terra",
+    "prompt_engineering": "sol",
+    "unknown": "terra"
+  },
+  "effort_by_category": {
+    "email": "low",
+    "simple_text": "low",
+    "literary": "low",
+    "documentation": "low",
+    "normal_coding": "medium",
+    "debugging": "high",
+    "testing": "medium",
+    "dependency_management": "medium",
+    "repo_operations": "medium",
+    "data_analysis": "medium",
+    "grant_work": "high",
+    "research": "high",
+    "complex_coding": "high",
+    "architecture": "xhigh",
+    "math_theory": "xhigh",
+    "security_audit": "high",
+    "secret_handling": "high",
+    "incident_response": "high",
+    "system_admin": "high",
+    "release_management": "high",
+    "financial_admin": "high",
+    "legal_admin": "high",
+    "prompt_engineering": "high",
+    "unknown": "medium"
+  },
+  "rapid_edit_signals": [
+    "\\bchange (?:one|a single|the) (?:button )?label\\b",
+    "\\bone[- ]line (?:edit|change|fix)\\b",
+    "\\brename (?:one|a single|the)\\b",
+    "\\bfix (?:one|a single|the) typo\\b",
+    "\\bsmall targeted (?:code )?edit\\b"
+  ],
+  "deep_research_signals": [
+    "\\b(?:deep|difficult|exhaustive|comprehensive|multi-source) research\\b",
+    "\\bfinal audit\\b"
+  ],
+  "delegation_signals": [
+    "\\bdelegate\\b",
+    "\\bsub[- ]?agents?\\b",
+    "\\bmultiple agents\\b",
+    "\\bin parallel\\b"
+  ],
+  "deterministic_eval_signals": [
+    "\\bdeterministic eval\\b",
+    "\\breproducib(?:le|ility)\\b",
+    "\\bbenchmark case\\b",
+    "\\beval case\\b"
+  ],
+  "local_policy": {
+    "allowed_sandbox_modes": ["read-only", "workspace-write"],
+    "allowed_approval_policies": ["on-request", "untrusted"]
+  }
+}

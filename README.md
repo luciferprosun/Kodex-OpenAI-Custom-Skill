@@ -6,7 +6,10 @@ Kodex OpenAI Custom Skill combines a Smart Prompt Check, Task Router, and Model 
 
 The repository-local Codex custom skill invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. Phase 1 through Phase 4.1 are complete. Phase 5 project-local lifecycle hooks are implemented, with manual review and trust acceptance still pending. Phase 6 plugin packaging is next and has not started.
 
-Model, effort, profile, sandbox, and approval recommendations remain advisory and are not applied automatically. The hooks preserve normal human approval and cover only the lifecycle paths supported and configured by the installed Codex release.
+Skill and hook recommendations remain advisory. The opt-in App Server manager
+adds a separate localhost layer that applies actual per-turn model, effort,
+sandbox, and approval overrides before forwarding `turn/start`. Hooks preserve
+normal human approval and remain defense-in-depth.
 
 The standalone `smart-codex` CLI remains available for explicit dry-run routing and approved launch workflows.
 
@@ -22,6 +25,7 @@ The internal Python package, import paths, rules, and standalone commands intent
 - A profile selector for task categories such as coding, research, writing, math, security, and repo operations.
 - A JSON-backed Knowledge Library in `rules/` for prompt weights, hard safety triggers, action danger, complexity, context, evidence, tie breakers, and profile policy.
 - A privacy-safe routing metadata logger.
+- An isolated, opt-in App Server proxy for actual per-turn model rotation in the original Codex TUI.
 
 ## What It Is Not
 
@@ -31,7 +35,7 @@ The internal Python package, import paths, rules, and standalone commands intent
 - Not an uncontrolled auto-agent.
 - Not a browser automation hack.
 - Not a replacement for human approval.
-- Not an SDK or app-server integration in V0.
+- Not a globally mandatory App Server replacement.
 - Not an AIOA, AOIA-Core, LSC, grant, or website portal integration.
 - Not a system that stores private prompts or touches secrets.
 - Not an OpenAI internal patch.
@@ -68,6 +72,25 @@ intercept every Codex tool. See
 [`docs/native-skill/PROJECT_LOCAL_HOOKS.md`](docs/native-skill/PROJECT_LOCAL_HOOKS.md)
 for architecture, privacy guarantees, exact definitions, known gaps, and the
 manual acceptance procedure.
+
+## Opt-in App Server routed TUI
+
+Actual per-turn model and reasoning-effort rotation is available through the
+isolated localhost App Server prototype:
+
+```bash
+./scripts/start-routed-codex
+```
+
+This opens the original installed Codex TUI through `codex --remote`. Ordinary
+`codex` remains the explicit OFF mode. The launcher does not replace the
+installed command, edit global configuration, or auto-approve actions.
+WebSocket App Server transport is experimental and unsupported.
+
+See [dynamic routing](docs/app-server/DYNAMIC_MODEL_ROUTING.md), [local routed
+TUI](docs/app-server/LOCAL_ROUTED_TUI.md), [security
+model](docs/app-server/SECURITY_MODEL.md), and
+[rollback](docs/app-server/ROLLBACK.md).
 
 ## Installation
 
@@ -149,7 +172,7 @@ The main eval file is `rules/eval_set_002.jsonl`. Add one JSON object per line w
 
 - `smart-codex` never uses `shell=True`.
 - Commands are built as argument lists.
-- Prompts are passed as one argument.
+- The legacy standalone execute path passes its prompt as one argument; routed TUI prompts stay inside App Server frames and never enter launcher argv.
 - Local `codex` wrapper execution calls the preserved `codex-real` entry point to avoid recursion.
 - V0 rejects `danger-full-access`.
 - Risk levels are `low`, `medium`, `high`, and `critical`.
@@ -163,9 +186,10 @@ The main eval file is `rules/eval_set_002.jsonl`. Add one JSON object per line w
 ## Limitations
 
 - Classification is deterministic keyword and regex scoring, not an LLM judge.
-- Model names are placeholders until the local machine runs `codex debug models`.
+- Legacy profile model names remain placeholders; App Server routed mode uses
+  the live startup `model/list` response instead.
 - Profile TOML files intentionally keep model placeholders in the public repo.
 - V0 does not install profiles into global Codex config.
-- V0 does not call SDKs, app-server, or remote tools.
+- App Server routed mode is isolated, localhost-only, experimental, and opt-in.
 - Project-local hooks cover only their configured, release-supported event and
   tool paths; existing sandboxing and human approval remain authoritative.
