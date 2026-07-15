@@ -6,7 +6,8 @@ Checkpoint status:
 
 - Phase 4: **COMPLETE**
 - Phase 4.1: **COMPLETE**
-- Phase 5: **NEXT**
+- Phase 5: **IMPLEMENTED — MANUAL TRUST ACCEPTANCE PENDING**
+- Phase 6: **NEXT**
 
 ## Phase 2: Skill scaffold
 
@@ -231,33 +232,75 @@ new reviewed Phase 4.1 checkpoint after this patch is accepted.
 
 ## Phase 5: Project-local hooks
 
+Status: implemented on 2026-07-15 on
+`feature/project-local-hooks-v0-2`; manual `/hooks` review, trust, and
+trusted-session acceptance remain pending.
+
+Validation evidence:
+
+- The three project-local definitions use command hooks with 15-second
+  timeouts and repository-root-resolved entrypoints.
+- All handlers reuse `smart_codex.router.route_prompt` and the root Knowledge
+  Library; no hook-local safety classifier was introduced.
+- The required shorthand analysis fixture `deleting main would be dangerous`
+  exposed one central trigger gap. After explicit operator approval, one
+  declarative protected-branch term was added to `rules/risk_triggers.json`;
+  no hook pattern or eval expectation was added or weakened.
+- `UserPromptSubmit` returns allowlisted advisory context and fails closed
+  without exposing the prompt.
+- `PreToolUse` denies central safety routes, defers ordinary actions, and never
+  auto-allows.
+- `PermissionRequest` denies unsafe or unclassifiable requests and otherwise
+  preserves the normal human approval prompt; it never auto-allows.
+- Focused configuration, adapter, subprocess, privacy, and fail-closed tests
+  pass (44/44). The full suite passes 227/227, preserving the previous 183
+  tests; eval sets remain 51/51, 85/85, and 69/69. All six direct stdin
+  simulations passed.
+- No plugin, marketplace, MCP, global configuration, trust-store, launcher, or
+  Codex binary change was made.
+- Manual trust was not bypassed. The implementation remains
+  **IMPLEMENTATION GREEN — MANUAL HOOK TRUST ACCEPTANCE PENDING**.
+- A fresh TUI reached the directory-trust gate. `No, quit` was selected, so
+  project-local hook display in `/hooks` and trusted-session tests remain
+  intentionally uncompleted until the human operator accepts the reviewed
+  project and hook definitions.
+
 ### Files changed
 
 - `.codex/hooks.json`
 - `.codex/hooks/user_prompt_submit.py`
 - `.codex/hooks/pre_tool_use.py`
 - `.codex/hooks/permission_request.py`
-- `tests/test_user_prompt_submit_hook.py`
-- `tests/test_pre_tool_use_hook.py`
-- `tests/test_permission_request_hook.py`
-- hook fixtures containing synthetic prompts/tool inputs only
+- `rules/risk_triggers.json` (one operator-approved central shorthand term)
+- `smart_codex/codex_hook_adapter.py`
+- `tests/test_codex_hooks_config.py`
+- `tests/test_codex_hook_adapter.py`
+- `tests/test_codex_hooks_subprocess.py`
+- `docs/native-skill/PROJECT_LOCAL_HOOKS.md`
+- minimal README and phase-plan status updates
 
 ### Acceptance criteria
 
 - Each adapter parses only its documented event schema and calls the canonical Router Core.
-- `UserPromptSubmit` returns bounded `additionalContext` for advisory routes and a documented block for hard-safety/`CONFIG_ERROR` routes.
+- `UserPromptSubmit` returns bounded `additionalContext` for successful routes,
+  permits analysis-only discussion, and returns a documented block on malformed
+  input, `CONFIG_ERROR`, or adapter failure.
 - `PreToolUse` denies tested destructive calls on every locally confirmed supported path.
 - `PermissionRequest` denies or defers; it never automatically allows in V0.3.
 - Hook output and stderr never contain raw prompts or secret values.
 - Explicit short timeouts are configured.
 - `/hooks` shows the project source and requires manual trust of the exact definitions.
-- Documentation lists every uncovered tool path observed in 0.144.1.
+- Documentation states the known interception limits verified for 0.144.4.
 
 ### Tests
 
-- Unit tests feed exact JSON fixtures on stdin and validate stdout/stderr/exit status.
-- Exit 0/no-output, valid context, structured block, exit 2 block, malformed JSON, missing fields, `ConfigError`, exceptions, and timeout behavior.
-- TUI tests for `UserPromptSubmit`, simple Bash, `apply_patch`, MCP if a harmless local test server already exists, and `PermissionRequest`.
+- Unit tests validate configuration, event-specific adapter behavior, central
+  safety parity, no-auto-allow invariants, and sanitized fail-closed responses.
+- Subprocess tests feed exact JSON fixtures through stdin and validate compact
+  JSON stdout, empty stderr, exit status, privacy canaries, and no temporary
+  input files.
+- Direct simulations cover safe/failing prompt submission, safe/critical tool
+  use, and safe/critical permission requests without executing any fixture.
 - Negative coverage tests show that WebSearch and any unhooked paths are not claimed as protected.
 - Full existing core/eval suite.
 

@@ -295,7 +295,8 @@
         "git\\s+push\\b.*--delete\\s+(?:main|master|production|release)\\b",
         "git\\s+push\\b.*\\s:(?:main|master|production|release)\\b",
         "(?:delete|deleting|remove|removing)\\s+(?:the\\s+)?(?:default|protected|production|release)\\s+branch",
-        "(?:delete|deleting|remove|removing)\\s+(?:the\\s+)?(?:main|master)\\s+branch"
+        "(?:delete|deleting|remove|removing)\\s+(?:the\\s+)?(?:main|master)\\s+branch",
+        "(?:delete|deleting|remove|removing)\\s+(?:the\\s+)?(?:main|master)\\s+(?:would|now|immediately)\\b"
       ],
       "risk": "critical",
       "category": "repo_operations",

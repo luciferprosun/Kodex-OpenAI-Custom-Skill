@@ -4,7 +4,9 @@
 
 Kodex OpenAI Custom Skill combines a Smart Prompt Check, Task Router, and Model Configuration Selector for Codex repository work. Its deterministic Router Core classifies task weight, category, complexity, risk, action danger, context, and evidence requirements, then recommends a conservative profile, sandbox, and approval policy.
 
-The current repository-local Codex custom skill is advisory: it invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. It does not automatically change the active model, profile, sandbox, or approval policy. Project-local lifecycle hooks are planned for Phase 5 to add deterministic pre-execution gates within their officially supported coverage.
+The repository-local Codex custom skill invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. Phase 1 through Phase 4.1 are complete. Phase 5 project-local lifecycle hooks are implemented, with manual review and trust acceptance still pending. Phase 6 plugin packaging is next and has not started.
+
+Model, effort, profile, sandbox, and approval recommendations remain advisory and are not applied automatically. The hooks preserve normal human approval and cover only the lifecycle paths supported and configured by the installed Codex release.
 
 The standalone `smart-codex` CLI remains available for explicit dry-run routing and approved launch workflows.
 
@@ -48,6 +50,24 @@ Implicit selection is model-selected and advisory, not a guaranteed security int
 ```bash
 ./.venv/bin/python .agents/skills/codex-patch-smart-router/scripts/route_prompt.py --stdin
 ```
+
+## Project-Local Hooks
+
+Phase 5 adds repository-local `UserPromptSubmit`, `PreToolUse`, and
+`PermissionRequest` adapters in `.codex/`. Start Codex from this repository and
+open `/hooks` to review the exact definitions. Trust must be granted manually;
+it is not bypassed or stored in the repository.
+
+Until that review and a fresh trusted-session test are complete, the status is:
+
+**IMPLEMENTATION GREEN — MANUAL HOOK TRUST ACCEPTANCE PENDING**
+
+The Smart Router never auto-allows a permission request. `PreToolUse` is a
+guardrail rather than a complete enforcement boundary and does not claim to
+intercept every Codex tool. See
+[`docs/native-skill/PROJECT_LOCAL_HOOKS.md`](docs/native-skill/PROJECT_LOCAL_HOOKS.md)
+for architecture, privacy guarantees, exact definitions, known gaps, and the
+manual acceptance procedure.
 
 ## Installation
 
@@ -147,3 +167,5 @@ The main eval file is `rules/eval_set_002.jsonl`. Add one JSON object per line w
 - Profile TOML files intentionally keep model placeholders in the public repo.
 - V0 does not install profiles into global Codex config.
 - V0 does not call SDKs, app-server, or remote tools.
+- Project-local hooks cover only their configured, release-supported event and
+  tool paths; existing sandboxing and human approval remain authoritative.
