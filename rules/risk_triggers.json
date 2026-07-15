@@ -10,6 +10,11 @@
         "private key",
         ".env",
         "credential",
+        "(?:~?/)?\\.ssh/(?:id_rsa|id_ed25519|id_ecdsa|id_dsa)\\b",
+        "(?:~?/)?\\.codex/auth\\.json\\b",
+        "\\b(?:credential|token)\\s+stores?\\b",
+        "\\b(?:cat|read|print|copy|cp|export|upload|modify|edit|write|move|mv)\\b.*\\.(?:pem|key)\\b",
+        "\\.(?:pem|key)\\b.*\\bprivate\\s+keys?\\b",
         "-----BEGIN.*PRIVATE KEY-----"
       ],
       "risk": "critical",
@@ -17,6 +22,7 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "secret_touching_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "direct credential exposure risk"
@@ -37,6 +43,7 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "secret_touching_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "identity or access surface"
@@ -56,6 +63,7 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "destructive_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "malicious or offensive security content"
@@ -65,18 +73,16 @@
       "terms": [
         "rm\\s+-rf",
         "delete all",
-        "remove all",
+        "remove all (?:files|directories|logs|artifacts|data)",
         "wipe",
-        "format disk",
-        "drop .*table",
-        "drop table",
-        "truncate table"
+        "format disk"
       ],
       "risk": "critical",
       "category": "system_admin",
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "destructive_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "irreversible data loss risk"
@@ -95,6 +101,7 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "destructive_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "host-level privilege or permission mutation"
@@ -110,13 +117,31 @@
         "release publishing",
         "publish to pypi",
         "publish .*pypi",
-        "npm publish"
+        "npm publish",
+        "\\btwine\\s+upload\\b",
+        "\\bpnpm\\s+publish\\b",
+        "\\byarn\\s+npm\\s+publish\\b",
+        "\\bcargo\\s+publish\\b",
+        "\\bgem\\s+push\\b",
+        "\\b(?:docker|podman)\\s+push\\b",
+        "\\bpoetry\\s+publish\\b",
+        "\\bdotnet\\s+nuget\\s+push\\b",
+        "package publication",
+        "publish (?:a )?package to (?:a )?registry",
+        "upload (?:a )?distribution to pypi",
+        "\\bgh\\s+release\\s+create\\b",
+        "create and publish (?:a )?github release",
+        "publish (?:a )?release",
+        "release to production",
+        "push release artifacts",
+        "publish (?:the )?final build"
       ],
       "risk": "high",
       "category": "release_management",
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "deployment_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "irreversible public or production impact"
@@ -139,26 +164,47 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "secret_touching_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "cloud or GitHub credential exposure"
+    },
+    {
+      "group": "destructive_database",
+      "terms": [
+        "\\btruncate\\s+table\\b",
+        "^(?:run\\s+|execute\\s+)?truncate\\s*$",
+        "^(?:run\\s+|execute\\s+)?truncate\\s+(?!(?:this|the|displayed|paragraph|text|response)\\b)[a-z_][a-z0-9_.]*\\b",
+        "\\bdrop\\s+(?:table|database)\\b",
+        "\\bdrop\\s+(?:the\\s+)?[a-z_][a-z0-9_]*\\s+table\\b",
+        "\\bdelete\\s+from\\s+[a-z_][a-z0-9_.]*\\b(?!.*\\bwhere\\b)",
+        "destructive migration",
+        "irreversible (?:database )?migration",
+        "remove all production records"
+      ],
+      "risk": "critical",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "action_danger": "database_operation",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "irreversible database data or schema loss risk"
     },
     {
       "group": "database_ops",
       "terms": [
         "database migration",
         "alembic upgrade",
-        "ALTER TABLE.*DROP",
-        "drop .*table",
-        "drop database",
-        "truncate table",
-        "delete from users"
+        "ALTER TABLE.*DROP"
       ],
       "risk": "high",
       "category": "system_admin",
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "database_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "database schema or data mutation risk"
@@ -178,6 +224,7 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "write_local_files",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "financial irreversibility or sensitive billing data"
@@ -198,6 +245,7 @@
       "profile": "research",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "read_only_analysis",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "privacy or legal sensitivity"
@@ -208,6 +256,9 @@
         "force push",
         "git push --force",
         "push -f",
+        "git reset --hard",
+        "reset --hard",
+        "delete branch",
         "rewrite history"
       ],
       "risk": "critical",
@@ -215,9 +266,91 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "destructive_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "irreversible git history rewrite"
+    },
+    {
+      "group": "destructive_git_cleanup",
+      "terms": [
+        "git\\s+clean\\s+-(?:[a-z]*f[a-z]*d[a-z]*|[a-z]*d[a-z]*f[a-z]*)\\b",
+        "git\\s+clean\\b.*(?:-f\\b|--force\\b).*(?:-d\\b|--directories?\\b)",
+        "git\\s+clean\\b.*(?:-d\\b|--directories?\\b).*(?:-f\\b|--force\\b)"
+      ],
+      "risk": "critical",
+      "category": "repo_operations",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "action_danger": "destructive_operation",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "irreversible Git working-tree cleanup"
+    },
+    {
+      "group": "protected_branch_deletion",
+      "terms": [
+        "git\\s+branch\\s+-d\\s+(?:main|master|production|release)\\b",
+        "git\\s+push\\b.*--delete\\s+(?:main|master|production|release)\\b",
+        "git\\s+push\\b.*\\s:(?:main|master|production|release)\\b",
+        "(?:delete|deleting|remove|removing)\\s+(?:the\\s+)?(?:default|protected|production|release)\\s+branch",
+        "(?:delete|deleting|remove|removing)\\s+(?:the\\s+)?(?:main|master)\\s+branch"
+      ],
+      "risk": "critical",
+      "category": "repo_operations",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "action_danger": "destructive_operation",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "protected or default branch deletion"
+    },
+    {
+      "group": "security_control_disable",
+      "terms": [
+        "\\bufw\\s+disable\\b",
+        "\\bsystemctl\\s+(?:stop|disable)\\s+firewalld\\b",
+        "\\bsetenforce\\s+0\\b",
+        "\\b(?:disable|disabling)\\s+(?:selinux|apparmor|antivirus|endpoint protection)\\b",
+        "\\b(?:systemctl\\s+stop|stop|stopping)\\s+auditd\\b",
+        "turn off authentication",
+        "bypass security controls",
+        "(?:disable|disabling) (?:tls(?: certificate)?|certificate) verification"
+      ],
+      "risk": "critical",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "action_danger": "destructive_operation",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "host or transport security control disabling"
+    },
+    {
+      "group": "codex_binary_mutation",
+      "terms": [
+        "overwrit(?:e|ing)\\b.*(?:\\.local/bin/)?codex\\b",
+        "replace (?:the )?(?:installed |real )?codex (?:binary|command|executable)",
+        "(?:copy|cp|move|mv)\\b.*\\.local/bin/codex\\b",
+        "create (?:an )?alias\\b.*(?:replac(?:e|es|ing)|override)\\b.*codex\\b",
+        "chang(?:e|ing)\\b.*codex\\b.*symlink",
+        "patch\\b.*codex\\b.*(?:binary|executable)",
+        "delet(?:e|ing)\\b.*codex\\b.*(?:binary|command|executable)",
+        "rm\\b.*\\.local/bin/codex\\b",
+        "inspect\\b.*codex\\b.*(?:binary|executable|symlink)"
+      ],
+      "risk": "critical",
+      "category": "system_admin",
+      "profile": "security",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "action_danger": "destructive_operation",
+      "execute_by_default": false,
+      "confirmation_required": true,
+      "reason": "installed Codex command or binary mutation"
     },
     {
       "group": "pipe_to_shell",
@@ -235,6 +368,7 @@
       "profile": "security",
       "sandbox": "read-only",
       "approval": "on-request",
+      "action_danger": "destructive_operation",
       "execute_by_default": false,
       "confirmation_required": true,
       "reason": "unverified remote code execution pattern"

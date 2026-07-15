@@ -13,6 +13,18 @@ ALLOWED_V0_SANDBOX = {"read-only", "workspace-write"}
 ALLOWED_VERBOSITY = {"low", "medium", "high"}
 ALLOWED_REASONING_EFFORT = {"minimal", "low", "medium", "high", "xhigh"}
 ALLOWED_APPROVAL_POLICY = {"on-request"}  # V0 only
+ALLOWED_ACTION_DANGERS = {
+    "read_only_analysis",
+    "write_local_files",
+    "run_tests",
+    "git_operations",
+    "network_access",
+    "dependency_install",
+    "database_operation",
+    "deployment_operation",
+    "destructive_operation",
+    "secret_touching_operation",
+}
 
 class ConfigError(RuntimeError):
     pass
@@ -106,7 +118,16 @@ def _validate_risk_triggers(risk_triggers: dict) -> None:
     if not isinstance(triggers, list) or not triggers:
         raise ConfigError("risk_triggers.json missing non-empty triggers list")
     for index, trigger in enumerate(triggers, start=1):
-        for key in ["group", "terms", "risk", "category", "profile", "sandbox", "approval"]:
+        for key in [
+            "group",
+            "terms",
+            "risk",
+            "category",
+            "profile",
+            "sandbox",
+            "approval",
+            "action_danger",
+        ]:
             if key not in trigger:
                 raise ConfigError(f"risk trigger {index} missing {key}")
         if trigger["risk"] not in {"high", "critical"}:
@@ -115,6 +136,11 @@ def _validate_risk_triggers(risk_triggers: dict) -> None:
             raise ConfigError(f"risk trigger {trigger['group']} invalid sandbox")
         if trigger["approval"] != "on-request":
             raise ConfigError(f"risk trigger {trigger['group']} invalid approval")
+        if trigger["action_danger"] not in ALLOWED_ACTION_DANGERS:
+            raise ConfigError(
+                f"risk trigger {trigger['group']} invalid action_danger: "
+                f"{trigger['action_danger']}"
+            )
         if not isinstance(trigger["terms"], list) or not trigger["terms"]:
             raise ConfigError(f"risk trigger {trigger['group']} has no terms")
 

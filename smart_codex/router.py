@@ -10,7 +10,7 @@ from .profiles import (
     validate_profile_override,
     validate_sandbox_override,
 )
-from .scorer import RISK_ORDER, score
+from .scorer import RISK_ORDER, is_analysis_only_request, score
 
 
 CATEGORY_TO_PROFILE = {
@@ -35,15 +35,6 @@ SAFETY_ACTION_DANGERS = {
     "deployment_operation",
     "database_operation",
 }
-
-DESTRUCTIVE_GIT_SIGNALS = (
-    "force push",
-    "push --force",
-    "push -f",
-    "reset --hard",
-    "delete branch",
-    "rewrite history",
-)
 
 DATABASE_ACTION_SIGNALS = (
     "database",
@@ -130,15 +121,13 @@ def route_prompt(
 
     override_used = False
     safety_forced = False
+    analysis_only = is_analysis_only_request(prompt)
 
-    if has_destructive_git_signal(prompt):
-        action_danger = "destructive_operation"
-        risk_level = max_risk(risk_level, "critical")
-        selected_profile = "security"
-        safety_forced = True
-        warning = append_warning(warning, "REQUIRES_CONFIRMATION")
-        reasons.append("destructive git signal forces security routing")
-    elif action_danger == "database_operation" and not has_database_action_signal(prompt):
+    if (
+        action_danger == "database_operation"
+        and score_card.override is None
+        and not has_database_action_signal(prompt)
+    ):
         action_danger = "read_only_analysis"
         reasons.append("non-database migration does not trigger database action gate")
     elif action_danger in SAFETY_ACTION_DANGERS:
@@ -194,6 +183,10 @@ def route_prompt(
     if safety_forced:
         sandbox_mode = "read-only"
         approval_policy = "on-request"
+    elif analysis_only and action_danger == "read_only_analysis":
+        sandbox_mode = "read-only"
+        approval_policy = "on-request"
+        reasons.append("explicit analysis-only request forces read-only advisory routing")
 
     if sandbox_override is not None:
         validate_sandbox_override(sandbox_override)
@@ -260,11 +253,6 @@ def max_risk(current: str, minimum: str) -> str:
     current_value = RISK_ORDER.get(current, 0)
     minimum_value = RISK_ORDER.get(minimum, 0)
     return current if current_value >= minimum_value else minimum
-
-
-def has_destructive_git_signal(prompt: str) -> bool:
-    normalized = prompt.lower()
-    return any(signal in normalized for signal in DESTRUCTIVE_GIT_SIGNALS)
 
 
 def has_database_action_signal(prompt: str) -> bool:

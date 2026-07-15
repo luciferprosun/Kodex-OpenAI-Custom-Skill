@@ -41,6 +41,9 @@ CATEGORY_PRIORITY = [
 
 READ_ONLY_INTENT = (
     "explain",
+    "describe",
+    "analyze only",
+    "analysis only",
     "what does",
     "without running",
     "without executing",
@@ -51,6 +54,33 @@ READ_ONLY_INTENT = (
     "scan",
     "find",
     "summarize",
+)
+
+ANALYSIS_ONLY_MARKERS = (
+    "analyze only",
+    "analysis only",
+    "review only",
+    "simulation only",
+    "simulate without execution",
+    "simulate without executing",
+    "without execution",
+    "without executing",
+    "without running",
+    "do not execute",
+    "don't execute",
+    "do not run",
+    "don't run",
+    "propose but do not execute",
+)
+
+ANALYSIS_LEAD_RE = re.compile(
+    r"^(?:please\s+)?(?:explain|describe|review|analy[sz]e|audit|inspect|"
+    r"simulate|assess|evaluate|show\s+where|why\b|what\s+does\b)"
+)
+
+FOLLOWED_BY_EXECUTION_RE = re.compile(
+    r"\b(?:then|and)\s+(?:run|execute|apply|perform|delete|remove|upload|"
+    r"publish|disable|overwrite|replace|change|stop|truncate|drop)\b"
 )
 
 DIRECT_SECRET_INTENT = (
@@ -66,22 +96,6 @@ DIRECT_SECRET_INTENT = (
     "gho_",
     "aws_secret",
 )
-
-ACTION_BY_GROUP = {
-    "secrets_keys": "secret_touching_operation",
-    "auth_identity": "secret_touching_operation",
-    "github_cloud_credentials": "secret_touching_operation",
-    "malware_exploit": "destructive_operation",
-    "destructive_fs": "destructive_operation",
-    "elevated_privilege": "destructive_operation",
-    "production_changes": "deployment_operation",
-    "database_ops": "database_operation",
-    "payment_billing": "write_local_files",
-    "legal_pii": "read_only_analysis",
-    "force_push": "destructive_operation",
-    "pipe_to_shell": "destructive_operation",
-}
-
 
 @dataclass(frozen=True)
 class OverrideResult:
@@ -153,16 +167,52 @@ def _is_read_only_intent(text: str) -> bool:
     return _contains_any(text, READ_ONLY_INTENT)
 
 
+def is_analysis_only_request(prompt: str) -> bool:
+    """Return whether the prompt explicitly constrains work to analysis only.
+
+    Dangerous syntax defaults to execution-oriented handling. Analysis is
+    recognized only from an explicit leading analytical verb or a direct
+    no-execution constraint. A later request to run the action wins.
+    """
+    text = normalize_prompt(prompt)
+    if FOLLOWED_BY_EXECUTION_RE.search(text):
+        return False
+    if _contains_any(text, ANALYSIS_ONLY_MARKERS):
+        return True
+    return ANALYSIS_LEAD_RE.search(text) is not None
+
+
 def _has_direct_secret_intent(text: str) -> bool:
     return _contains_any(text, DIRECT_SECRET_INTENT)
 
 
-def _override_from_trigger(trigger: dict[str, Any], text: str) -> OverrideResult:
+def _override_from_trigger(
+    trigger: dict[str, Any],
+    text: str,
+    *,
+    analysis_only: bool,
+) -> OverrideResult:
     group = str(trigger.get("group", "unknown"))
     category = str(trigger.get("category", "security_audit"))
     risk = str(trigger.get("risk", "critical"))
     profile = str(trigger.get("profile", "security"))
     reason = str(trigger.get("reason", "hard safety override"))
+    action_danger = str(trigger.get("action_danger", "secret_touching_operation"))
+    confirmation_required = bool(trigger.get("confirmation_required", True))
+
+    if analysis_only:
+        return OverrideResult(
+            category="security_audit",
+            profile="security",
+            risk="high",
+            sandbox="read-only",
+            approval="on-request",
+            group=group,
+            reason=f"{reason}; explicit analysis-only request",
+            action_danger="read_only_analysis",
+            confirmation_required=False,
+            execute_by_default=False,
+        )
 
     if group in {"secrets_keys", "auth_identity"}:
         if _is_read_only_intent(text) and not _has_direct_secret_intent(text):
@@ -174,12 +224,6 @@ def _override_from_trigger(trigger: dict[str, Any], text: str) -> OverrideResult
             category = "secret_handling" if group == "secrets_keys" else "security_audit"
             risk = "critical" if group == "secrets_keys" else "high"
             profile = "security"
-
-    if group == "destructive_fs" and _is_read_only_intent(text):
-        category = "security_audit"
-        risk = "high"
-        profile = "security"
-        reason = f"{reason}; read-only destructive-command analysis"
 
     if group == "production_changes" and _contains_any(text, ["broke prod", "rollback plan", "prod is down"]):
         category = "incident_response"
@@ -200,19 +244,24 @@ def _override_from_trigger(trigger: dict[str, Any], text: str) -> OverrideResult
         approval=str(trigger.get("approval", "on-request")),
         group=group,
         reason=reason,
-        action_danger=ACTION_BY_GROUP.get(group, "secret_touching_operation"),
-        confirmation_required=bool(trigger.get("confirmation_required", True)),
-        execute_by_default=False,
+        action_danger=action_danger,
+        confirmation_required=confirmation_required,
+        execute_by_default=bool(trigger.get("execute_by_default", False)),
     )
 
 
 def check_hard_override(prompt: str, rules: KnowledgeLibrary | None = None) -> OverrideResult | None:
     rules = rules or load_rules()
     text = normalize_prompt(prompt)
+    analysis_only = is_analysis_only_request(text)
     for trigger in rules.risk_triggers.get("triggers", []):
         terms = trigger.get("terms", [])
         if any(_term_matches(str(term), text) for term in terms):
-            return _override_from_trigger(trigger, text)
+            return _override_from_trigger(
+                trigger,
+                text,
+                analysis_only=analysis_only,
+            )
     return None
 
 
@@ -358,6 +407,8 @@ def _score_level_group(prompt: str, levels: dict[str, Any], order: dict[str, int
 
 def _action_danger(prompt: str, rules: KnowledgeLibrary) -> str:
     text = normalize_prompt(prompt)
+    if is_analysis_only_request(text):
+        return "read_only_analysis"
     order = {
         "read_only_analysis": 0,
         "write_local_files": 1,
@@ -467,13 +518,22 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
     if override is not None:
         base = categories.get(override.category, categories.get("unknown", {}))
         complexity = _complexity_for(prompt, override.category, str(base.get("complexity", "medium")), rules)
-        if override.group in {"production_changes", "database_ops"}:
+        if override.group in {
+            "production_changes",
+            "database_ops",
+            "destructive_database",
+        }:
             complexity = "medium"
         if override.group == "pipe_to_shell" and ("curl" in text or "wget" in text or "| bash" in text or "| sh" in text):
             complexity = "medium"
         evidence = _score_level_group(prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "light")
         context = _score_level_group(prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
         repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(prompt, override.risk, override.action_danger)
+        warnings = [f"hard_override:{override.group}"]
+        if override.confirmation_required:
+            warnings.insert(0, "REQUIRES_CONFIRMATION")
+        else:
+            warnings.insert(0, "ANALYSIS_ONLY")
         return ScoreCard(
             category=override.category,
             profile=override.profile,
@@ -485,7 +545,7 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
             confidence=1.0,
             confidence_level="high",
             override=override,
-            warnings=["REQUIRES_CONFIRMATION", f"hard_override:{override.group}"],
+            warnings=warnings,
             reasons=[override.reason],
             repo_impact=repo_impact,
             security_sensitivity=security_sensitivity,

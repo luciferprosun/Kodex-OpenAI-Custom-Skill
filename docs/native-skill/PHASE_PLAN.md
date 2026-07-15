@@ -5,6 +5,7 @@ Phase 1 ends with documentation only. Every later phase must start from a clean 
 Checkpoint status:
 
 - Phase 4: **COMPLETE**
+- Phase 4.1: **COMPLETE**
 - Phase 5: **NEXT**
 
 ## Phase 2: Skill scaffold
@@ -158,6 +159,75 @@ No hook or plugin file is created.
 ### Rollback
 
 Revert the Phase 4 evaluation commit to remove the dataset, schema tests, report, and status update. The Phase 3 skill and adapter remain unchanged. Revert Phase 2/3 separately only if the repository-local skill itself must be removed.
+
+## Phase 4.1: Router Core mandatory hook-safety coverage
+
+Status: implemented and validated on 2026-07-15 on
+`feature/router-core-safety-coverage-v0-1`.
+
+Validation evidence:
+
+- Central risk triggers now classify destructive Git cleanup, protected/default
+  branch deletion, private-key and credential-store access, package/release
+  publication, destructive database operations, security-control disabling,
+  and installed Codex binary mutation.
+- One shared scorer function distinguishes explicit analysis/no-execution
+  prompts from execution-oriented requests; a later instruction to execute
+  takes precedence.
+- The 69-case `eval_set_003_safety_coverage` contains 37 execution cases, 22
+  analysis controls, and 10 ordinary negative controls, all passing.
+- Existing `eval_set_001` (51/51), `eval_set_002` (85/85), skill activation
+  schema tests, scaffold tests, and adapter tests remain green.
+- The complete repository suite passes with 183 tests.
+- The adapter schema remains `0.1.0`, prompt input remains stdin-only, and no
+  launcher, hook, plugin, global Codex configuration, or Codex binary change
+  was introduced.
+
+### Files changed
+
+- `rules/risk_triggers.json`
+- `rules/eval_set_003_safety_coverage.jsonl`
+- `smart_codex/knowledge.py`
+- `smart_codex/scorer.py`
+- `smart_codex/router.py`
+- `tests/test_router_core_safety_coverage_4_1.py`
+- `docs/native-skill/PHASE_4_1_SAFETY_COVERAGE.md`
+- this phase-plan status update
+
+### Acceptance criteria
+
+- Every mandatory Phase 5 action class routes to security/read-only with
+  on-request approval and a high or critical risk.
+- Mandatory destructive classes route at exactly critical risk.
+- Explicit discussion and simulation route as `read_only_analysis` and never
+  execute the described action.
+- Ordinary uses of words such as clean, publish, release, truncate, drop,
+  disable, and Codex do not become destructive operations.
+- Hard-safety precedence, action-danger routing, confidence, evidence/context,
+  and fail-closed Knowledge Library validation remain intact.
+- All previous and Phase 4.1 tests pass.
+
+### Tests
+
+- `tests/test_router_core_safety_coverage_4_1.py`
+- `rules/eval_set_003_safety_coverage.jsonl`
+- existing eval sets, adapter, skill scaffold, activation schema, and full
+  regression suite
+- stdin-only adapter simulations and static privacy/safety scans
+
+### Stop conditions
+
+- Any mandatory execution case is not high/critical and security/read-only.
+- Discussion is classified exactly like execution.
+- Ordinary negative controls become destructive.
+- A hook-local or second classifier is required.
+- Raw prompt logging, shell execution, launcher use, or global mutation appears.
+
+### Rollback
+
+Revert the Phase 4.1 commit. The immutable `phase-4-complete` checkpoint remains
+available at `e9dd9d0`, and the clean Phase 5 branch can be recreated from the
+new reviewed Phase 4.1 checkpoint after this patch is accepted.
 
 ## Phase 5: Project-local hooks
 
