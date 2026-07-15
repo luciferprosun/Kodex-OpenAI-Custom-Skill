@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 from .knowledge import KnowledgeLibrary, load_rules
-from .preprocessor import normalize_prompt
+from .preprocessor import analyze_prompt_semantics, normalize_prompt
 
 
 RISK_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -83,18 +83,18 @@ FOLLOWED_BY_EXECUTION_RE = re.compile(
     r"publish|disable|overwrite|replace|change|stop|truncate|drop)\b"
 )
 
-DIRECT_SECRET_INTENT = (
-    "add",
-    "create",
-    "generate",
-    "store",
-    "rotate",
-    "remove",
-    "commit history",
-    "github token",
-    "ghp_",
-    "gho_",
-    "aws_secret",
+DIRECT_SECRET_ACTION_RE = re.compile(
+    r"\b(?:access|add|cat|copy|cp|create|display|dump|edit|export|extract|"
+    r"generate|move|mv|modify|open|patch|print|read|remove|retrieve|reveal|"
+    r"rotate|show|store|update|upload|write)\b"
+)
+
+DIRECT_SECRET_TARGET_RE = re.compile(
+    r"\b(?:passwords?|credentials?|secrets?|tokens?|api\s+keys?|"
+    r"private\s+keys?|ssh\s+keys?|cookies?|auth(?:entication)?(?:\.json)?|"
+    r"credential\s+stores?)\b|(?<!\w)\.env(?!\w)|\.codex/auth\.json|"
+    r"\.ssh/id_(?:rsa|ed25519|ecdsa|dsa)",
+    flags=re.IGNORECASE,
 )
 
 @dataclass(frozen=True)
@@ -139,6 +139,7 @@ class ScoreCard:
     security_sensitivity: str = "none"
     destructiveness: str = "none"
     execution_scope: str = "unknown"
+    safety_constraints: list[str] = field(default_factory=list)
     source: str = "knowledge_library"
 
 
@@ -183,7 +184,10 @@ def is_analysis_only_request(prompt: str) -> bool:
 
 
 def _has_direct_secret_intent(text: str) -> bool:
-    return _contains_any(text, DIRECT_SECRET_INTENT)
+    return (
+        DIRECT_SECRET_ACTION_RE.search(text) is not None
+        and DIRECT_SECRET_TARGET_RE.search(text) is not None
+    )
 
 
 def _override_from_trigger(
@@ -215,15 +219,19 @@ def _override_from_trigger(
         )
 
     if group in {"secrets_keys", "auth_identity"}:
-        if _is_read_only_intent(text) and not _has_direct_secret_intent(text):
+        if not _has_direct_secret_intent(text):
             category = "security_audit"
             risk = "high"
             profile = "security"
             reason = f"{reason}; read-only secret/auth analysis"
+            action_danger = "read_only_analysis"
+            confirmation_required = False
         else:
-            category = "secret_handling" if group == "secrets_keys" else "security_audit"
-            risk = "critical" if group == "secrets_keys" else "high"
+            category = "secret_handling"
+            risk = "critical"
             profile = "security"
+            action_danger = "secret_touching_operation"
+            confirmation_required = True
 
     if group == "production_changes" and _contains_any(text, ["broke prod", "rollback plan", "prod is down"]):
         category = "incident_response"
@@ -252,8 +260,9 @@ def _override_from_trigger(
 
 def check_hard_override(prompt: str, rules: KnowledgeLibrary | None = None) -> OverrideResult | None:
     rules = rules or load_rules()
-    text = normalize_prompt(prompt)
-    analysis_only = is_analysis_only_request(text)
+    semantics = analyze_prompt_semantics(prompt)
+    text = semantics.actionable_text
+    analysis_only = is_analysis_only_request(prompt)
     for trigger in rules.risk_triggers.get("triggers", []):
         terms = trigger.get("terms", [])
         if any(_term_matches(str(term), text) for term in terms):
@@ -415,11 +424,12 @@ def _action_danger(prompt: str, rules: KnowledgeLibrary) -> str:
         "run_tests": 2,
         "git_operations": 3,
         "network_access": 4,
-        "dependency_install": 5,
-        "database_operation": 6,
-        "deployment_operation": 7,
-        "destructive_operation": 8,
-        "secret_touching_operation": 9,
+        "external_service_action": 5,
+        "dependency_install": 6,
+        "database_operation": 7,
+        "deployment_operation": 8,
+        "destructive_operation": 9,
+        "secret_touching_operation": 10,
         "unknown": -1,
     }
     danger = _score_level_group(prompt, rules.action_danger_rules.get("levels", {}), order, "read_only_analysis")
@@ -505,19 +515,21 @@ def _dimensions(prompt: str, risk_level: str, action_danger: str) -> tuple[str, 
     repo_impact = "remote" if _contains_any(text, ["push", "pull request", "tag", "release", "publish"]) else "local" if _contains_any(text, ["commit", "branch", "repo"]) else "none"
     security_sensitivity = "critical" if risk_level == "critical" else "high" if risk_level == "high" or "secret" in text or "token" in text else "low" if "auth" in text else "none"
     destructiveness = "critical" if _contains_any(text, ["rm -rf", "delete all", "wipe", "drop table", "force push", "truncate table"]) else "hard" if action_danger in {"deployment_operation", "database_operation"} else "soft" if _contains_any(text, ["remove", "delete", "overwrite"]) else "none"
-    execution_scope = "network" if action_danger in {"network_access", "dependency_install"} else "system" if action_danger in {"deployment_operation", "database_operation", "destructive_operation"} else "repo" if repo_impact != "none" else "module" if _contains_any(text, ["module", "service", "gateway"]) else "single_file" if _contains_any(text, ["function", "file", "loop", "button"]) else "unknown"
+    execution_scope = "network" if action_danger in {"network_access", "external_service_action", "dependency_install"} else "system" if action_danger in {"deployment_operation", "database_operation", "destructive_operation"} else "repo" if repo_impact != "none" else "module" if _contains_any(text, ["module", "service", "gateway"]) else "single_file" if _contains_any(text, ["function", "file", "loop", "button"]) else "unknown"
     return repo_impact, security_sensitivity, destructiveness, execution_scope
 
 
 def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
     rules = rules or load_rules()
-    text = normalize_prompt(prompt)
-    override = check_hard_override(prompt, rules)
+    semantics = analyze_prompt_semantics(prompt)
+    semantic_prompt = semantics.actionable_text
+    text = normalize_prompt(semantic_prompt)
+    override = check_hard_override(semantic_prompt, rules)
     categories = rules.category_weights.get("categories", {})
 
     if override is not None:
         base = categories.get(override.category, categories.get("unknown", {}))
-        complexity = _complexity_for(prompt, override.category, str(base.get("complexity", "medium")), rules)
+        complexity = _complexity_for(semantic_prompt, override.category, str(base.get("complexity", "medium")), rules)
         if override.group in {
             "production_changes",
             "database_ops",
@@ -526,9 +538,9 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
             complexity = "medium"
         if override.group == "pipe_to_shell" and ("curl" in text or "wget" in text or "| bash" in text or "| sh" in text):
             complexity = "medium"
-        evidence = _score_level_group(prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "light")
-        context = _score_level_group(prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
-        repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(prompt, override.risk, override.action_danger)
+        evidence = _score_level_group(semantic_prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "light")
+        context = _score_level_group(semantic_prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
+        repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(semantic_prompt, override.risk, override.action_danger)
         warnings = [f"hard_override:{override.group}"]
         if override.confirmation_required:
             warnings.insert(0, "REQUIRES_CONFIRMATION")
@@ -551,19 +563,22 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
             security_sensitivity=security_sensitivity,
             destructiveness=destructiveness,
             execution_scope=execution_scope,
+            safety_constraints=list(semantics.safety_constraints),
         )
 
-    category, category_scores, confidence, confidence_level, mixed, top_matches = score_categories(prompt, rules)
+    category, category_scores, confidence, confidence_level, mixed, top_matches = score_categories(semantic_prompt, rules)
     base = categories.get(category, categories.get("unknown", {}))
     base_risk = str(base.get("risk", "low"))
     base_complexity = str(base.get("complexity", "medium"))
-    risk_level = _risk_for_category(category, base_risk, prompt)
-    complexity_level = _complexity_for(prompt, category, base_complexity, rules)
-    evidence_requirement = _score_level_group(prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "none")
-    context_requirement = _score_level_group(prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
-    action_danger = _action_danger(prompt, rules)
+    risk_level = _risk_for_category(category, base_risk, semantic_prompt)
+    complexity_level = _complexity_for(semantic_prompt, category, base_complexity, rules)
+    evidence_requirement = _score_level_group(semantic_prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "none")
+    context_requirement = _score_level_group(semantic_prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
+    action_danger = _action_danger(semantic_prompt, rules)
     profile = str(base.get("default_profile", "standard"))
     warnings: list[str] = []
+    if semantics.safety_constraints:
+        warnings.append("SAFETY_CONSTRAINTS_RECOGNIZED")
 
     if category == "unknown":
         if _contains_any(text, ["access", "credential", "permission", "auth", "secret", "token"]):
@@ -585,10 +600,11 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
         profile = "literary"
 
     reasons = [f"category:{category}", f"confidence:{confidence_level}"]
+    reasons.extend(f"safety_constraint:{item}" for item in semantics.safety_constraints)
     if top_matches:
         reasons.append("matched:" + ",".join(top_matches[0].matched_terms[:5]))
 
-    repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(prompt, risk_level, action_danger)
+    repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(semantic_prompt, risk_level, action_danger)
     return ScoreCard(
         category=category,
         profile=profile,
@@ -608,4 +624,5 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
         security_sensitivity=security_sensitivity,
         destructiveness=destructiveness,
         execution_scope=execution_scope,
+        safety_constraints=list(semantics.safety_constraints),
     )

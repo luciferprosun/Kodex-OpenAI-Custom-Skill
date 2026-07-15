@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
+from .preprocessor import analyze_prompt_semantics
+
 
 CATEGORIES = [
     "email",
@@ -265,7 +267,8 @@ def normalize_text(prompt: str) -> str:
 
 
 def classify_prompt(prompt: str) -> Classification:
-    text = normalize_text(prompt)
+    semantics = analyze_prompt_semantics(prompt)
+    text = normalize_text(semantics.actionable_text)
     scores = {category: 0 for category in CATEGORIES}
     matched_by_category: dict[str, list[str]] = {category: [] for category in CATEGORIES}
 
@@ -275,7 +278,7 @@ def classify_prompt(prompt: str) -> Classification:
                 scores[category] += weight
                 matched_by_category[category].append(label)
 
-    apply_structural_heuristics(prompt, scores, matched_by_category)
+    apply_structural_heuristics(semantics.actionable_text, scores, matched_by_category)
 
     total_score = sum(scores.values())
     if total_score == 0:

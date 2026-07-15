@@ -79,6 +79,7 @@ class RoutingDecision:
     security_sensitivity: str
     destructiveness: str
     execution_scope: str
+    safety_constraints: list[str]
     score_source: str
 
 
@@ -154,6 +155,10 @@ def route_prompt(
         risk_level = max_risk(risk_level, "medium")
         warning = append_warning(warning, "network access requires confirmation")
         reasons.append(f"network access routes to {selected_profile} profile")
+    elif action_danger == "external_service_action":
+        risk_level = max_risk(risk_level, "medium")
+        warning = append_warning(warning, "external service action requires human approval")
+        reasons.append("external service action retains the task profile and human approval")
 
     high_or_critical = RISK_ORDER.get(risk_level, 0) >= RISK_ORDER["high"]
     if high_or_critical:
@@ -237,6 +242,7 @@ def route_prompt(
         security_sensitivity=score_card.security_sensitivity,
         destructiveness=score_card.destructiveness,
         execution_scope=score_card.execution_scope,
+        safety_constraints=list(score_card.safety_constraints),
         score_source=score_card.source,
 )
 

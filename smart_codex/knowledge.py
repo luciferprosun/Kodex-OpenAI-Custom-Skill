@@ -19,6 +19,7 @@ ALLOWED_ACTION_DANGERS = {
     "run_tests",
     "git_operations",
     "network_access",
+    "external_service_action",
     "dependency_install",
     "database_operation",
     "deployment_operation",

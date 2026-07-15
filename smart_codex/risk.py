@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import re
 
 from .scorer import OverrideResult, check_hard_override as _check_hard_override
+from .preprocessor import analyze_prompt_semantics
 
 
 HIGH_RISK_PATTERNS = [
@@ -48,10 +49,11 @@ class RiskAssessment:
 
 
 def assess_risk(prompt: str, category: str) -> RiskAssessment:
-    text = re.sub(r"\s+", " ", prompt.lower()).strip()
+    semantic_prompt = analyze_prompt_semantics(prompt).actionable_text
+    text = re.sub(r"\s+", " ", semantic_prompt.lower()).strip()
     reasons: list[str] = []
 
-    override = check_hard_override(prompt)
+    override = check_hard_override(semantic_prompt)
     if override is not None:
         reasons.extend([override.reason, f"hard override: {override.group}"])
         return RiskAssessment(

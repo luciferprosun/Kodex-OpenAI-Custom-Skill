@@ -14,6 +14,7 @@
         "(?:~?/)?\\.codex/auth\\.json\\b",
         "\\b(?:credential|token)\\s+stores?\\b",
         "\\b(?:cat|read|print|copy|cp|export|upload|modify|edit|write|move|mv)\\b.*\\.(?:pem|key)\\b",
+        "\\b(?:retrieve|read|print|show|export|copy|upload|open|access|extract|dump)\\b.*\\b(?:saved\\s+)?(?:browser\\s+)?cookies?\\b",
         "\\.(?:pem|key)\\b.*\\bprivate\\s+keys?\\b",
         "-----BEGIN.*PRIVATE KEY-----"
       ],

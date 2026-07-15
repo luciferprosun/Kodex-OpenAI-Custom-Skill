@@ -87,6 +87,22 @@
       "sandbox": "workspace-write",
       "approval": "on-request"
     },
+    "external_service_action": {
+      "signals": [
+        "send email",
+        "send the approved draft",
+        "send an existing approved draft",
+        "gmail.*send",
+        "send.*gmail"
+      ],
+      "allowed_profiles": [
+        "fast",
+        "standard",
+        "research"
+      ],
+      "sandbox": "read-only",
+      "approval": "on-request"
+    },
     "dependency_install": {
       "signals": [
         "pip install",
