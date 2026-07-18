@@ -1,0 +1,29 @@
+{
+  "definition": "separate A-C, rights-cleared censored-run cohort; never coded as ordinary success or failure",
+  "n": 0,
+  "by_reason": {},
+  "wall_time_seconds": {
+    "n": 0,
+    "task_clusters": 0,
+    "p10": null,
+    "p25": null,
+    "p50": null,
+    "p75": null,
+    "p90": null,
+    "p50_cluster_bootstrap_95ci": null,
+    "p90_cluster_bootstrap_95ci": null
+  },
+  "total_reported_tokens": {
+    "n": 0,
+    "task_clusters": 0,
+    "p10": null,
+    "p25": null,
+    "p50": null,
+    "p75": null,
+    "p90": null,
+    "p50_cluster_bootstrap_95ci": null,
+    "p90_cluster_bootstrap_95ci": null
+  },
+  "survival_model_fitted": false,
+  "survival_model_requirement": "sufficient comparable censoring times/budgets and at least five independent task clusters"
+}

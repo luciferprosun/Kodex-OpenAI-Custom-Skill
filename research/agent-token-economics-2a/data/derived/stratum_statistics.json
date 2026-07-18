@@ -1,0 +1,9 @@
+{
+  "method": {
+    "bootstrap_replicates": 2000,
+    "seed": 20260718,
+    "bootstrap_unit": "dataset_id plus task_id",
+    "outcome_policy": "censored runs excluded from ordinary successes and failures"
+  },
+  "strata": []
+}

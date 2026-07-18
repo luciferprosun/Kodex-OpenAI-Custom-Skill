@@ -1,0 +1,26 @@
+{
+  "total_runs": 19,
+  "numeric_prior_runs": 0,
+  "quality_classes": {
+    "E": 19
+  },
+  "datasets": {
+    "ds_sweagent_demonstrations": 19
+  },
+  "models": {
+    "null": 19
+  },
+  "frameworks": {
+    "SWE-agent": 19
+  },
+  "task_domains": {
+    "OTHER": 10,
+    "SE": 9
+  },
+  "successful_runs": 0,
+  "failed_runs": 0,
+  "unknown_outcomes": 19,
+  "censored_runs": 0,
+  "censoring_analysis_runs": 0,
+  "complete_accepted_cost_chains": 0
+}

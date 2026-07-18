@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<rect width="1600" height="1000" fill="#F5F7FA"/>
+<rect x="42" y="34" width="1516" height="932" rx="28" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<rect x="42" y="34" width="20" height="932" fill="#007F86"/>
+<text x="98" y="115" font-family="DejaVu Sans" font-weight="bold" font-size="45" fill="#102A43">Historical agent-trajectory coverage</text>
+<text x="100" y="175" font-family="DejaVu Sans" font-size="23" fill="#627D98">Public artifacts become richer over time, but trajectory availability and token telemetry remain different things.</text>
+<text x="120" y="300" font-size="28" fill="#102A43">2022-10 through 2023-02: not located</text><text x="120" y="354" font-size="28" fill="#102A43">2023-03 onward: no standardized historical corpus located</text><text x="120" y="408" font-size="28" fill="#102A43">2023-06 onward: usually absent; one very large archive remains license/schema blocked</text><text x="120" y="462" font-size="28" fill="#102A43">2023 onward: heterogeneous, often aggregate/cost-only, and frequently license-ambiguous</text><text x="120" y="516" font-size="28" fill="#102A43">2023-07 onward: mostly absent or aggregate and non-comparable</text><text x="120" y="570" font-size="28" fill="#102A43">2024 onward: adapter- and release-dependent</text><text x="120" y="624" font-size="28" fill="#102A43">2025 through evidence cutoff 2026-07-18: interfaces exist; no universal public task/outcome corpus</text>
+<line x1="100" y1="900" x2="1500" y2="900" stroke="#D9E2EC" stroke-width="2"/>
+<text x="100" y="940" font-family="DejaVu Sans" font-size="17" fill="#627D98">n=7 historical eras | measurement: primary-source discovery map | no token totals inferred for missing eras</text>
+</svg>

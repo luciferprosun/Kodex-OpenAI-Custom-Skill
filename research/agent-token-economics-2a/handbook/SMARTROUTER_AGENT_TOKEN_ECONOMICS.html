@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SmartRouter Agent Token Economics 2026</title><style>
+@page { size: A4; margin: 17mm 15mm 20mm; }
+* { box-sizing: border-box; }
+html { color: #102a43; background: #eef2f6; font-family: Inter, "DejaVu Sans", Arial, sans-serif; }
+body { margin: 0 auto; max-width: 1120px; background: white; font-size: 10.4pt; line-height: 1.5; }
+.cover { min-height: 255mm; padding: 30mm 18mm 20mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; background: linear-gradient(145deg, #102a43 0%, #164e63 62%, #007f86 100%); color: white; }
+.cover .eyebrow { color: #99f6e4; font-size: 12pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.cover h1 { color: white; font-size: 34pt; line-height: 1.08; margin: 10mm 0 5mm; border: 0; }
+.cover h2 { color: #d9f5f2; font-size: 17pt; line-height: 1.35; margin: 0; border: 0; break-before: auto; }
+.cover .meta { border-top: 1px solid rgba(255,255,255,.35); padding-top: 7mm; font-size: 10pt; color: #d9e2ec; }
+nav.toc { break-after: page; padding: 8mm 5mm 0; }
+nav.toc h2 { break-before: auto; margin-top: 0; }
+nav.toc ul { columns: 2; column-gap: 12mm; padding-left: 6mm; }
+nav.toc li { break-inside: avoid; margin: 1.5mm 0; }
+nav.toc a { color: #0f6170; text-decoration: none; }
+h2 { color: #0f6170; font-size: 20pt; line-height: 1.2; margin: 0 0 5mm; padding-top: 2mm; break-before: page; border-bottom: 2px solid #9ed7d9; padding-bottom: 2.5mm; }
+h3 { color: #164e63; font-size: 13.5pt; margin: 7mm 0 2.5mm; break-after: avoid; }
+h4 { color: #334e68; font-size: 11.5pt; margin: 5mm 0 2mm; break-after: avoid; }
+p, ul, ol { margin-top: 0; margin-bottom: 3.6mm; }
+ul, ol { padding-left: 6mm; }
+li { margin-bottom: 1.2mm; }
+blockquote { margin: 5mm 0; padding: 4mm 5mm; border-left: 4px solid #00a6a6; background: #edf7f7; font-size: 12pt; color: #164e63; break-inside: avoid; }
+code { background: #eef2f6; border-radius: 3px; padding: .4mm 1mm; font-family: "DejaVu Sans Mono", monospace; font-size: 9pt; overflow-wrap: anywhere; }
+pre { background: #102a43; color: #f0f4f8; border-radius: 7px; padding: 4mm; white-space: pre-wrap; break-inside: avoid; }
+pre code { background: transparent; color: inherit; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 4mm 0 5mm; font-size: 8.4pt; break-inside: avoid-page; }
+th { background: #164e63; color: white; text-align: left; }
+th, td { border: 1px solid #bcccdc; padding: 2mm 2.2mm; vertical-align: top; }
+tr:nth-child(even) td { background: #f5f7fa; }
+img { display: block; width: 100%; max-height: 172mm; object-fit: contain; margin: 5mm auto 6mm; border: 1px solid #d9e2ec; border-radius: 5px; break-inside: avoid; }
+a { color: #006d77; overflow-wrap: anywhere; }
+.chapter-body { padding: 0 5mm; }
+p, li { orphans: 3; widows: 3; }
+@media screen { body { padding: 0 18mm 20mm; box-shadow: 0 0 40px rgba(16,42,67,.12); } .cover { margin: 0 -18mm; } }
+@media print { html, body { background: white; } body { max-width: none; } .cover { margin: -17mm -15mm -20mm; min-height: 297mm; padding: 42mm 30mm 28mm; } }
+</style></head>
+<body>
+<section class="cover"><div><div class="eyebrow">SmartRouter Research 2A</div><h1>Agent Token Economics 2026</h1><h2>Public trajectory corpus, task-cost model, and telemetry handbook</h2></div><div class="meta"><strong>Version 2A</strong><br>Evidence cutoff: 2026-07-18 · Europe/Berlin<br><br>Independent community research. Not an official OpenAI publication. No production routing behavior changed.</div></section>
+<nav class="toc"><h2>Contents</h2><div class="toc">
+<ul>
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#1-what-token-usage-actually-means">1. What Token Usage Actually Means</a><ul>
+<li><a href="#11-request-accounting">1.1 Request accounting</a></li>
+<li><a href="#12-session-and-context-accounting">1.2 Session and context accounting</a></li>
+<li><a href="#13-billing-and-product-quotas">1.3 Billing and product quotas</a></li>
+</ul>
+</li>
+<li><a href="#2-history-of-public-agent-telemetry">2. History of Public Agent Telemetry</a></li>
+<li><a href="#3-openai-usage-and-tracing-interfaces">3. OpenAI Usage and Tracing Interfaces</a><ul>
+<li><a href="#31-responses-usage">3.1 Responses usage</a></li>
+<li><a href="#32-organization-usage-and-costs">3.2 Organization usage and costs</a></li>
+<li><a href="#33-agents-sdk-usage-and-tracing">3.3 Agents SDK usage and tracing</a></li>
+<li><a href="#34-stable-interfaces-versus-observations">3.4 Stable interfaces versus observations</a></li>
+</ul>
+</li>
+<li><a href="#4-codex-specific-telemetry-surfaces">4. Codex-Specific Telemetry Surfaces</a></li>
+<li><a href="#5-public-agent-trajectory-datasets">5. Public Agent Trajectory Datasets</a><ul>
+<li><a href="#51-software-engineering-agents">5.1 Software-engineering agents</a></li>
+<li><a href="#52-web-and-general-assistant-agents">5.2 Web and general-assistant agents</a></li>
+<li><a href="#53-multi-agent-systems">5.3 Multi-agent systems</a></li>
+</ul>
+</li>
+<li><a href="#6-data-licensing-and-privacy">6. Data Licensing and Privacy</a></li>
+<li><a href="#7-canonical-telemetry-schema">7. Canonical Telemetry Schema</a><ul>
+<li><a href="#71-numerical-admission-gate">7.1 Numerical admission gate</a></li>
+<li><a href="#72-referential-and-aggregate-checks">7.2 Referential and aggregate checks</a></li>
+</ul>
+</li>
+<li><a href="#8-task-taxonomy">8. Task Taxonomy</a></li>
+<li><a href="#9-software-engineering-agent-costs">9. Software-Engineering Agent Costs</a></li>
+<li><a href="#10-tool-and-context-amplification">10. Tool and Context Amplification</a></li>
+<li><a href="#11-caching-and-repeated-context">11. Caching and Repeated Context</a></li>
+<li><a href="#12-failure-retry-and-escalation-economics">12. Failure, Retry, and Escalation Economics</a></li>
+<li><a href="#13-cost-per-accepted-task">13. Cost per Accepted Task</a></li>
+<li><a href="#14-public-data-statistical-findings">14. Public-Data Statistical Findings</a><ul>
+<li><a href="#141-what-could-be-computed">14.1 What could be computed</a></li>
+<li><a href="#142-what-was-withheld">14.2 What was withheld</a></li>
+<li><a href="#143-robust-methods-for-future-compatible-data">14.3 Robust methods for future compatible data</a></li>
+</ul>
+</li>
+<li><a href="#15-answers-to-the-research-questions">15. Answers to the Research Questions</a></li>
+<li><a href="#16-missing-evidence">16. Missing Evidence</a></li>
+<li><a href="#17-local-telemetry-requirements">17. Local Telemetry Requirements</a><ul>
+<li><a href="#p0-identity-and-terminal-outcome">P0 — Identity and terminal outcome</a></li>
+<li><a href="#p0-per-request-usage-and-timing">P0 — Per-request usage and timing</a></li>
+<li><a href="#p1-component-aware-amplification">P1 — Component-aware amplification</a></li>
+<li><a href="#p1-context-tools-and-agents">P1 — Context, tools, and agents</a></li>
+</ul>
+</li>
+<li><a href="#18-proposed-smartrouter-prediction-features">18. Proposed SmartRouter Prediction Features</a></li>
+<li><a href="#19-proposed-routing-objective">19. Proposed Routing Objective</a></li>
+<li><a href="#20-baseline-prediction-models">20. Baseline Prediction Models</a></li>
+<li><a href="#21-limitations-and-non-claims">21. Limitations and Non-Claims</a></li>
+<li><a href="#22-source-and-dataset-registry">22. Source and Dataset Registry</a></li>
+<li><a href="#23-reproducibility-checklist">23. Reproducibility Checklist</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+</nav>
+<main class="chapter-body"><h2 id="executive-summary">Executive Summary</h2>
+<p>The economically correct routing question is not “which model has the lowest
+listed token price?” It is:</p>
+<blockquote>
+<p>Which available model is expected to produce an accepted result at the lowest
+total task-chain cost, subject to capability, risk, verification, budget,
+availability, and human-approval constraints?</p>
+</blockquote>
+<p>Answering that question requires more than input and output token counts. A
+complete record must link the task, route decision, attempts, model requests,
+tools, context growth, retries, escalation, verification, acceptance, human
+review, price basis, and censoring. No public source inspected in 2A supplies
+that complete join.</p>
+<p>The discovery protocol registered 78 deduplicated primary or official sources
+(plus two retained source aliases) and 41 dataset,
+benchmark, aggregate-result, framework, or telemetry-surface records. None
+passed all gates for a numerical SmartRouter routing prior. This is not a failed
+research outcome. It is the central finding: public agent artifacts are rich in
+tasks, actions, patches, screenshots, and outcome labels, but sparse in
+compatible provider-reported token accounting, complete failures, stable model
+identity, dated cost components, and reusable publication rights.</p>
+<p>The 2A corpus therefore does four things:</p>
+<ol>
+<li>preserves an exhaustive <strong>discovery protocol</strong>, not a false claim of
+   exhaustive historical telemetry;</li>
+<li>defines strict, versioned run/request/task/provenance schemas that preserve
+   <code>null</code> rather than inventing zero;</li>
+<li>supplies reproducible registries, bounded parser evidence, missingness maps,
+   robust analysis code, empty-safe baselines, and privacy-aware manifests;</li>
+<li>specifies the local telemetry that mission 2B must collect before numerical
+   model-selection rules can be calibrated.</li>
+</ol>
+<p>The numerical gate remains closed. Spark, Luna, Terra, and Sol are not assigned
+efficiency regions in this handbook because 2A has neither controlled matched
+runs nor an independently verified alias-to-immutable-model mapping for those
+labels. Version order, price alone, and model reputation are not evidence.</p>
+<p><img alt="Public evidence quality" src="../charts/13_public_evidence_quality.png" /></p>
+<h2 id="1-what-token-usage-actually-means">1. What Token Usage Actually Means</h2>
+<p>“Tokens used” can refer to several incompatible quantities. Combining them
+without scope and provenance creates false comparisons.</p>
+<h3 id="11-request-accounting">1.1 Request accounting</h3>
+<ul>
+<li><strong>Raw input tokens</strong> are the provider/framework input count for one request.
+  On many surfaces this includes the cached subset.</li>
+<li><strong>Non-cached input tokens</strong> are input tokens not served from cache. They may be
+  provider-reported or reconstructed only when compatible totals exist.</li>
+<li><strong>Cached input tokens</strong> are input tokens read from a cache. They remain part
+  of logical input/context processing.</li>
+<li><strong>Cache-write tokens</strong> are tokens written to a cache when a model/version
+  exposes this field.</li>
+<li><strong>Reasoning tokens</strong> are a provider-reported output-side count. They are not
+  hidden reasoning text.</li>
+<li><strong>Visible output tokens</strong> require a surface that measures visible content or
+  an explicitly labeled tokenizer reconstruction. Provider <code>output_tokens</code> can
+  include reasoning and other non-visible structure.</li>
+<li><strong>Total reported tokens</strong> preserve the source definition. The corpus does not
+  force an arithmetic sum when field semantics differ.</li>
+</ul>
+<p>The current <a href="https://developers.openai.com/api/docs/guides/prompt-caching">OpenAI prompt-caching documentation</a>
+separates cache reads and writes, while the <a href="https://github.com/openai/openai-agents-python/blob/65886fa16dcdb482090b30b74de1d0cc80b9f4c6/docs/usage.md">Agents SDK usage interface</a>
+preserves run totals and per-request entries. These are measurement surfaces,
+not a public accepted-task dataset.</p>
+<h3 id="12-session-and-context-accounting">1.2 Session and context accounting</h3>
+<ul>
+<li><strong>Cumulative session tokens</strong> sum processing over time.</li>
+<li><strong>Current context occupancy</strong> is what currently occupies the model context.</li>
+<li><strong>Context-window size</strong> is capacity, not occupancy.</li>
+<li><strong>Tokens re-sent from history</strong> are history serialized into later requests.</li>
+<li><strong>Tool-output tokens</strong> are tool results introduced into later model input.</li>
+<li><strong>Compaction tokens</strong> are summaries or other content introduced by a
+  compaction step.</li>
+</ul>
+<p>Cumulative usage can grow far beyond the context-window capacity because prior
+content is processed repeatedly. A decreasing last-turn count does not prove a
+compaction occurred, and a context-window field does not reveal occupancy.</p>
+<h3 id="13-billing-and-product-quotas">1.3 Billing and product quotas</h3>
+<ul>
+<li><strong>API-billed tokens</strong> use API billing semantics for a particular model,
+  service tier, region, and date.</li>
+<li><strong>Reported monetary cost</strong> is a source-provided amount with a declared scope.</li>
+<li><strong>Reconstructed cost</strong> is a calculation against an identified price table.</li>
+<li><strong>Subscription quota consumption</strong> is product-plan accounting and is not
+  inferred from API prices.</li>
+<li><strong>Rate-limit capacity</strong> is neither usage cost nor subscription credit.</li>
+</ul>
+<p>Current prices are referenced through the dated <a href="https://developers.openai.com/api/docs/pricing">official OpenAI pricing page</a>,
+but 2A does not present current prices as a historical ledger. A current-price
+reconstruction of an older run is counterfactual and must be labeled as such.</p>
+<h2 id="2-history-of-public-agent-telemetry">2. History of Public Agent Telemetry</h2>
+<p>Public agent evidence evolved faster than standardized token telemetry.</p>
+<table>
+<thead>
+<tr>
+<th>Era</th>
+<th>Typical public evidence</th>
+<th>Token-economics value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ReAct/tool-use, 2022–2023</td>
+<td>papers, prompt examples, action traces</td>
+<td>historical/task-taxonomy context; no comparable usage corpus</td>
+</tr>
+<tr>
+<td>autonomous agents, 2023 onward</td>
+<td>framework code, examples, benchmark loops</td>
+<td>architecture context; historical use generally unmeasured</td>
+</tr>
+<tr>
+<td>web/computer use, 2023 onward</td>
+<td>DOM/accessibility state, screenshots, browser actions, verifier outcomes</td>
+<td>tool/context structure; substantial privacy risk; token fields usually absent</td>
+</tr>
+<tr>
+<td>software agents, 2023 onward</td>
+<td>issues, patches, trajectories, tests, leaderboard outcomes</td>
+<td>strongest objective-verifier ecosystem; accounting and rights remain heterogeneous</td>
+</tr>
+<tr>
+<td>multi-agent systems, 2023 onward</td>
+<td>conversations, roles, aggregate examples</td>
+<td>qualitative coordination amplification; no general response curve</td>
+</tr>
+<tr>
+<td>long-horizon terminal agents, 2024 onward</td>
+<td>container tasks, tool traces, deterministic tests</td>
+<td>promising future strata when exact usage is collected</td>
+</tr>
+<tr>
+<td>current Codex/Agents SDK</td>
+<td>versioned usage and trace interfaces</td>
+<td>strong local collection surfaces; not a universal public task corpus</td>
+</tr>
+</tbody>
+</table>
+<p>The <a href="https://arxiv.org/abs/2210.03629">ReAct paper</a> formalized interleaved
+reasoning and acting, but its artifacts do not provide standardized provider
+usage records. <a href="https://github.com/web-arena-x/webarena">WebArena</a> provides a
+benchmark implementation and objective evaluation harness, but its code license
+does not by itself establish redistribution rights for separately hosted trace
+archives. <a href="https://github.com/SWE-agent/SWE-agent">SWE-agent</a> and the
+<a href="https://github.com/SWE-bench/experiments">SWE-bench experiments archive</a>
+illustrate how software trajectories can link to objective tests, but their
+formats and cost fields vary by release/submission and do not provide one stable
+per-request accounting contract.</p>
+<p><img alt="Historical coverage" src="../charts/11_historical_agent_trajectory_coverage.png" /></p>
+<p>The timeline is a coverage map, not an inference of token use where measurements
+are absent.</p>
+<h2 id="3-openai-usage-and-tracing-interfaces">3. OpenAI Usage and Tracing Interfaces</h2>
+<h3 id="31-responses-usage">3.1 Responses usage</h3>
+<p>The official Responses schema can expose input tokens, cached-input details,
+model-dependent cache writes, output tokens, reasoning-token details, and a
+reported total. Response items expose model/tool activity. It does not supply a
+benchmark task ID, verifier result, retry chain, accepted result, or human-review
+cost. Application-defined join keys remain necessary.</p>
+<h3 id="32-organization-usage-and-costs">3.2 Organization usage and costs</h3>
+<p>Organization usage and cost endpoints provide time-bucketed audit aggregates.
+They are useful for reconciliation, but a daily/bucketed amount cannot generally
+be assigned to one agent task. They lack complete task identity, verifier result,
+reasoning breakdown, and route-chain semantics. Their records are private
+operator data even when the source schema has a permissive software license.</p>
+<h3 id="33-agents-sdk-usage-and-tracing">3.3 Agents SDK usage and tracing</h3>
+<p>The <a href="https://github.com/openai/openai-agents-python/blob/65886fa16dcdb482090b30b74de1d0cc80b9f4c6/docs/usage.md">OpenAI Agents SDK usage documentation</a>
+documents request count, run-level input/output/total usage, nested cached and
+reasoning details, and <code>request_usage_entries</code>. Usage aggregates model calls
+made during tool loops and handoffs. Traces add model, tool, handoff, guardrail,
+and custom spans.</p>
+<p>This is the strongest official run-level collection surface inspected, but it
+still needs application-defined task, attempt, retry, escalation, verification,
+acceptance, and privacy metadata. Third-party adapters can omit usage or apply
+different defaults, so provider/backend behavior must be validated rather than
+assumed.</p>
+<h3 id="34-stable-interfaces-versus-observations">3.4 Stable interfaces versus observations</h3>
+<p>The corpus labels each claim as one of:</p>
+<ul>
+<li>stable documented interface;</li>
+<li>official source-defined interface;</li>
+<li>local generated observation tied to Codex CLI 0.144.5;</li>
+<li>private/unstable artifact.</li>
+</ul>
+<p>This prevents a field observed in a local schema or issue from being presented
+as a permanent cross-version contract.</p>
+<h2 id="4-codex-specific-telemetry-surfaces">4. Codex-Specific Telemetry Surfaces</h2>
+<p>The documented <code>codex exec --json</code> stream provides typed lifecycle events. On
+the inspected Codex version and current source, <code>turn.completed.usage</code> can expose
+input, cached input, output, and reasoning-output counts; source-defined cache
+write support is version-gated. Typed item lifecycle events can reconstruct
+command, MCP, collaboration, web-search, message, and other activity without
+counting raw transcript content. The <a href="https://github.com/openai/codex/blob/56395bddaf26eb2829387ca6a417bf9128e5b239/codex-rs/exec/src/exec_events.rs">pinned Codex event source</a>
+anchors the source-only fields.</p>
+<p>Locally generated app-server schemas for Codex CLI 0.144.5 expose last and total
+token breakdowns, model-context-window capacity, compaction events, and
+account-rate-limit surfaces. These are version-specific. They do not prove
+current context occupancy, API cost, subscription conversion, or task success.</p>
+<p>Raw local rollout/session JSONL is explicitly rejected as a public corpus. It
+can contain private prompts, responses, tool I/O, paths, secrets, and personal
+data. Mission 2B should prefer allowlisted <code>exec --json</code> capture with ephemeral
+mode where suitable, then join only the required counts and lifecycle metadata.</p>
+<h2 id="5-public-agent-trajectory-datasets">5. Public Agent Trajectory Datasets</h2>
+<h3 id="51-software-engineering-agents">5.1 Software-engineering agents</h3>
+<p><strong>SWE-bench Experiments.</strong> The archive can link task IDs, predictions,
+trajectories, and evaluator outcomes, and some SWE-agent submissions contain
+aggregate cost/token fields. However, schemas vary by submission; per-request
+breakdowns are often absent; failures and missing trajectories need inventory;
+the repository and external submission rights are not a single reusable data
+license; and complete payload size is unbounded. Decision: metadata/reference
+only pending a human rights decision.</p>
+<p><strong>SWE-agent demonstrations.</strong> Nineteen small demonstration <code>.traj</code> files
+(1,503,861 bytes) at the pinned repository revision form a bounded parser
+fixture. All parsed as JSON and have unique SHA-256 values. Eighteen contain a
+<code>model_stats</code> object, but every input/output token and cost value is zero despite
+non-empty trajectories; three replay fixtures report 11, 11, and 13 API calls
+with zero token counts. These are placeholders/replay metadata, not measured
+zero-token runs. The fixtures are quality E, all outcomes remain unknown, and
+all 19 contain explicit thought fields. Raw content is not republished;
+structural field presence, hashes, sizes, and safe counts are retained.</p>
+<p><strong>SWE-smith.</strong> The task and trajectory releases are promising at scale, but the
+asset card, failure selection, exact fields, model identity, and trajectory
+rights must be audited independently of the repository license. Training-value
+filters make raw success rates unsuitable for deployment priors.</p>
+<p><strong>OpenHands.</strong> The current framework and newer benchmark harness support rich
+run logs and objective evaluators, but legacy and current event schemas cannot
+be silently combined. Each public run release needs an independent license,
+version, adapter, prompt, budget, condenser, and failure-coverage audit.</p>
+<p><strong>Terminal-Bench and Harbor.</strong> <a href="https://github.com/harbor-framework/harbor">Harbor</a>
+is an agent-evaluation framework, not a comparable public token corpus.
+<a href="https://github.com/harbor-framework/terminal-bench-2">Terminal-Bench 2</a>
+provides objective terminal tasks. Both are strong candidates for future local
+measurement, not current public token priors.</p>
+<p><strong>STATE-Bench and AgentRE-Bench.</strong> <a href="https://github.com/microsoft/STATE-Bench">STATE-Bench</a>
+documents stateful enterprise-workflow evaluation, while
+<a href="https://github.com/agentrebench/AgentRE-Bench">AgentRE-Bench</a> provides scored
+reverse-engineering tasks and budgets. A budget is not observed usage, and an
+aggregate paper table is not a per-run population. Both are useful task/verifier
+sources for a later measured program.</p>
+<h3 id="52-web-and-general-assistant-agents">5.2 Web and general-assistant agents</h3>
+<p>WebArena, VisualWebArena, Mind2Web, and WebLINX offer rich action/context
+structure. Human demonstrations do not represent model usage. Web traces can
+include HTML, screenshots, accessibility trees, raw predictions, Playwright
+state, HAR/network traffic, cookies, and storage. The default publication unit
+must therefore be aggregate counts and lawful derived features, not raw traces.</p>
+<p>GAIA offers objective outcomes, but public results do not contain token fields
+and current gated/no-reshare terms constrain raw redistribution. AgentBoard and
+AgentBench supply valuable task/progress methodology; their “token” or history
+counters must not be mislabeled as provider-billed usage.</p>
+<p>AgentLab is a high-value discovery candidate because its framework tracks
+token/cost and its public archive spans multiple models/benchmarks. The inspected
+archive is approximately 207 GB and lacks a sufficient dataset schema/license
+for safe bounded ingestion. It was not downloaded.</p>
+<p>Trace Commons is much smaller and provides volunteered native sessions, but the
+compilation license does not replace per-trace rights, anonymization is
+best-effort, the sample is self-selected, and no canonical token columns were
+found. It remains metadata-only.</p>
+<h3 id="53-multi-agent-systems">5.3 Multi-agent systems</h3>
+<p>MetaGPT, MegaAgent, and AgencyBench report aggregate examples that demonstrate
+how coordination/dialogue can amplify input. They change task, model, scaffold,
+agent topology, and measurement conditions together. These are class D
+descriptive records, not a causal curve linking agent count to total tokens or
+pass rate.</p>
+<p><img alt="Agent count versus tokens" src="../charts/10_agent_count_vs_tokens_success.png" /></p>
+<h2 id="6-data-licensing-and-privacy">6. Data Licensing and Privacy</h2>
+<p>A public URL is not a redistribution license. A code or schema license does not
+license prompts, model outputs, operator telemetry, captured web pages, issue
+text, screenshots, network traces, or third-party repositories.</p>
+<p>Every dataset record separately tracks:</p>
+<ul>
+<li>software/schema license;</li>
+<li>telemetry or dataset rights;</li>
+<li>raw acquisition status;</li>
+<li>raw redistribution status;</li>
+<li>commercial-use signal;</li>
+<li>attribution requirement;</li>
+<li>permitted derived-statistics status;</li>
+<li>personal-data, secret, and reasoning-content risk;</li>
+<li>human-review requirement.</li>
+</ul>
+<p>Raw prompts, private chats, credentials, cookies, authorization headers,
+storage state, browser tokens, private repository text, personal addresses, and
+hidden reasoning are outside the public corpus. Hidden reasoning <strong>counts</strong> may
+be telemetry; hidden reasoning <strong>text</strong> is neither required nor approved.</p>
+<p>The public-safe unit is an allowlisted record containing identifiers, hashes,
+counts, categorical features, tool types, durations, outcomes, missingness, and
+provenance. The <a href="../sources/LICENSE_AND_PUBLICATION_REVIEW.md">license and publication review</a>
+documents source-specific restrictions.</p>
+<h2 id="7-canonical-telemetry-schema">7. Canonical Telemetry Schema</h2>
+<p>Four strict Draft 2020-12 schemas define the research corpus:</p>
+<table>
+<thead>
+<tr>
+<th>Schema</th>
+<th>Unit</th>
+<th>Key purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent_run_record</code></td>
+<td>one task attempt/run</td>
+<td>model/framework/task identity, cumulative usage, tools, outcome, costs, chain/censoring, quality</td>
+</tr>
+<tr>
+<td><code>agent_request_record</code></td>
+<td>one model request</td>
+<td>request sequence, provider usage, cache/reasoning details, tools, latency, request cost</td>
+</tr>
+<tr>
+<td><code>task_record</code></td>
+<td>one dataset task</td>
+<td>SE/MATH/PHY and operational taxonomy, benchmark/version, verifier/success criterion</td>
+</tr>
+<tr>
+<td><code>source_provenance</code></td>
+<td>one source artifact</td>
+<td>canonical locator, revision/hash, rights, transformations, privacy review</td>
+</tr>
+</tbody>
+</table>
+<p>All schema fields are required at the record level, while genuinely missing
+measurements use <code>null</code>, appear in <code>missing_fields</code>, and carry measurement method
+<code>unknown</code>. Observed fields are labeled <code>measured</code>, <code>provider_reported</code>,
+<code>framework_reported</code>, <code>reconstructed</code>, or <code>estimated</code>.</p>
+<h3 id="71-numerical-admission-gate">7.1 Numerical admission gate</h3>
+<p><code>included_in_numerical_priors</code> is independent of quality class. Admission
+requires all of:</p>
+<ul>
+<li>quality A, B, or C;</li>
+<li>explicit inclusion flag;</li>
+<li>no censoring;</li>
+<li>completed privacy review;</li>
+<li>permission for derived statistics;</li>
+<li>known measurement confidence;</li>
+<li>all ten persisted boolean quality components, a recomputed score, and a
+  score consistent with its A/B/C class;</li>
+<li>explicit numerical permission in the dataset registry;</li>
+<li>exact timestamped model/provider/version, framework/version, and product
+  surface identity;</li>
+<li>observed prompt and total-token values with known accounting scopes;</li>
+<li>a completed outcome, success criterion, and objective verifier evidence;</li>
+<li>compatible model/framework/task/verifier/accounting/price stratum.</li>
+</ul>
+<p>D/E records cannot enter numerical priors. A–C records can still be withheld for
+rights, missingness, leakage, or incompatibility.</p>
+<h3 id="72-referential-and-aggregate-checks">7.2 Referential and aggregate checks</h3>
+<p>The validator enforces stable source/dataset IDs, composite <code>(dataset_id,
+task_id)</code> task identity, unique run/request identity, task/run/request links,
+request sequence uniqueness, embedded provenance agreement, complete-request
+aggregate sums, tool-call counts, contiguous attempt-chain order, one final
+accepted run in the last attempt, dataset numerical permission, and censoring
+semantics.</p>
+<h2 id="8-task-taxonomy">8. Task Taxonomy</h2>
+<p>The taxonomy aligns with existing SmartRouter SE, MATH, and PHY scales while
+adding operational features:</p>
+<ul>
+<li>single-turn vs agentic;</li>
+<li>no file, single file, or multi-file;</li>
+<li>no repository, repository-local, or cross-repository;</li>
+<li>read-only, write, or mixed;</li>
+<li>tool-free, light, or tool-heavy;</li>
+<li>deterministic, partial, subjective, absent, or unknown verifier;</li>
+<li>short, medium, or long horizon;</li>
+<li>clear, partially ambiguous, ambiguous, or unknown requirements;</li>
+<li>fresh, continued, or long-continuing context;</li>
+<li>low, moderate, high-impact, or unknown risk;</li>
+<li>research, implementation, analysis, verification, mixed, or unknown work.</li>
+</ul>
+<p>These are preregistered candidate predictors. The corpus does not rank their
+importance.</p>
+<h2 id="9-software-engineering-agent-costs">9. Software-Engineering Agent Costs</h2>
+<p>Software-engineering benchmarks are the strongest public domain for objective
+verification, but they do not create automatic cost comparability. A valid
+stratum must hold or record:</p>
+<ul>
+<li>task split and benchmark version;</li>
+<li>repository/base revision and environment image;</li>
+<li>model ID/version and reasoning effort;</li>
+<li>framework/prompt/tool/condenser versions;</li>
+<li>token and wall-time budgets;</li>
+<li>evaluator version and success criterion;</li>
+<li>attempt/retry/escalation policy;</li>
+<li>complete successful, failed, censored, and infrastructure-error coverage;</li>
+<li>product surface, accounting scope, and measurement method profile;</li>
+<li>historical currency, price-table ID/date, and cost scope.</li>
+</ul>
+<p>Repository size can be a candidate input predictor, yet “repository size” itself
+needs a definition: bytes, files, language-aware source tokens, retrieved subset,
+or serialized context. Files present on disk are not necessarily sent to the
+model.</p>
+<p><img alt="Repository size versus input tokens" src="../charts/08_repository_size_vs_input_tokens.png" /></p>
+<p>No compatible A–C public runs passed the gate, so the panel is intentionally
+empty.</p>
+<h2 id="10-tool-and-context-amplification">10. Tool and Context Amplification</h2>
+<p>Tools affect token economics in at least four ways:</p>
+<ol>
+<li>a model generates tool arguments;</li>
+<li>a tool result is inserted into context;</li>
+<li>later requests re-send all or part of that result;</li>
+<li>errors or invalid calls trigger repair loops.</li>
+</ol>
+<p>Tool-call count is not tool-output size. Parallel tools can reduce elapsed time
+while increasing summed resource use. An accepted analysis therefore needs tool
+type, payload bytes/tokens, start/end, success, invalid/repeated flags, later
+request attribution, and whether results were summarized or compacted.</p>
+<p><img alt="Tool calls versus total tokens" src="../charts/07_tool_calls_vs_total_tokens.png" /></p>
+<p>Session continuation similarly amplifies input because previous messages may be
+re-fed on later runs. Official Agents SDK documentation confirms the mechanism,
+but no inspected surface directly partitions later input into new user text,
+history, tool output, retrieved files, or compaction summary. Mission 2B must
+collect component-aware counts.</p>
+<h2 id="11-caching-and-repeated-context">11. Caching and Repeated Context</h2>
+<p>Caching changes billing and often latency, not the logical input length. A cache
+hit must therefore report at least:</p>
+<ul>
+<li>total input tokens;</li>
+<li>cached input tokens;</li>
+<li>cache-write tokens when supported;</li>
+<li>non-cached input if provider-reported or explicitly reconstructed;</li>
+<li>model/version, service tier, cache policy, and price date.</li>
+</ul>
+<p>Cached tokens can still count toward token rate limits. A cache ratio is valid
+only when numerator and denominator share one definition. It must never be used
+to infer ChatGPT/Codex subscription credit from API prices.</p>
+<p><img alt="Cache ratio by workload" src="../charts/06_cache_ratio_by_workload.png" /></p>
+<p>The public corpus supports the accounting mechanism, not a workload-specific
+ratio distribution.</p>
+<h2 id="12-failure-retry-and-escalation-economics">12. Failure, Retry, and Escalation Economics</h2>
+<p>Success-only cost summaries have survivorship bias. If a cheap first model fails
+and a stronger model finishes the task, the accepted result consumed both
+attempts plus transition, verification, and review.</p>
+<p>For a route chain with attempts <code>i = 1..k</code>, define:</p>
+<p><code>C_accept = Σ(model_api_i + tool_i + verification_i + human_review_i + failure_penalty_i)</code></p>
+<p>only when the chain is complete, uses one compatible currency/price basis, and
+ends in exactly one accepted result on the final contiguous attempt. Every
+attempt must carry run-scoped normalized cost and the same non-null currency,
+price-table ID, and price-table date. Chain-scoped totals are never added once
+per attempt. Missing cost components make the value <code>null</code>; they are not zero.</p>
+<p>Budget exhaustion, cancellation, context overflow, infrastructure failure, and
+ordinary verifier failure are different outcomes. Budget-exhausted/interrupted
+runs are censored and excluded from ordinary success/failure rates. Eligible
+censored runs require a separate explicit censoring-analysis flag and are
+summarized by exposure and reason. A survival analysis is fitted only when
+censoring time/budget and comparable task-cluster support are available.</p>
+<p><img alt="Retry count versus accepted-task cost" src="../charts/09_retry_count_vs_accepted_cost.png" /></p>
+<h2 id="13-cost-per-accepted-task">13. Cost per Accepted Task</h2>
+<p>Let a lower-cost first route have direct expected cost <code>C_l</code>, success probability
+<code>p_l</code>, and expected downstream cost <code>E_l</code> conditional on non-acceptance. Let a
+stronger direct route have expected accepted-chain cost <code>C_s</code>. The lower-cost
+route is economically preferable only when:</p>
+<p><code>C_l + (1 - p_l) × E_l &lt; C_s</code></p>
+<p>after capability, safety, verifier, budget, availability, and approval gates are
+satisfied. This is an accounting identity, not an estimated crossover. <code>E_l</code>
+must include retries, escalation, tool use, extra verification, human review,
+and a policy-defined failure penalty.</p>
+<p><img alt="Cost per accepted task" src="../charts/04_cost_per_accepted_task.png" /></p>
+<p>The corpus contains no complete price-date-correct accepted route chain eligible
+for a numerical prior.</p>
+<h2 id="14-public-data-statistical-findings">14. Public-Data Statistical Findings</h2>
+<h3 id="141-what-could-be-computed">14.1 What could be computed</h3>
+<p>The registry and discovery corpus support:</p>
+<ul>
+<li>source/dataset counts and historical coverage;</li>
+<li>field-availability and missingness maps;</li>
+<li>rights, privacy, and quality classifications;</li>
+<li>bounded structural inspection of parser fixtures;</li>
+<li>explicit zero admitted numerical-prior runs.</li>
+</ul>
+<h3 id="142-what-was-withheld">14.2 What was withheld</h3>
+<p>The required token, success, accepted-cost, cache, tool, repository-size, retry,
+and agent-count charts exist as reproducible <strong>no-data panels</strong>. Filling them
+with incompatible aggregates would be less informative and more misleading than
+showing <code>null</code>.</p>
+<p><img alt="p50/p90 total tokens" src="../charts/02_p50_p90_total_tokens.png" /></p>
+<h3 id="143-robust-methods-for-future-compatible-data">14.3 Robust methods for future compatible data</h3>
+<p>For each compatible stratum, the analysis code computes p10, p25, p50, p75,
+p90 and outcome-conditioned distributions. Percentile intervals and the primary
+success interval use 2,000 bootstrap resamples clustered by <code>(dataset_id,
+task_id)</code>. Success is first averaged within each task and then across equally
+weighted tasks, so repeated trajectories cannot manufacture precision. It never
+averages across incompatible datasets. Intervals require at least five
+independent task clusters; <code>n &lt; 20</code> is flagged. Censored runs have a separate
+exposure/reason summary rather than an ordinary outcome.</p>
+<p>Lookup baselines use held-out task and source groups. Regularized baselines need
+at least <code>max(100, 10 × encoded feature width)</code> observations. The probability
+baseline is correctly labeled a ridge linear-probability baseline, not logistic
+regression. The one-split tree contains an explicit missing-value branch. No
+model is fitted when support is inadequate.</p>
+<h2 id="15-answers-to-the-research-questions">15. Answers to the Research Questions</h2>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>2A answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>strongest token predictors</td>
+<td>unanswerable; candidate features are preregistered, not ranked</td>
+</tr>
+<tr>
+<td>strongest failure/retry predictors</td>
+<td>unanswerable without complete comparable failed/censored chains</td>
+</tr>
+<tr>
+<td>when a cheaper model becomes more expensive</td>
+<td>when downstream failure-chain cost exceeds the initial saving; no threshold estimated</td>
+</tr>
+<tr>
+<td>when Spark is efficient</td>
+<td>no controlled same-task accepted-cost evidence; unknown</td>
+</tr>
+<tr>
+<td>when Luna minimizes accepted cost</td>
+<td>no complete Luna chain population or verified immutable identity; unknown</td>
+</tr>
+<tr>
+<td>when Terra beats Luna economically</td>
+<td>no matched comparison; unknown</td>
+</tr>
+<tr>
+<td>which risk/ambiguity routes immediately to Sol</td>
+<td>empirical threshold unknown; safety and human policy gates precede price</td>
+</tr>
+<tr>
+<td>token growth from tools</td>
+<td>mechanism supported, share unmeasured</td>
+</tr>
+<tr>
+<td>token growth from repeated history</td>
+<td>mechanism supported, share unmeasured</td>
+</tr>
+<tr>
+<td>caching effect</td>
+<td>can lower API-billed input cost without reducing logical input processed</td>
+</tr>
+<tr>
+<td>agent-count effect</td>
+<td>qualitative coordination amplification; no causal token/pass-rate curve</td>
+</tr>
+<tr>
+<td>unusable historical datasets</td>
+<td>most inspected artifacts cannot supply numerical routing priors in current form</td>
+</tr>
+<tr>
+<td>required local fields</td>
+<td>exact identity, component usage, chains, context/compaction, tools, outcome, price, review</td>
+</tr>
+</tbody>
+</table>
+<p>Model-specific rules are not inferred from aliases, version numbers, a visible
+picker, or current prices.</p>
+<h2 id="16-missing-evidence">16. Missing Evidence</h2>
+<p>The strongest missing evidence is not “more trajectories” in the abstract. It
+is a <strong>representative, rights-cleared, outcome-linked, request-level population</strong>
+with complete failures and route chains.</p>
+<p>Key gaps:</p>
+<ul>
+<li>early agent eras lack comparable provider usage;</li>
+<li>web agents usually lack usage fields and carry raw-content privacy risks;</li>
+<li>software-agent releases mix formats, versions, prompts, budgets, and rights;</li>
+<li>public leaderboards omit abandoned experiments and favor competitive systems;</li>
+<li>training corpora filter for validity/reward/success and distort failure rates;</li>
+<li>reasoning, cache, and tool-output partitions are uncommon;</li>
+<li>current context occupancy and compaction burden are rarely measured;</li>
+<li>price-date and subscription/API distinctions are usually absent;</li>
+<li>multi-agent examples lack matched agent-count experiments;</li>
+<li>public data do not represent SmartRouter’s own task distribution.</li>
+</ul>
+<p><img alt="Dataset missingness heatmap" src="../charts/12_dataset_missingness_heatmap.png" /></p>
+<h2 id="17-local-telemetry-requirements">17. Local Telemetry Requirements</h2>
+<p>Mission 2B should collect privacy-minimized records in priority order.</p>
+<h3 id="p0-identity-and-terminal-outcome">P0 — Identity and terminal outcome</h3>
+<ul>
+<li>immutable task, benchmark/version, repository/base revision;</li>
+<li>route, attempt-chain, ordered attempt, retry/escalation identifiers;</li>
+<li>requested alias and service-confirmed model/version;</li>
+<li>product surface, framework/version, reasoning effort, agent count;</li>
+<li>deterministic verifier/result, partial score, censoring, final acceptance;</li>
+<li>human-review minutes.</li>
+</ul>
+<h3 id="p0-per-request-usage-and-timing">P0 — Per-request usage and timing</h3>
+<ul>
+<li>request ID/sequence/status and start/end monotonic time;</li>
+<li>provider input, cache read/write, reasoning, output, total fields;</li>
+<li>request failure/rate-limit wait/retryability;</li>
+<li>reported/reconstructed cost, currency, scope, price-table ID/date.</li>
+</ul>
+<h3 id="p1-component-aware-amplification">P1 — Component-aware amplification</h3>
+<ul>
+<li>allowlisted counts for system/developer/user additions;</li>
+<li>re-sent history;</li>
+<li>tool results by type;</li>
+<li>repository/file excerpts;</li>
+<li>verifier messages;</li>
+<li>subagent/handoff context;</li>
+<li>compaction summaries.</li>
+</ul>
+<h3 id="p1-context-tools-and-agents">P1 — Context, tools, and agents</h3>
+<ul>
+<li>last vs cumulative usage;</li>
+<li>measured current/peak occupancy where exposed;</li>
+<li>explicit compaction event and post-compaction state;</li>
+<li>tool type/duration/outcome/repeats/invalid calls/result size;</li>
+<li>per-agent usage and handoff/concurrency graph.</li>
+</ul>
+<p><img alt="Local telemetry fields" src="../charts/15_local_telemetry_fields_required.png" /></p>
+<p>Raw prompt text, hidden reasoning, credentials, and private tool output are not
+needed for these analyses.</p>
+<h2 id="18-proposed-smartrouter-prediction-features">18. Proposed SmartRouter Prediction Features</h2>
+<p>Candidate feature groups are:</p>
+<ul>
+<li><strong>capability:</strong> SE/MATH/PHY level and domain/subdomain;</li>
+<li><strong>scope:</strong> interaction, file, repository, and mutation mode;</li>
+<li><strong>execution:</strong> tool profile, horizon, agent count, context state;</li>
+<li><strong>requirements:</strong> clarity/ambiguity, task size, repository size;</li>
+<li><strong>evidence:</strong> verifier type, success criterion, benchmark/version;</li>
+<li><strong>risk:</strong> impact level and human-approval requirement;</li>
+<li><strong>runtime:</strong> current model availability, token/time budgets, session state;</li>
+<li><strong>historical telemetry:</strong> only compatible, recent, leakage-controlled local
+  strata.</li>
+</ul>
+<p>Candidate targets are p50 input tokens, p90 total tokens, probability of
+completed acceptance, probability of escalation, compaction/retry counts,
+wall time, and complete accepted-task cost. Predictor strength remains unknown
+until 2B.</p>
+<h2 id="19-proposed-routing-objective">19. Proposed Routing Objective</h2>
+<p>For task features <code>x</code> and candidate model route <code>m</code>, future SmartRouter research
+may minimize:</p>
+<p><code>E[accepted_task_cost | x, m]</code></p>
+<p>subject to:</p>
+<ul>
+<li>minimum calibrated acceptance probability;</li>
+<li>capability ceiling;</li>
+<li>task-risk and safety constraints;</li>
+<li>appropriate verifier availability;</li>
+<li>token and wall-time budgets;</li>
+<li>current model/product availability;</li>
+<li>human-approval boundaries.</li>
+</ul>
+<p>Price is a term in the objective, never a substitute for capability or safety.
+Low-confidence, unsupported, or out-of-distribution tasks fail closed to a
+conservative supported route or human decision.</p>
+<p><img alt="Proposed escalation frontier" src="../charts/14_proposed_model_escalation_frontier.png" /></p>
+<p>The frontier is explicitly schematic. It contains no empirical model points.</p>
+<h2 id="20-baseline-prediction-models">20. Baseline Prediction Models</h2>
+<p>The research package implements small, interpretable baselines:</p>
+<ol>
+<li>median lookup by compatible stratum;</li>
+<li>p90 quantile lookup;</li>
+<li>L2-regularized log-target regression for token/cost targets;</li>
+<li>L2-regularized linear-probability baseline for success/escalation;</li>
+<li>a one-split descriptive tree with an explicit missing branch.</li>
+</ol>
+<p>Targets remain untrained when support is insufficient. Lookup calibration is
+reported separately by stratum and held-out task/source group. A regularized or
+tree training diagnostic is not calibration and is marked publication-ineligible
+until nested task-group and source-group evaluation exists. No estimator is
+imported by production runtime.</p>
+<h2 id="21-limitations-and-non-claims">21. Limitations and Non-Claims</h2>
+<ul>
+<li>This is not a universal dataset of all agents or all historical runs.</li>
+<li>Absence of a public field does not prove an author never measured it privately.</li>
+<li>No public A–C numerical run population passed every 2A gate.</li>
+<li>Empty charts are deliberate and must not be replaced by incompatible totals.</li>
+<li>Aggregate paper examples are not per-request telemetry.</li>
+<li>Human demonstrations are not model token usage.</li>
+<li>Visible reasoning text is not a provider reasoning-token count.</li>
+<li>Current context occupancy is not cumulative session usage.</li>
+<li>Context-window capacity is not occupancy.</li>
+<li>API prices do not define subscription quota use.</li>
+<li>Current prices are not silently applied as historical billed amounts.</li>
+<li>Budget-exhausted runs are censored, not ordinary failures.</li>
+<li>Success-only cost is not accepted-task cost.</li>
+<li>Multi-agent examples do not establish a causal agent-count effect.</li>
+<li>No Spark/Luna/Terra/Sol rule is established.</li>
+<li>No production routing behavior changed.</li>
+</ul>
+<h2 id="22-source-and-dataset-registry">22. Source and Dataset Registry</h2>
+<p>The canonical human-readable registries are:</p>
+<ul>
+<li><a href="../sources/SOURCE_REGISTRY.md">Source Registry</a></li>
+<li><a href="../sources/DATASET_REGISTRY.md">Dataset Registry</a></li>
+<li><a href="../sources/COVERAGE_AND_MISSING_DATA.md">Historical Coverage and Missing-Data Map</a></li>
+<li><a href="../sources/LOCAL_CODEX_TELEMETRY_SURFACES.md">Local Codex Telemetry Surfaces</a></li>
+</ul>
+<p>Machine-readable equivalents, schemas, manifests, statistical outputs, chart
+metadata, and the research-only knowledge pack accompany this handbook.</p>
+<h2 id="23-reproducibility-checklist">23. Reproducibility Checklist</h2>
+<ol>
+<li>Rebuild source/dataset registries from isolated research packets.</li>
+<li>Rebuild the coverage and missing-data maps.</li>
+<li>Acquire only the bounded, license-reviewed parser fixture into temporary
+   storage; keep raw text outside Git.</li>
+<li>Run the allowlist transformation and manifests.</li>
+<li>Validate every JSON/JSONL record and schema reference.</li>
+<li>Run structural, missingness, rights, censoring, referential, and aggregate
+   tests.</li>
+<li>Compute stratified statistics and baselines; expect <code>null</code>/untrained results
+   when the numerical gate is empty.</li>
+<li>Regenerate PNG/SVG charts and metadata.</li>
+<li>Build HTML/PDF and render every PDF page for visual review.</li>
+<li>Run citation, privacy, license, and adversarial audits before publication.</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>Public agent evidence is sufficient to design a trustworthy telemetry system,
+but not to publish universal model token budgets or SmartRouter model-specific
+cost rules. The correct 2A artifact is therefore a conservative corpus with
+strong provenance, explicit missingness, bounded acquisition, reproducible
+methods, and an empty numerical-prior gate.</p>
+<p>SmartRouter is ready for a separately authorized local telemetry mission 2B.
+That mission should measure matched, privacy-minimized, complete route chains;
+only then can model selection optimize accepted-task cost without sacrificing
+capability, safety, or verification.</p></main>
+</body></html>

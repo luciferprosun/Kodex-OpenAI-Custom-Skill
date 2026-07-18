@@ -1,0 +1,1190 @@
+{
+  "agent_request_record": {
+    "$defs": {
+      "measurementMap": {
+        "additionalProperties": {
+          "enum": [
+            "measured",
+            "provider_reported",
+            "framework_reported",
+            "reconstructed",
+            "estimated",
+            "unknown"
+          ]
+        },
+        "type": "object"
+      },
+      "nullableCount": {
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    },
+    "$id": "https://smart-router.local/schemas/agent_request_record.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "cache_write_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "cached_input_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "context_after_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "context_before_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "cost_currency": {
+        "pattern": "^[A-Z]{3}$",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "cost_reconstruction_basis": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "dataset_id": {
+        "type": "string"
+      },
+      "latency_seconds": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "measurement_method": {
+        "$ref": "#/$defs/measurementMap"
+      },
+      "missing_fields": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "model_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_provider": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "non_cached_input_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "normalized_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "normalized_cost_scope": {
+        "enum": [
+          "request",
+          "unknown",
+          null
+        ]
+      },
+      "price_table_date": {
+        "format": "date",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "price_table_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "product_surface": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "prompt_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "provenance": {
+        "$ref": "source_provenance.schema.json"
+      },
+      "reasoning_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "record_version": {
+        "const": "2a.1"
+      },
+      "reported_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "reported_cost_scope": {
+        "enum": [
+          "request",
+          "unknown",
+          null
+        ]
+      },
+      "request_id": {
+        "type": "string"
+      },
+      "request_sequence": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "request_success": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "run_id": {
+        "type": "string"
+      },
+      "source_id": {
+        "type": "string"
+      },
+      "timestamp": {
+        "format": "date-time",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "tool_calls": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "duration_seconds": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "success": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tool_type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "tool_type",
+            "success",
+            "duration_seconds"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "tool_output_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "total_reported_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "visible_output_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      }
+    },
+    "required": [
+      "record_version",
+      "source_id",
+      "dataset_id",
+      "run_id",
+      "request_id",
+      "request_sequence",
+      "timestamp",
+      "model_id",
+      "model_provider",
+      "product_surface",
+      "prompt_tokens",
+      "non_cached_input_tokens",
+      "cached_input_tokens",
+      "cache_write_tokens",
+      "reasoning_tokens",
+      "visible_output_tokens",
+      "total_reported_tokens",
+      "reported_cost",
+      "normalized_cost",
+      "cost_currency",
+      "reported_cost_scope",
+      "normalized_cost_scope",
+      "price_table_date",
+      "price_table_id",
+      "cost_reconstruction_basis",
+      "tool_output_tokens",
+      "context_before_tokens",
+      "context_after_tokens",
+      "latency_seconds",
+      "tool_calls",
+      "request_success",
+      "measurement_method",
+      "missing_fields",
+      "provenance"
+    ],
+    "title": "SmartRouter Token Economics Agent Request Record",
+    "type": "object"
+  },
+  "agent_run_record": {
+    "$defs": {
+      "measurementMap": {
+        "additionalProperties": {
+          "enum": [
+            "measured",
+            "provider_reported",
+            "framework_reported",
+            "reconstructed",
+            "estimated",
+            "unknown"
+          ]
+        },
+        "type": "object"
+      },
+      "nullableCount": {
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "qualityComponents": {
+        "additionalProperties": false,
+        "properties": {
+          "complete_public_safe_trajectory": {
+            "type": "boolean"
+          },
+          "complete_request_breakdown": {
+            "type": "boolean"
+          },
+          "exact_agent_identity": {
+            "type": "boolean"
+          },
+          "exact_model_identity": {
+            "type": "boolean"
+          },
+          "exact_task_identity": {
+            "type": "boolean"
+          },
+          "license_clarity": {
+            "type": "boolean"
+          },
+          "objective_verifier": {
+            "type": "boolean"
+          },
+          "provider_reported_tokens": {
+            "type": "boolean"
+          },
+          "repeatable_acquisition": {
+            "type": "boolean"
+          },
+          "timestamped_price_table": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exact_model_identity",
+          "exact_agent_identity",
+          "exact_task_identity",
+          "provider_reported_tokens",
+          "complete_request_breakdown",
+          "complete_public_safe_trajectory",
+          "objective_verifier",
+          "timestamped_price_table",
+          "repeatable_acquisition",
+          "license_clarity"
+        ],
+        "type": "object"
+      }
+    },
+    "$id": "https://smart-router.local/schemas/agent_run_record.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "agent_count": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "agent_framework": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "agent_version": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "api_billed_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "attempt_chain_complete": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "attempt_chain_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "attempt_sequence": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "cache_write_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "cached_input_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "censor_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "censored": {
+        "type": "boolean"
+      },
+      "context_compactions": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "context_window": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "cost_currency": {
+        "pattern": "^[A-Z]{3}$",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "cost_reconstruction_basis": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "cumulative_session_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "current_context_occupancy": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "dataset_id": {
+        "type": "string"
+      },
+      "escalation_count": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "failure_penalty_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "files_touched": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "human_review_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "human_review_minutes": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "included_in_censoring_analysis": {
+        "type": "boolean"
+      },
+      "included_in_numerical_priors": {
+        "type": "boolean"
+      },
+      "invalid_tool_calls": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "license": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "measurement_confidence": {
+        "enum": [
+          "high",
+          "medium",
+          "low",
+          "unknown"
+        ]
+      },
+      "measurement_method": {
+        "$ref": "#/$defs/measurementMap"
+      },
+      "missing_fields": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "model_alias": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_provider": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_version": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "non_cached_input_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "normalized_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "normalized_cost_scope": {
+        "enum": [
+          "request",
+          "run",
+          "attempt_chain",
+          "unknown",
+          null
+        ]
+      },
+      "number_of_model_requests": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "number_of_tool_calls": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "partial_score": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "peak_context_used": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "price_table_date": {
+        "format": "date",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "price_table_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "product_surface": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "prompt_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "prompt_tokens_scope": {
+        "enum": [
+          "single_request",
+          "per_run_cumulative",
+          "unknown"
+        ]
+      },
+      "provenance": {
+        "$ref": "source_provenance.schema.json"
+      },
+      "quality_class": {
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ]
+      },
+      "quality_components": {
+        "$ref": "#/$defs/qualityComponents"
+      },
+      "quality_score": {
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "reasoning_effort": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reasoning_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "record_version": {
+        "const": "2a.1"
+      },
+      "repeated_tool_calls": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "reported_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "reported_cost_scope": {
+        "enum": [
+          "request",
+          "run",
+          "attempt_chain",
+          "subscription",
+          "unknown",
+          null
+        ]
+      },
+      "repository_size": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "request_breakdown_complete": {
+        "type": "boolean"
+      },
+      "retry_count": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "route_final_accepted": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "run_id": {
+        "type": "string"
+      },
+      "source_id": {
+        "type": "string"
+      },
+      "subscription_quota_units": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "task_difficulty": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      },
+      "task_domain": {
+        "enum": [
+          "SE",
+          "MATH",
+          "PHY",
+          "WEB",
+          "COMPUTER_USE",
+          "RESEARCH",
+          "OTHER"
+        ]
+      },
+      "task_id": {
+        "type": "string"
+      },
+      "task_size": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "task_subdomain": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "task_success": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "timestamp": {
+        "format": "date-time",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "tokens_from_compaction": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "tokens_from_tool_output": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "tokens_resent_from_history": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "tool_calls_by_type": {
+        "additionalProperties": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "type": "object"
+      },
+      "tool_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "total_reported_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "total_reported_tokens_scope": {
+        "enum": [
+          "single_request",
+          "per_run_cumulative",
+          "unknown"
+        ]
+      },
+      "trajectory_available": {
+        "type": "boolean"
+      },
+      "verification_cost": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "verifier_result": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "verifier_type": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "visible_output_tokens": {
+        "$ref": "#/$defs/nullableCount"
+      },
+      "wall_time_seconds": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "record_version",
+      "source_id",
+      "dataset_id",
+      "run_id",
+      "task_id",
+      "timestamp",
+      "model_id",
+      "model_alias",
+      "model_version",
+      "model_provider",
+      "product_surface",
+      "agent_framework",
+      "agent_version",
+      "agent_count",
+      "reasoning_effort",
+      "task_domain",
+      "task_subdomain",
+      "task_difficulty",
+      "task_size",
+      "repository_size",
+      "files_touched",
+      "prompt_tokens",
+      "non_cached_input_tokens",
+      "cached_input_tokens",
+      "cache_write_tokens",
+      "reasoning_tokens",
+      "visible_output_tokens",
+      "total_reported_tokens",
+      "prompt_tokens_scope",
+      "total_reported_tokens_scope",
+      "cumulative_session_tokens",
+      "current_context_occupancy",
+      "tokens_resent_from_history",
+      "tokens_from_tool_output",
+      "tokens_from_compaction",
+      "api_billed_tokens",
+      "subscription_quota_units",
+      "number_of_model_requests",
+      "number_of_tool_calls",
+      "tool_calls_by_type",
+      "invalid_tool_calls",
+      "repeated_tool_calls",
+      "context_window",
+      "peak_context_used",
+      "context_compactions",
+      "retry_count",
+      "escalation_count",
+      "wall_time_seconds",
+      "verifier_type",
+      "verifier_result",
+      "task_success",
+      "partial_score",
+      "human_review_minutes",
+      "reported_cost",
+      "normalized_cost",
+      "cost_currency",
+      "reported_cost_scope",
+      "normalized_cost_scope",
+      "price_table_date",
+      "price_table_id",
+      "cost_reconstruction_basis",
+      "tool_cost",
+      "verification_cost",
+      "human_review_cost",
+      "failure_penalty_cost",
+      "attempt_chain_id",
+      "attempt_sequence",
+      "attempt_chain_complete",
+      "route_final_accepted",
+      "request_breakdown_complete",
+      "trajectory_available",
+      "measurement_method",
+      "measurement_confidence",
+      "quality_components",
+      "quality_score",
+      "quality_class",
+      "included_in_numerical_priors",
+      "included_in_censoring_analysis",
+      "censored",
+      "censor_reason",
+      "missing_fields",
+      "license",
+      "provenance"
+    ],
+    "title": "SmartRouter Token Economics Canonical Agent Run",
+    "type": "object"
+  },
+  "record_version": "2a.1",
+  "source_provenance": {
+    "$id": "https://smart-router.local/schemas/source_provenance.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "artifact_locator": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "canonical_url": {
+        "format": "uri",
+        "type": "string"
+      },
+      "commercial_use_status": {
+        "enum": [
+          "allowed",
+          "restricted",
+          "unknown",
+          "not_applicable"
+        ]
+      },
+      "dataset_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "derived_statistics_status": {
+        "enum": [
+          "allowed",
+          "restricted",
+          "unknown"
+        ]
+      },
+      "hidden_reasoning_removed": {
+        "type": "boolean"
+      },
+      "license": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "notes": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "privacy_review": {
+        "enum": [
+          "passed",
+          "sanitized",
+          "not_applicable",
+          "pending"
+        ]
+      },
+      "publisher": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "raw_content_committed": {
+        "type": "boolean"
+      },
+      "record_version": {
+        "const": "2a.1"
+      },
+      "redistribution_status": {
+        "enum": [
+          "allowed",
+          "derived_only",
+          "reference_only",
+          "unknown"
+        ]
+      },
+      "retrieved_at": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "sha256": {
+        "pattern": "^[a-f0-9]{64}$",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source_id": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "transformation": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "record_version",
+      "source_id",
+      "dataset_id",
+      "canonical_url",
+      "artifact_locator",
+      "publisher",
+      "retrieved_at",
+      "license",
+      "redistribution_status",
+      "commercial_use_status",
+      "derived_statistics_status",
+      "sha256",
+      "transformation",
+      "raw_content_committed",
+      "hidden_reasoning_removed",
+      "privacy_review",
+      "notes"
+    ],
+    "title": "SmartRouter Token Economics Source Provenance",
+    "type": "object"
+  },
+  "status": "research_proposal_not_runtime",
+  "task_record": {
+    "$id": "https://smart-router.local/schemas/task_record.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "benchmark_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "benchmark_version": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "context_state": {
+        "enum": [
+          "fresh",
+          "continued",
+          "long_continuing",
+          "unknown"
+        ]
+      },
+      "dataset_id": {
+        "type": "string"
+      },
+      "file_scope": {
+        "enum": [
+          "none",
+          "single_file",
+          "multi_file",
+          "unknown"
+        ]
+      },
+      "horizon": {
+        "enum": [
+          "short",
+          "medium",
+          "long",
+          "unknown"
+        ]
+      },
+      "interaction_mode": {
+        "enum": [
+          "single_turn",
+          "agentic",
+          "unknown"
+        ]
+      },
+      "math_level": {
+        "maximum": 9,
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "missing_fields": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "mutation_mode": {
+        "enum": [
+          "read_only",
+          "write",
+          "mixed",
+          "unknown"
+        ]
+      },
+      "phy_level": {
+        "maximum": 9,
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "provenance": {
+        "$ref": "source_provenance.schema.json"
+      },
+      "record_version": {
+        "const": "2a.1"
+      },
+      "repository_scope": {
+        "enum": [
+          "none",
+          "repository_local",
+          "cross_repository",
+          "unknown"
+        ]
+      },
+      "repository_size": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "requirement_clarity": {
+        "enum": [
+          "clear",
+          "partially_ambiguous",
+          "ambiguous",
+          "unknown"
+        ]
+      },
+      "risk_level": {
+        "enum": [
+          "low",
+          "moderate",
+          "high_impact",
+          "unknown"
+        ]
+      },
+      "se_level": {
+        "maximum": 9,
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "source_id": {
+        "type": "string"
+      },
+      "success_criterion": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "task_difficulty": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      },
+      "task_domain": {
+        "enum": [
+          "SE",
+          "MATH",
+          "PHY",
+          "WEB",
+          "COMPUTER_USE",
+          "RESEARCH",
+          "OTHER"
+        ]
+      },
+      "task_id": {
+        "type": "string"
+      },
+      "task_size": {
+        "minimum": 0,
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "task_subdomain": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "tool_profile": {
+        "enum": [
+          "tool_free",
+          "light",
+          "tool_heavy",
+          "unknown"
+        ]
+      },
+      "verifier_profile": {
+        "enum": [
+          "deterministic",
+          "partial",
+          "subjective",
+          "none",
+          "unknown"
+        ]
+      },
+      "work_type": {
+        "enum": [
+          "research",
+          "implementation",
+          "analysis",
+          "verification",
+          "mixed",
+          "unknown"
+        ]
+      }
+    },
+    "required": [
+      "record_version",
+      "source_id",
+      "dataset_id",
+      "benchmark_id",
+      "benchmark_version",
+      "task_id",
+      "task_domain",
+      "task_subdomain",
+      "task_difficulty",
+      "se_level",
+      "math_level",
+      "phy_level",
+      "interaction_mode",
+      "file_scope",
+      "repository_scope",
+      "mutation_mode",
+      "tool_profile",
+      "verifier_profile",
+      "horizon",
+      "requirement_clarity",
+      "context_state",
+      "risk_level",
+      "work_type",
+      "task_size",
+      "repository_size",
+      "success_criterion",
+      "missing_fields",
+      "provenance"
+    ],
+    "title": "SmartRouter Token Economics Task Record",
+    "type": "object"
+  }
+}

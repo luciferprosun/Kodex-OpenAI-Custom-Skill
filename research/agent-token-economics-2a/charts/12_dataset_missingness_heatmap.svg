@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<rect width="1600" height="1000" fill="#F5F7FA"/>
+<rect x="42" y="34" width="1516" height="932" rx="28" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<rect x="42" y="34" width="20" height="932" fill="#007F86"/>
+<text x="98" y="115" font-family="DejaVu Sans" font-weight="bold" font-size="45" fill="#102A43">Dataset telemetry missingness heatmap</text>
+<text x="100" y="175" font-family="DejaVu Sans" font-size="23" fill="#627D98">Field status across all discovery records. Presence does not imply compatible semantics, objective outcomes, or permissi</text>
+<text x="120" y="300" font-size="28" fill="#102A43">41 discovery records</text><text x="120" y="354" font-size="28" fill="#102A43">8 telemetry/outcome dimensions</text><text x="120" y="408" font-size="28" fill="#102A43">Presence is not comparability</text>
+<line x1="100" y1="900" x2="1500" y2="900" stroke="#D9E2EC" stroke-width="2"/>
+<text x="100" y="940" font-family="DejaVu Sans" font-size="17" fill="#627D98">n=41 registry records | measurement: field-status metadata | orange/grey cells are unknown/absent, not zero</text>
+</svg>

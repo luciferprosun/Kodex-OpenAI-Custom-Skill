@@ -1,0 +1,24 @@
+{
+  "schema_version": "2a.1",
+  "evidence_cutoff": "2026-07-18",
+  "capability_domains": {
+    "SE": { "scale": "SE-0 through SE-9", "source": "existing SmartRouter capability scale" },
+    "MATH": { "scale": "MATH-0 through MATH-9", "source": "existing SmartRouter capability scale" },
+    "PHY": { "scale": "PHY-0 through PHY-9", "source": "existing SmartRouter capability scale" }
+  },
+  "operational_dimensions": {
+    "interaction_mode": ["single_turn", "agentic", "unknown"],
+    "file_scope": ["none", "single_file", "multi_file", "unknown"],
+    "repository_scope": ["none", "repository_local", "cross_repository", "unknown"],
+    "mutation_mode": ["read_only", "write", "mixed", "unknown"],
+    "tool_profile": ["tool_free", "light", "tool_heavy", "unknown"],
+    "verifier_profile": ["deterministic", "partial", "subjective", "none", "unknown"],
+    "horizon": ["short", "medium", "long", "unknown"],
+    "requirement_clarity": ["clear", "partially_ambiguous", "ambiguous", "unknown"],
+    "context_state": ["fresh", "continued", "long_continuing", "unknown"],
+    "risk_level": ["low", "moderate", "high_impact", "unknown"],
+    "work_type": ["research", "implementation", "analysis", "verification", "mixed", "unknown"]
+  },
+  "missingness_rule": "Unknown dimensions remain the literal value unknown; missing numerical measurements remain null.",
+  "routing_rule": "Capability, risk, and verification gates precede cost optimization."
+}

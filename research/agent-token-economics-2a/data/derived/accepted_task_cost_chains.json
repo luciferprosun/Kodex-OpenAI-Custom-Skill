@@ -1,0 +1,16 @@
+{
+  "definition": "sum of model/API, tool, verification, human-review, and failure-penalty costs across every attempt in a complete accepted route chain",
+  "n_complete_accepted_chains": 0,
+  "distribution": {
+    "n": 0,
+    "task_clusters": 0,
+    "p10": null,
+    "p25": null,
+    "p50": null,
+    "p75": null,
+    "p90": null,
+    "p50_cluster_bootstrap_95ci": null,
+    "p90_cluster_bootstrap_95ci": null
+  },
+  "excluded_incomplete_or_partially_costed_chains": true
+}

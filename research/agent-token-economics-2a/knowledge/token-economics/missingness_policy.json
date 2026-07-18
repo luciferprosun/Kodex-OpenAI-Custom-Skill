@@ -1,0 +1,22 @@
+{
+  "allowed_measurement_methods": [
+    "measured",
+    "provider_reported",
+    "framework_reported",
+    "reconstructed",
+    "estimated",
+    "unknown"
+  ],
+  "null_is_zero": false,
+  "record_version": "2a.1",
+  "rules": [
+    "Every null quantitative telemetry field is listed in missing_fields and uses measurement method unknown.",
+    "Estimated and reconstructed measurements retain their method and never become provider-reported.",
+    "Censored runs have null task_success, never enter ordinary failure rates, and require a separate explicit censoring-analysis flag.",
+    "D/E, rights-blocked, privacy-pending, and confidence-unknown records cannot enter numerical priors.",
+    "Cumulative session usage is not current context occupancy.",
+    "API pricing is not subscription quota consumption.",
+    "Current prices applied to historical usage are labeled counterfactual.",
+    "Accepted-task cost requires a complete accepted attempt chain and all cost components."
+  ]
+}

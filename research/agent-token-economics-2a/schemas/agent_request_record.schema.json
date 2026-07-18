@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-router.local/schemas/agent_request_record.schema.json",
+  "title": "SmartRouter Token Economics Agent Request Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_version",
+    "source_id",
+    "dataset_id",
+    "run_id",
+    "request_id",
+    "request_sequence",
+    "timestamp",
+    "model_id",
+    "model_provider",
+    "product_surface",
+    "prompt_tokens",
+    "non_cached_input_tokens",
+    "cached_input_tokens",
+    "cache_write_tokens",
+    "reasoning_tokens",
+    "visible_output_tokens",
+    "total_reported_tokens",
+    "reported_cost",
+    "normalized_cost",
+    "cost_currency",
+    "reported_cost_scope",
+    "normalized_cost_scope",
+    "price_table_date",
+    "price_table_id",
+    "cost_reconstruction_basis",
+    "tool_output_tokens",
+    "context_before_tokens",
+    "context_after_tokens",
+    "latency_seconds",
+    "tool_calls",
+    "request_success",
+    "measurement_method",
+    "missing_fields",
+    "provenance"
+  ],
+  "properties": {
+    "record_version": { "const": "2a.1" },
+    "source_id": { "type": "string" },
+    "dataset_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "request_sequence": { "type": "integer", "minimum": 0 },
+    "timestamp": { "type": ["string", "null"], "format": "date-time" },
+    "model_id": { "type": ["string", "null"] },
+    "model_provider": { "type": ["string", "null"] },
+    "product_surface": { "type": ["string", "null"] },
+    "prompt_tokens": { "$ref": "#/$defs/nullableCount" },
+    "non_cached_input_tokens": { "$ref": "#/$defs/nullableCount" },
+    "cached_input_tokens": { "$ref": "#/$defs/nullableCount" },
+    "cache_write_tokens": { "$ref": "#/$defs/nullableCount" },
+    "reasoning_tokens": { "$ref": "#/$defs/nullableCount" },
+    "visible_output_tokens": { "$ref": "#/$defs/nullableCount" },
+    "total_reported_tokens": { "$ref": "#/$defs/nullableCount" },
+    "reported_cost": { "type": ["number", "null"], "minimum": 0 },
+    "normalized_cost": { "type": ["number", "null"], "minimum": 0 },
+    "cost_currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+    "reported_cost_scope": { "enum": ["request", "unknown", null] },
+    "normalized_cost_scope": { "enum": ["request", "unknown", null] },
+    "price_table_date": { "type": ["string", "null"], "format": "date" },
+    "price_table_id": { "type": ["string", "null"] },
+    "cost_reconstruction_basis": { "type": ["string", "null"] },
+    "tool_output_tokens": { "$ref": "#/$defs/nullableCount" },
+    "context_before_tokens": { "$ref": "#/$defs/nullableCount" },
+    "context_after_tokens": { "$ref": "#/$defs/nullableCount" },
+    "latency_seconds": { "type": ["number", "null"], "minimum": 0 },
+    "tool_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tool_type", "success", "duration_seconds"],
+        "properties": {
+          "tool_type": { "type": "string" },
+          "success": { "type": ["boolean", "null"] },
+          "duration_seconds": { "type": ["number", "null"], "minimum": 0 }
+        }
+      }
+    },
+    "request_success": { "type": ["boolean", "null"] },
+    "measurement_method": { "$ref": "#/$defs/measurementMap" },
+    "missing_fields": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "provenance": { "$ref": "source_provenance.schema.json" }
+  },
+  "$defs": {
+    "nullableCount": { "type": ["integer", "null"], "minimum": 0 },
+    "measurementMap": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["measured", "provider_reported", "framework_reported", "reconstructed", "estimated", "unknown"]
+      }
+    }
+  }
+}

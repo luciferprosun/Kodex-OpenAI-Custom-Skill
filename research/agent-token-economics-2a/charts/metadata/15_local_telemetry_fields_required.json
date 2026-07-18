@@ -1,0 +1,26 @@
+{
+  "title": "Local telemetry fields still required",
+  "evidence_cutoff": "2026-07-18",
+  "generated_at_date": "2026-07-18",
+  "dataset": [],
+  "sample_size": 12,
+  "measurement_type": "requirements derived from public missing-data map",
+  "models": [],
+  "task_stratum": null,
+  "uncertainty": "registry-count uncertainty is not a sampling interval",
+  "known_limitations": [
+    "The list is a collection specification, not observed local telemetry."
+  ],
+  "numerical_prior_eligible": false,
+  "critical_missing_measurements": [
+    "comparable provider-reported per-request token breakdowns joined to objective outcomes",
+    "complete failed, censored, retry, and escalation attempt chains",
+    "current context occupancy distinct from cumulative usage",
+    "tool-output and repeated-history token attribution",
+    "compaction input/output and post-compaction context",
+    "subscription quota consumption with documented semantics",
+    "price-date-correct accepted-task cost including verification and human review",
+    "representative multi-agent runs with per-agent attribution",
+    "SmartRouter-specific tasks and route decisions"
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "prediction_feature_groups": {
+    "capability": [
+      "se_level",
+      "math_level",
+      "phy_level"
+    ],
+    "evidence": [
+      "verifier_profile",
+      "success_criterion",
+      "benchmark_version"
+    ],
+    "execution": [
+      "tool_profile",
+      "horizon",
+      "agent_count",
+      "context_state"
+    ],
+    "risk": [
+      "requirement_clarity",
+      "risk_level",
+      "work_type"
+    ],
+    "scope": [
+      "interaction_mode",
+      "file_scope",
+      "repository_scope",
+      "mutation_mode"
+    ]
+  },
+  "record_version": "2a.1",
+  "status": "research_proposal_not_runtime",
+  "taxonomy": {
+    "capability_domains": {
+      "MATH": {
+        "scale": "MATH-0 through MATH-9",
+        "source": "existing SmartRouter capability scale"
+      },
+      "PHY": {
+        "scale": "PHY-0 through PHY-9",
+        "source": "existing SmartRouter capability scale"
+      },
+      "SE": {
+        "scale": "SE-0 through SE-9",
+        "source": "existing SmartRouter capability scale"
+      }
+    },
+    "evidence_cutoff": "2026-07-18",
+    "missingness_rule": "Unknown dimensions remain the literal value unknown; missing numerical measurements remain null.",
+    "operational_dimensions": {
+      "context_state": [
+        "fresh",
+        "continued",
+        "long_continuing",
+        "unknown"
+      ],
+      "file_scope": [
+        "none",
+        "single_file",
+        "multi_file",
+        "unknown"
+      ],
+      "horizon": [
+        "short",
+        "medium",
+        "long",
+        "unknown"
+      ],
+      "interaction_mode": [
+        "single_turn",
+        "agentic",
+        "unknown"
+      ],
+      "mutation_mode": [
+        "read_only",
+        "write",
+        "mixed",
+        "unknown"
+      ],
+      "repository_scope": [
+        "none",
+        "repository_local",
+        "cross_repository",
+        "unknown"
+      ],
+      "requirement_clarity": [
+        "clear",
+        "partially_ambiguous",
+        "ambiguous",
+        "unknown"
+      ],
+      "risk_level": [
+        "low",
+        "moderate",
+        "high_impact",
+        "unknown"
+      ],
+      "tool_profile": [
+        "tool_free",
+        "light",
+        "tool_heavy",
+        "unknown"
+      ],
+      "verifier_profile": [
+        "deterministic",
+        "partial",
+        "subjective",
+        "none",
+        "unknown"
+      ],
+      "work_type": [
+        "research",
+        "implementation",
+        "analysis",
+        "verification",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "routing_rule": "Capability, risk, and verification gates precede cost optimization.",
+    "schema_version": "2a.1"
+  }
+}

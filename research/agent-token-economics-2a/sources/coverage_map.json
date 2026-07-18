@@ -1,0 +1,281 @@
+{
+  "evidence_cutoff": "2026-07-18",
+  "universal_coverage_claimed": false,
+  "candidate_dataset_records": 41,
+  "accepted_for_numerical_routing": 0,
+  "historical_eras": [
+    {
+      "era": "early_tool_using_and_react",
+      "period": "2022-10 through 2023-02",
+      "examples": [
+        "ReAct"
+      ],
+      "public_evidence": "papers, prompts, demonstrations, benchmark outcomes",
+      "run_level_token_telemetry": "not located",
+      "routing_use": "task taxonomy and historical context only"
+    },
+    {
+      "era": "autonomous_general_agents",
+      "period": "2023-03 onward",
+      "examples": [
+        "AutoGPT",
+        "BabyAGI"
+      ],
+      "public_evidence": "framework code, examples, benchmark infrastructure",
+      "run_level_token_telemetry": "no standardized historical corpus located",
+      "routing_use": "framework history only"
+    },
+    {
+      "era": "web_and_computer_use_agents",
+      "period": "2023-06 onward",
+      "examples": [
+        "Mind2Web",
+        "WebArena",
+        "VisualWebArena",
+        "WebLINX",
+        "BrowserGym"
+      ],
+      "public_evidence": "actions, screenshots, page state, tool traces, verifier outcomes",
+      "run_level_token_telemetry": "usually absent; one very large archive remains license/schema blocked",
+      "routing_use": "structural and tool-intensity features, not token priors"
+    },
+    {
+      "era": "software_engineering_agents",
+      "period": "2023 onward",
+      "examples": [
+        "SWE-agent",
+        "OpenHands",
+        "SWE-bench",
+        "SWE-smith",
+        "Multi-SWE-bench"
+      ],
+      "public_evidence": "tasks, patches, trajectories, objective verifier outcomes",
+      "run_level_token_telemetry": "heterogeneous, often aggregate/cost-only, and frequently license-ambiguous",
+      "routing_use": "future bounded adapters after source-specific audit"
+    },
+    {
+      "era": "multi_agent_systems",
+      "period": "2023-07 onward",
+      "examples": [
+        "ChatDev",
+        "MetaGPT",
+        "MegaAgent",
+        "Magentic-One",
+        "AgencyBench"
+      ],
+      "public_evidence": "frameworks, outcomes, a few aggregate token/cost examples",
+      "run_level_token_telemetry": "mostly absent or aggregate and non-comparable",
+      "routing_use": "qualitative amplification evidence only"
+    },
+    {
+      "era": "long_horizon_terminal_agents",
+      "period": "2024 onward",
+      "examples": [
+        "Terminal-Bench",
+        "Harbor",
+        "STATE-Bench",
+        "AgentRE-Bench"
+      ],
+      "public_evidence": "tasks, tools, deterministic verifiers, some aggregate usage",
+      "run_level_token_telemetry": "adapter- and release-dependent",
+      "routing_use": "future locally measured strata"
+    },
+    {
+      "era": "current_codex_and_agents_sdk",
+      "period": "2025 through evidence cutoff 2026-07-18",
+      "examples": [
+        "OpenAI Responses",
+        "OpenAI Agents SDK",
+        "Codex JSONL",
+        "Codex app-server"
+      ],
+      "public_evidence": "documented usage/tracing interfaces and versioned schemas",
+      "run_level_token_telemetry": "interfaces exist; no universal public task/outcome corpus",
+      "routing_use": "preferred collection surfaces for local telemetry 2B"
+    }
+  ],
+  "field_coverage_candidates": {
+    "input_tokens": {
+      "candidate_records": 8,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-ORG-USAGE",
+        "OA-TELEM-RESPONSES-RUN",
+        "hwm_megaagent_appendix_examples",
+        "hwm_metagpt_softwaredev_aggregates",
+        "hwm_openhands_token_consumption_independent_2026"
+      ]
+    },
+    "cached_tokens": {
+      "candidate_records": 6,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-ORG-USAGE",
+        "OA-TELEM-RESPONSES-RUN",
+        "hwm_openhands_token_consumption_independent_2026"
+      ]
+    },
+    "reasoning_tokens": {
+      "candidate_records": 4,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-RESPONSES-RUN"
+      ]
+    },
+    "output_tokens": {
+      "candidate_records": 8,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-ORG-USAGE",
+        "OA-TELEM-RESPONSES-RUN",
+        "hwm_megaagent_appendix_examples",
+        "hwm_metagpt_softwaredev_aggregates",
+        "hwm_openhands_token_consumption_independent_2026"
+      ]
+    },
+    "request_count": {
+      "candidate_records": 2,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-ORG-USAGE"
+      ]
+    },
+    "cost": {
+      "candidate_records": 4,
+      "dataset_ids": [
+        "OA-TELEM-ORG-COSTS",
+        "hwm_agentlab_tmlr_traces",
+        "hwm_megaagent_appendix_examples",
+        "hwm_metagpt_softwaredev_aggregates"
+      ]
+    },
+    "timing": {
+      "candidate_records": 11,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-ORG-COSTS",
+        "OA-TELEM-ORG-USAGE",
+        "OA-TELEM-RESPONSES-RUN",
+        "hwm_agencybench_acl2026_aggregates",
+        "hwm_agentlab_tmlr_traces",
+        "hwm_megaagent_appendix_examples",
+        "hwm_metagpt_softwaredev_aggregates",
+        "hwm_trace_commons_agent_traces_2026_07_18"
+      ]
+    },
+    "tool_calls": {
+      "candidate_records": 17,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-RESPONSES-RUN",
+        "hwm_agencybench_acl2026_aggregates",
+        "hwm_agentbench_public_runs",
+        "hwm_agentboard_dataset",
+        "hwm_agentlab_tmlr_traces",
+        "hwm_mind2web_human_traces",
+        "hwm_react_public_artifacts_v1",
+        "hwm_trace_commons_agent_traces_2026_07_18",
+        "hwm_visualwebarena_agent_trajectories",
+        "hwm_visualwebarena_human_trajectories",
+        "hwm_webarena_execution_traces_v1_v2",
+        "hwm_webarena_human_trajectories",
+        "hwm_weblinx_1_0_1_1",
+        "hwm_weblinx_browsergym_1_1"
+      ]
+    },
+    "verifier_result": {
+      "candidate_records": 29,
+      "dataset_ids": [
+        "ds_agentrebench",
+        "ds_harbor_public_results",
+        "ds_multiswebench",
+        "ds_multiswerl",
+        "ds_openhands_benchmark_outputs",
+        "ds_statebench",
+        "ds_sweagent_demonstrations",
+        "ds_swebench_experiments",
+        "ds_swesmith_tasks",
+        "ds_swesmith_trajectories",
+        "ds_terminalbench2_tasks",
+        "hwm_agencybench_acl2026_aggregates",
+        "hwm_agentbench_public_runs",
+        "hwm_agentboard_dataset",
+        "hwm_agentlab_tmlr_traces",
+        "hwm_gaia_core_2023",
+        "hwm_gaia_results_public",
+        "hwm_gaia_submissions_public",
+        "hwm_megaagent_appendix_examples",
+        "hwm_metagpt_softwaredev_aggregates",
+        "hwm_mind2web_human_traces",
+        "hwm_openhands_token_consumption_independent_2026",
+        "hwm_react_public_artifacts_v1",
+        "hwm_visualwebarena_agent_trajectories",
+        "hwm_visualwebarena_human_trajectories",
+        "hwm_webarena_execution_traces_v1_v2",
+        "hwm_webarena_human_trajectories",
+        "hwm_weblinx_1_0_1_1",
+        "hwm_weblinx_browsergym_1_1"
+      ]
+    },
+    "raw_trajectory": {
+      "candidate_records": 28,
+      "dataset_ids": [
+        "OA-TELEM-AGENTS-SDK",
+        "OA-TELEM-CODEX-APP-SERVER",
+        "OA-TELEM-CODEX-EXEC",
+        "OA-TELEM-CODEX-ROLLOUT",
+        "OA-TELEM-ORG-COSTS",
+        "OA-TELEM-ORG-USAGE",
+        "OA-TELEM-RESPONSES-RUN",
+        "ds_agentrebench",
+        "ds_harbor_public_results",
+        "ds_nebius_openhands_swerebench",
+        "ds_nebius_sweagent_trajectories",
+        "ds_openhands_benchmark_outputs",
+        "ds_sweagent_demonstrations",
+        "ds_swebench_experiments",
+        "ds_swesmith_trajectories",
+        "hwm_agentbench_public_runs",
+        "hwm_agentlab_tmlr_traces",
+        "hwm_gaia_submissions_public",
+        "hwm_megaagent_appendix_examples",
+        "hwm_mind2web_human_traces",
+        "hwm_openhands_token_consumption_independent_2026",
+        "hwm_trace_commons_agent_traces_2026_07_18",
+        "hwm_visualwebarena_agent_trajectories",
+        "hwm_visualwebarena_human_trajectories",
+        "hwm_webarena_execution_traces_v1_v2",
+        "hwm_webarena_human_trajectories",
+        "hwm_weblinx_1_0_1_1",
+        "hwm_weblinx_browsergym_1_1"
+      ]
+    },
+    "complete_failure_coverage": {
+      "candidate_records": 0,
+      "dataset_ids": []
+    }
+  },
+  "critical_missing_measurements": [
+    "comparable provider-reported per-request token breakdowns joined to objective outcomes",
+    "complete failed, censored, retry, and escalation attempt chains",
+    "current context occupancy distinct from cumulative usage",
+    "tool-output and repeated-history token attribution",
+    "compaction input/output and post-compaction context",
+    "subscription quota consumption with documented semantics",
+    "price-date-correct accepted-task cost including verification and human review",
+    "representative multi-agent runs with per-agent attribution",
+    "SmartRouter-specific tasks and route decisions"
+  ]
+}

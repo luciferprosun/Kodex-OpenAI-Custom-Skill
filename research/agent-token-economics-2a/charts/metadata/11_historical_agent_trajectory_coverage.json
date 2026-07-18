@@ -1,0 +1,15 @@
+{
+  "title": "Historical agent-trajectory coverage",
+  "evidence_cutoff": "2026-07-18",
+  "generated_at_date": "2026-07-18",
+  "dataset": [],
+  "sample_size": 7,
+  "measurement_type": "historical source-discovery classification",
+  "models": [],
+  "task_stratum": null,
+  "uncertainty": "registry-count uncertainty is not a sampling interval",
+  "known_limitations": [
+    "Bars encode evidence-era progression, not model capability or token volume."
+  ],
+  "numerical_prior_eligible": false
+}

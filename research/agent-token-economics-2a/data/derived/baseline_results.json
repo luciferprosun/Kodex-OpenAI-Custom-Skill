@@ -1,0 +1,137 @@
+{
+  "schema_version": "2a.1",
+  "status": "research_only_not_runtime",
+  "n_quality_a_to_c": 0,
+  "lookup_baselines": [],
+  "lookup_calibration": {
+    "task_group_holdout": {
+      "p50_input_tokens": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "task",
+        "metric": "mean_absolute_error",
+        "by_stratum": {}
+      },
+      "p90_total_tokens": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "task",
+        "metric": "pinball",
+        "by_stratum": {}
+      },
+      "success_probability": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "task",
+        "metric": "brier",
+        "by_stratum": {}
+      },
+      "escalation_probability": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "task",
+        "metric": "brier",
+        "by_stratum": {}
+      },
+      "accepted_task_cost": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "task",
+        "metric": "mean_absolute_error",
+        "by_stratum": {}
+      }
+    },
+    "source_group_holdout": {
+      "p50_input_tokens": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "source",
+        "metric": "mean_absolute_error",
+        "by_stratum": {}
+      },
+      "p90_total_tokens": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "source",
+        "metric": "pinball",
+        "by_stratum": {}
+      },
+      "success_probability": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "source",
+        "metric": "brier",
+        "by_stratum": {}
+      },
+      "escalation_probability": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "source",
+        "metric": "brier",
+        "by_stratum": {}
+      },
+      "accepted_task_cost": {
+        "n": 0,
+        "error": null,
+        "holdout_group": "source",
+        "metric": "mean_absolute_error",
+        "by_stratum": {}
+      }
+    }
+  },
+  "regularized_baselines": {
+    "input_tokens": {
+      "trained": false,
+      "reason": "insufficient_runs_relative_to_feature_width",
+      "n": 0,
+      "feature_width": 13,
+      "minimum_n": 130,
+      "publication_ready": false,
+      "grouped_evaluation": null
+    },
+    "total_tokens": {
+      "trained": false,
+      "reason": "insufficient_runs_relative_to_feature_width",
+      "n": 0,
+      "feature_width": 13,
+      "minimum_n": 130,
+      "publication_ready": false,
+      "grouped_evaluation": null
+    },
+    "success_probability": {
+      "trained": false,
+      "reason": "insufficient_runs_relative_to_feature_width",
+      "n": 0,
+      "feature_width": 13,
+      "minimum_n": 130,
+      "publication_ready": false,
+      "grouped_evaluation": null
+    },
+    "escalation_probability": {
+      "trained": false,
+      "reason": "insufficient_runs_relative_to_feature_width",
+      "n": 0,
+      "feature_width": 13,
+      "minimum_n": 130,
+      "publication_ready": false,
+      "grouped_evaluation": null
+    },
+    "accepted_task_cost": {
+      "trained": false,
+      "reason": "insufficient_runs_relative_to_feature_width",
+      "n": 0,
+      "feature_width": 13,
+      "minimum_n": 130,
+      "publication_ready": false,
+      "grouped_evaluation": null
+    }
+  },
+  "interpretable_tree": {
+    "trained": false,
+    "reason": "fewer_than_100_observed_runs",
+    "n": 0,
+    "publication_ready": false,
+    "grouped_evaluation": null
+  },
+  "global_limitation": "Public normalized support is sparse and heterogeneous. Accepted-task cost uses complete route chains only. No estimator is activated in SmartRouter runtime."
+}

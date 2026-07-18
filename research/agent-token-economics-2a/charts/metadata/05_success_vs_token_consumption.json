@@ -1,0 +1,15 @@
+{
+  "title": "Success probability versus token consumption",
+  "evidence_cutoff": "2026-07-18",
+  "generated_at_date": "2026-07-18",
+  "dataset": [],
+  "sample_size": 0,
+  "measurement_type": "no compatible measured public run records",
+  "models": [],
+  "task_stratum": null,
+  "uncertainty": "not estimable",
+  "known_limitations": [
+    "An empty panel is intentional; it prevents aggregate, estimated, or unlicensed records from becoming numerical priors."
+  ],
+  "numerical_prior_eligible": false
+}

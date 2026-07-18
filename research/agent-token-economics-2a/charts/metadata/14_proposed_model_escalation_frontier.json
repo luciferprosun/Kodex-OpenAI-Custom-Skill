@@ -1,0 +1,15 @@
+{
+  "title": "Proposed model-escalation frontier",
+  "evidence_cutoff": "2026-07-18",
+  "generated_at_date": "2026-07-18",
+  "dataset": [],
+  "sample_size": 0,
+  "measurement_type": "conceptual research objective",
+  "models": [],
+  "task_stratum": null,
+  "uncertainty": "not estimable",
+  "known_limitations": [
+    "The line is schematic and must not be read as an empirical efficiency frontier."
+  ],
+  "numerical_prior_eligible": false
+}

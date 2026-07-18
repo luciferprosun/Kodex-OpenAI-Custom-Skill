@@ -1,0 +1,68 @@
+{
+  "charts": {
+    "metadata_sidecars": 15,
+    "png": 15,
+    "regeneration_script": "analysis/generate_charts.py",
+    "svg": 15
+  },
+  "corpus": {
+    "records": {
+      "agent_requests.jsonl": 0,
+      "agent_runs.jsonl": 19,
+      "provenance.jsonl": 1,
+      "tasks.jsonl": 12
+    },
+    "schemas": 4,
+    "status": "PASS"
+  },
+  "evidence_cutoff": "2026-07-18",
+  "json": {
+    "documents_or_rows": 846,
+    "files": 66
+  },
+  "links": {
+    "external_citations": 13,
+    "local": 92
+  },
+  "numerical_priors": 0,
+  "pdf": {
+    "encrypted": false,
+    "extractable_words": 4495,
+    "file": "output/pdf/SmartRouter_Agent_Token_Economics_2026.pdf",
+    "javascript": false,
+    "page_size": "594.96 x 841.92 pts (A4)",
+    "pages": 34,
+    "renderer": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.0.0 Safari/537.36",
+    "sha256": "c126db107c9ed05e0b8fe079db2221cebbfa2614fb13c00b9a972a6156cab1e5",
+    "tagged": "yes",
+    "visual_review": "PASS \u2014 all 34 pages rendered and inspected; cover, charts, tables, links, margins, and final page have no clipping, overlap, or broken background",
+    "visual_review_record": "validation/PDF_VISUAL_REVIEW.json"
+  },
+  "privacy": {
+    "aoia_content_matches": 0,
+    "bytes_scanned": 2982088,
+    "files_scanned": 130,
+    "nested_git_directories": 0,
+    "private_absolute_paths": 0,
+    "raw_private_chats": 0,
+    "secret_matches": 0,
+    "symlinks": 0,
+    "unexpected_binaries": 0,
+    "unsafe_filenames": 0
+  },
+  "registries": {
+    "datasets_or_surfaces": 41,
+    "decision_counts": {
+      "accepted_qualitative": 8,
+      "blocked_pending_review": 10,
+      "metadata_only": 17,
+      "rejected": 6
+    },
+    "numerical_routing_datasets": 0,
+    "records_with_unknown_primary_license": 14,
+    "source_aliases": 2,
+    "sources": 78
+  },
+  "runtime_changed": false,
+  "status": "PASS"
+}

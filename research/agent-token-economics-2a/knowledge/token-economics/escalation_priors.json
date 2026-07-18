@@ -1,0 +1,27 @@
+{
+  "decision_constraints": [
+    "minimum calibrated success probability",
+    "capability ceiling",
+    "risk and human-approval constraints",
+    "available verifier",
+    "token and time budgets",
+    "current model availability"
+  ],
+  "priors": [],
+  "record_version": "2a.1",
+  "required_chain_fields": [
+    "attempt_chain_id",
+    "attempt_sequence",
+    "attempt_chain_complete",
+    "route_final_accepted",
+    "retry_count",
+    "escalation_count",
+    "normalized_cost",
+    "tool_cost",
+    "verification_cost",
+    "human_review_cost",
+    "failure_penalty_cost"
+  ],
+  "runtime_enabled": false,
+  "status": "withheld_pending_complete_attempt_chains"
+}

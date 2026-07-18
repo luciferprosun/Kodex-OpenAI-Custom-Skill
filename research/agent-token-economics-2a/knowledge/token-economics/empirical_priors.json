@@ -1,0 +1,46 @@
+{
+  "activation_condition": "At least one compatible A-C stratum with explicit numerical admission, rights clearance, outcome evidence, and held-out calibration.",
+  "admitted_run_count": 0,
+  "censoring_analysis": {
+    "by_reason": {},
+    "definition": "separate A-C, rights-cleared censored-run cohort; never coded as ordinary success or failure",
+    "n": 0,
+    "survival_model_fitted": false,
+    "survival_model_requirement": "sufficient comparable censoring times/budgets and at least five independent task clusters",
+    "total_reported_tokens": {
+      "n": 0,
+      "p10": null,
+      "p25": null,
+      "p50": null,
+      "p50_cluster_bootstrap_95ci": null,
+      "p75": null,
+      "p90": null,
+      "p90_cluster_bootstrap_95ci": null,
+      "task_clusters": 0
+    },
+    "wall_time_seconds": {
+      "n": 0,
+      "p10": null,
+      "p25": null,
+      "p50": null,
+      "p50_cluster_bootstrap_95ci": null,
+      "p75": null,
+      "p90": null,
+      "p90_cluster_bootstrap_95ci": null,
+      "task_clusters": 0
+    }
+  },
+  "non_claim": "No public aggregate, demonstration, or model-name heuristic is converted into a SmartRouter numerical prior.",
+  "priors": [],
+  "record_version": "2a.1",
+  "status": "withheld_insufficient_compatible_public_evidence",
+  "stratified_statistics": {
+    "method": {
+      "bootstrap_replicates": 2000,
+      "bootstrap_unit": "dataset_id plus task_id",
+      "outcome_policy": "censored runs excluded from ordinary successes and failures",
+      "seed": 20260718
+    },
+    "strata": []
+  }
+}
