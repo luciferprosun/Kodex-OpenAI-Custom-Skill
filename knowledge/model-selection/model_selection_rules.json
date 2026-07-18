@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.1.0",
+  "status": "research_proposal_not_runtime_implementation",
+  "scope": "Select model identity only. Reasoning effort, speed tier, agent count, tools, safety, and action authority are separate decisions.",
+  "domain_evaluation_policy": {
+    "task_representation": "Declare every applicable domain and level explicitly.",
+    "absent_domain": "not_applicable_not_zero",
+    "route_predicate": "all_applicable_domains_must_pass",
+    "unassessed_domain": "no_route_require_human_or_new_evidence",
+    "cross_domain_rule": "A route fails if any applicable domain exceeds its threshold or is unassessed for the candidate model."
+  },
+  "preconditions": [
+    "Read live model availability, visibility, modalities, and workspace constraints.",
+    "Identify surface and authentication boundary.",
+    "Classify every applicable SE, MATH, and PHY requirement; do not collapse a mixed task to its easiest domain.",
+    "Determine supervised versus bounded-autonomous workflow.",
+    "Apply safety, reversibility, privacy, and approval gates independently."
+  ],
+  "hard_rejections": [
+    {"condition":"model_not_live_or_not_entitled","result":"reject"},
+    {"condition":"required_input_modality_unsupported","result":"reject"},
+    {"condition":"task_exceeds_documented_or_empirically_verified_surface_context","result":"split_compact_or_use_explicit_verified_surface"},
+    {"condition":"any_applicable_domain_is_unassessed_for_candidate","result":"no_route_require_human_or_new_evidence"},
+    {"condition":"required_level_exceeds_selected_workflow_ceiling","result":"try_another_reviewed_model_only_if_within_its_ceiling_otherwise_human_led"},
+    {"condition":"required_level_exceeds_every_reviewed_model_ceiling","result":"human_led_evidence_insufficient"},
+    {"condition":"spark_and_not_targeted_text_only_low_risk_coding","result":"reject_spark"},
+    {"condition":"gpt_5_3_codex_on_chatgpt_authenticated_codex","result":"reject"},
+    {"condition":"unknown_model_without_reviewed_profile","result":"reject"}
+  ],
+  "primary_routes": [
+    {
+      "route_id": "ROUTE-LUNA-CLEAR",
+      "when": "Clear, repeatable, low-risk work with deterministic acceptance; every applicable domain must be within the declared threshold.",
+      "applicable_domain_limits": {"SE":3,"MATH":2,"PHY":2},
+      "all_applicable_domains_must_pass": true,
+      "prefer": ["gpt-5.6-luna","gpt-5.6-terra","gpt-5.5","gpt-5.6-sol"]
+    },
+    {
+      "route_id": "ROUTE-SPARK-TARGETED-CODE",
+      "when": "Interactive text-only targeted code task, small edit surface, low ambiguity, and explicit focused test.",
+      "applicable_domain_limits": {"SE":3},
+      "allowed_applicable_domains": ["SE"],
+      "all_applicable_domains_must_pass": true,
+      "prefer": ["gpt-5.3-codex-spark","gpt-5.6-luna","gpt-5.6-terra"]
+    },
+    {
+      "route_id": "ROUTE-TERRA-PROFESSIONAL",
+      "when": "Normal professional work after classification, within every applicable Terra trial ceiling, with no Sol-specific ambiguity or final-audit trigger.",
+      "limits_from": "knowledge/model_capability_matrix.json#gpt-5.6-terra",
+      "all_applicable_domains_must_pass": true,
+      "prefer": ["gpt-5.6-terra","gpt-5.5","gpt-5.6-sol","gpt-5.6-luna"]
+    },
+    {
+      "route_id": "ROUTE-SOL-COMPLEX",
+      "when": "Ambiguous, high-value, final-audit, or cross-domain synthesis that remains within every applicable Sol trial ceiling.",
+      "limits_from": "knowledge/model_capability_matrix.json#gpt-5.6-sol",
+      "all_applicable_domains_must_pass": true,
+      "prefer": ["gpt-5.6-sol","gpt-5.6-terra","gpt-5.5"]
+    },
+    {
+      "route_id": "ROUTE-PINNED-COMPATIBILITY",
+      "when": "Workflow is explicitly pinned, local compatibility evidence exists, and every applicable domain is assessed and within the requested model's ceiling.",
+      "limits_from": "knowledge/model_capability_matrix.json#requested_model",
+      "all_applicable_domains_must_pass": true,
+      "prefer": ["requested_model","gpt-5.6-terra","gpt-5.6-sol"]
+    }
+  ],
+  "escalation_triggers_to_sol": [
+    "The task is within every applicable Sol ceiling but exceeds a lower candidate's reviewed ceiling.",
+    "The task is within every applicable Sol ceiling and has high architectural depth, difficult causal debugging, or material ambiguity.",
+    "The task is within every applicable Sol ceiling and needs expert mathematics or physics candidate generation with independent verification.",
+    "The task is within every applicable Sol ceiling and requires final adversarial audit across multiple evidence classes."
+  ],
+  "above_sol_ceiling_result": "human_led_evidence_insufficient",
+  "non_triggers": [
+    "The word security by itself.",
+    "An external action or approval requirement by itself.",
+    "A large advertised API context window without effective-context evidence.",
+    "A higher price, newer version number, larger model name, or slower response.",
+    "Ultra, max, or another reasoning label appearing in the prompt."
+  ],
+  "context_policy": {
+    "observed_local_codex_catalog_main_models_tokens": 272000,
+    "observed_local_codex_catalog_spark_tokens": 128000,
+    "api_gpt_5_6_documented_tokens": 1050000,
+    "api_documented_max_output_tokens": 128000,
+    "long_context_price_threshold_tokens": 272000,
+    "long_context_input_multiplier": 2.0,
+    "long_context_output_multiplier": 1.5,
+    "rule": "Observed local catalog fields are not empirical accepted-input limits. Capacity is not effective context. Prefer retrieval, splitting, evidence maps, and independent verification before using an extreme window."
+  },
+  "staleness_policy": {
+    "live_inventory":"verify_each_startup",
+    "pricing_and_limits_days":14,
+    "rolling_latency_days":7,
+    "capability_review_days":90,
+    "refresh_on":["model_update","Codex_update","benchmark_correction","availability_change","material_local_eval_change"]
+  },
+  "explanation_fields_required":["model_id","surface","route_id","applicable_domains","required_levels","workflow","ceilings","confidence","hard_rejections","fallbacks","evidence_ids","verification_required","observed_at"]
+}

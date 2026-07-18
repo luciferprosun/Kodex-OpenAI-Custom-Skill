@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.1.0",
+  "assessed_at": "2026-07-18",
+  "meaning": "Conservative routing trial ceilings and protective policy caps, not intrinsic model scores or permission grants.",
+  "unassessed_semantics": "A null ceiling means no evidence-backed route in that domain. It is not zero capability and must not be coerced to numeric zero.",
+  "controlled_sanity_test": "Six available requested targets tied on three narrow tasks; the operator-recorded test did not differentiate ceilings or independently establish backend identity.",
+  "models": [
+    {
+      "model_id": "gpt-5.6-sol",
+      "preferred_role": "complex_open_ended_high_value",
+      "ceilings": {
+        "SE": {"status":"assessed_trial_ceiling","supervised":6,"autonomous":4,"confidence":"medium_high","evidence":["SRC-073","SRC-080","SRC-083","SRC-034"],"basis":"Current vendor coding evaluations, benchmark-quality audits, and system-card limits."},
+        "MATH": {"status":"assessed_trial_ceiling","supervised":8,"autonomous":3,"confidence":"medium","evidence":["SRC-073","SRC-049","SRC-053"],"basis":"Vendor-reported FrontierMath v2 results interpreted with benchmark methodology, version, funding, access, and proof-validity caveats."},
+        "PHY": {"status":"assessed_trial_ceiling","supervised":6,"autonomous":3,"confidence":"medium","evidence":["SRC-004","SRC-021","SRC-034"],"basis":"Mutable physics-specific evaluation, original benchmark design, and documented scientific-integrity failure; specialist acceptance remains mandatory."}
+      },
+      "research_candidate_only": ["MATH-9","PHY-7","PHY-8","PHY-9","SE-7","SE-8","SE-9"],
+      "limitations": ["Vendor and harness dependence","System card documents occasional overreach and false completion claims","No autonomous high-stakes authority"]
+    },
+    {
+      "model_id": "gpt-5.6-terra",
+      "preferred_role": "default_professional_workhorse",
+      "ceilings": {
+        "SE": {"status":"assessed_trial_ceiling","supervised":6,"autonomous":4,"confidence":"medium_high","evidence":["SRC-073","SRC-080","SRC-083"],"basis":"Current vendor coding evaluations with benchmark-quality caveats."},
+        "MATH": {"status":"assessed_trial_ceiling","supervised":8,"autonomous":3,"confidence":"medium","evidence":["SRC-073","SRC-049","SRC-053"],"basis":"Vendor-reported FrontierMath v2 results with methodology, funding/access, and proof-validity caveats."},
+        "PHY": {"status":"assessed_trial_ceiling","supervised":6,"autonomous":3,"confidence":"medium","evidence":["SRC-004","SRC-021"],"basis":"Physics-specific checkpoint evidence is directional and configuration-dependent; specialist acceptance remains mandatory."}
+      },
+      "research_candidate_only": ["MATH-9","PHY-7","PHY-8","PHY-9","SE-7","SE-8","SE-9"],
+      "limitations": ["High-level benchmark metadata incomplete","No autonomous research or production authority"]
+    },
+    {
+      "model_id": "gpt-5.6-luna",
+      "preferred_role": "clear_repeatable_high_volume",
+      "ceilings": {
+        "SE": {"status":"assessed_trial_ceiling","supervised":5,"autonomous":3,"confidence":"medium","evidence":["SRC-073","SRC-080","SRC-083"],"basis":"Current vendor coding evaluations support supervised repository work; the default route is intentionally narrower."},
+        "MATH": {"status":"assessed_trial_ceiling","supervised":7,"autonomous":2,"confidence":"medium_low","evidence":["SRC-073","SRC-049","SRC-053"],"basis":"Vendor-reported FrontierMath v2 evidence is useful but does not establish proof reliability."},
+        "PHY": {"status":"protective_policy_cap","supervised":4,"autonomous":2,"confidence":"low_medium","evidence":["SRC-004","SRC-021"],"basis":"Sparse, mutable physics-specific evidence; values are conservative policy caps rather than demonstrated success probabilities."}
+      },
+      "research_candidate_only": ["MATH-8","MATH-9","PHY-5","PHY-6","PHY-7","PHY-8","PHY-9","SE-6","SE-7","SE-8","SE-9"],
+      "limitations": ["Long-context effectiveness weaker on one vendor task","Sparse dedicated physics evidence","Do not infer depth from low price or throughput"]
+    },
+    {
+      "model_id": "gpt-5.5",
+      "preferred_role": "previous_generation_compatibility",
+      "ceilings": {
+        "SE": {"status":"assessed_trial_ceiling","supervised":6,"autonomous":4,"confidence":"medium","evidence":["SRC-073","SRC-077","SRC-080","SRC-083"],"basis":"Current comparator and launch-era coding evidence with benchmark-quality caveats."},
+        "MATH": {"status":"assessed_trial_ceiling","supervised":8,"autonomous":3,"confidence":"medium","evidence":["SRC-073","SRC-049","SRC-053","SRC-077"],"basis":"FrontierMath v2 comparator is vendor-reported and must not be conflated with launch-era v1."},
+        "PHY": {"status":"assessed_trial_ceiling","supervised":6,"autonomous":3,"confidence":"medium","evidence":["SRC-004","SRC-021","SRC-033"],"basis":"Physics-specific checkpoint evidence and system-card limits; specialist acceptance remains mandatory."}
+      },
+      "research_candidate_only": ["MATH-9","PHY-7","PHY-8","PHY-9","SE-7","SE-8","SE-9"],
+      "limitations": ["Previous generation in current Codex guide","FrontierMath v1 and v2 tables must not be conflated","Dynamic alias"]
+    },
+    {
+      "model_id": "gpt-5.4",
+      "preferred_role": "pinned_legacy_compatibility",
+      "ceilings": {
+        "SE": {"status":"assessed_trial_ceiling","supervised":5,"autonomous":3,"confidence":"medium","evidence":["SRC-076","SRC-080","SRC-083"],"basis":"Launch-era coding comparisons with later benchmark-quality caveats."},
+        "MATH": {"status":"protective_policy_cap","supervised":7,"autonomous":3,"confidence":"medium_low","evidence":["SRC-076","SRC-049"],"basis":"Older vendor evidence and benchmark-version discontinuity; values are conservative policy caps."},
+        "PHY": {"status":"protective_policy_cap","supervised":5,"autonomous":2,"confidence":"medium_low","evidence":["SRC-021","SRC-032"],"basis":"No decisive current exact-model physics table; cap is conservative and requires specialist review."}
+      },
+      "research_candidate_only": ["MATH-8","MATH-9","PHY-6","PHY-7","PHY-8","PHY-9","SE-6","SE-7","SE-8","SE-9"],
+      "limitations": ["Hidden in current local catalog","Older benchmark versions","Use mainly when pinned or compatibility-tested"]
+    },
+    {
+      "model_id": "gpt-5.3-codex",
+      "preferred_role": "api_only_legacy_coding_compatibility",
+      "ceilings": {
+        "SE": {"status":"protective_policy_cap","supervised":5,"autonomous":3,"confidence":"medium_low","evidence":["SRC-074","SRC-076"],"basis":"Official coding release and task-dependent coding comparison; current local ChatGPT-authenticated Codex rejected the requested target."},
+        "MATH": {"status":"unassessed_no_route","supervised":null,"autonomous":null,"confidence":"insufficient","evidence":["SRC-076"],"basis":"The reviewed official comparison publishes no decisive model-specific mathematics result."},
+        "PHY": {"status":"unassessed_no_route","supervised":null,"autonomous":null,"confidence":"insufficient","evidence":[],"basis":"No decisive model-specific physics evidence was found."}
+      },
+      "research_candidate_only": ["MATH-0","MATH-1","MATH-2","MATH-3","MATH-4","MATH-5","MATH-6","MATH-7","MATH-8","MATH-9","PHY-0","PHY-1","PHY-2","PHY-3","PHY-4","PHY-5","PHY-6","PHY-7","PHY-8","PHY-9","SE-6","SE-7","SE-8","SE-9"],
+      "limitations": ["Unsupported for ChatGPT-authenticated Codex in the current operator-recorded attempt","No assessed mathematics or physics route","Do not route unless API authentication and compatibility are explicit"]
+    },
+    {
+      "model_id": "gpt-5.3-codex-spark",
+      "preferred_role": "rapid_targeted_text_only_code",
+      "ceilings": {
+        "SE": {"status":"protective_policy_cap","supervised":3,"autonomous":2,"confidence":"medium","evidence":["SRC-075"],"basis":"Official text-only targeted-coding preview positioning; the value is a conservative scope cap, not a benchmark-derived probability."},
+        "MATH": {"status":"unassessed_no_route","supervised":null,"autonomous":null,"confidence":"insufficient","evidence":["SRC-075"],"basis":"Coding-preview positioning does not establish a mathematics route."},
+        "PHY": {"status":"unassessed_no_route","supervised":null,"autonomous":null,"confidence":"insufficient","evidence":["SRC-075"],"basis":"Coding-preview positioning does not establish a physics route."}
+      },
+      "research_candidate_only": ["MATH-0","MATH-1","MATH-2","MATH-3","MATH-4","MATH-5","MATH-6","MATH-7","MATH-8","MATH-9","PHY-0","PHY-1","PHY-2","PHY-3","PHY-4","PHY-5","PHY-6","PHY-7","PHY-8","PHY-9","SE-4","SE-5","SE-6","SE-7","SE-8","SE-9"],
+      "limitations": ["Research preview","Text only and 128K observed local catalog context field","Coding-focused; does not automatically run tests unless asked","No public API price or maximum output"]
+    }
+  ],
+  "global_autonomy_constraints": [
+    "An unassessed domain is no_route, not numeric zero and not a protective permission.",
+    "No model receives autonomous acceptance for MATH-7 through MATH-9 or PHY-7 through PHY-9.",
+    "SE autonomy applies only to low-risk reversible tasks with independent tests and policy gates.",
+    "Authentication, cryptography, billing, data migration, deployment, security approval, and safety-critical work require human review regardless of numeric ceiling.",
+    "A model ceiling never broadens sandbox, connector, filesystem, network, or approval authority."
+  ]
+}

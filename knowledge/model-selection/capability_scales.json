@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.1.0",
+  "scale_semantics": "Ordinal task and verification levels; not linear intelligence scores.",
+  "unassessed_domain_semantics": "A model-domain pair without adequate evidence uses null/no_route. It must never be coerced to level zero or treated as a passing protective cap.",
+  "domains": {
+    "SE": [
+      {"level":0,"label":"non_executable","task":"No reliable executable-code work","minimum_verification":"Do not delegate implementation"},
+      {"level":1,"label":"tiny_edit","task":"Syntax, explanation, or tiny isolated edit","minimum_verification":"Compile, lint, unit test, line review"},
+      {"level":2,"label":"bounded_unit","task":"Bounded function or small module","minimum_verification":"Unit and negative tests plus diff review"},
+      {"level":3,"label":"localized_repo_change","task":"Localized bug fix or refactor with repository context","minimum_verification":"Regression tests, static checks, rollback"},
+      {"level":4,"label":"multi_file_feature","task":"Coherent multi-file feature or refactor in one repository","minimum_verification":"Integration tests and compatibility review"},
+      {"level":5,"label":"repository_scale","task":"Repository-scale debugging or implementation under ambiguity","minimum_verification":"Independent tests, maintainer review, observability and rollback"},
+      {"level":6,"label":"long_horizon_subsystems","task":"Long-horizon engineering across repository subsystems","minimum_verification":"End-to-end, performance and security checks; staged release"},
+      {"level":7,"label":"cross_system_architecture","task":"Cross-repository or multi-system architectural change","minimum_verification":"Architecture and threat review, migration rehearsal, canary"},
+      {"level":8,"label":"open_ended_high_stakes_program","task":"Incomplete-requirement, high-stakes engineering program","minimum_verification":"Named human owner and independent security/reliability approval"},
+      {"level":9,"label":"independent_critical_ownership","task":"Independent ownership of novel safety-critical systems","minimum_verification":"Not currently delegable from public benchmark evidence"}
+    ],
+    "MATH": [
+      {"level":0,"label":"direct_arithmetic","task":"Single-operation arithmetic and exact substitution","minimum_verification":"Exact recomputation and unit/sign check"},
+      {"level":1,"label":"multi_step_arithmetic","task":"Grade-school arithmetic and word problems","minimum_verification":"Step recomputation and perturbed cases"},
+      {"level":2,"label":"routine_high_school","task":"Routine algebra, geometry and trigonometry","minimum_verification":"CAS or independent derivation and domain check"},
+      {"level":3,"label":"routine_undergraduate_computation","task":"Calculus and linear-algebra computations","minimum_verification":"Independent symbolic/numeric check and assumptions"},
+      {"level":4,"label":"undergraduate_proof","task":"Undergraduate concepts, proof exercises and proof critique","minimum_verification":"Reference proof, expert review or formal check"},
+      {"level":5,"label":"hard_competition","task":"Hard competition or Olympiad-style closed problems","minimum_verification":"Full derivation and independent judge or proof assistant"},
+      {"level":6,"label":"graduate_specialist","task":"Graduate coursework and specialized derivations","minimum_verification":"Specialist review, independent derivation and checked lemmas"},
+      {"level":7,"label":"expert_closed","task":"Expert closed problems requiring researcher-level work","minimum_verification":"Versioned exact verifier plus expert reasoning audit"},
+      {"level":8,"label":"exceptional_closed_research","task":"Exceptionally difficult closed research-level problems","minimum_verification":"Independent experts, reproducible computation and proof audit"},
+      {"level":9,"label":"open_research","task":"Genuinely open problems and novel theorem candidates","minimum_verification":"Prior-art search, independent experts and publication-grade proof; model never final authority"}
+    ],
+    "PHY": [
+      {"level":0,"label":"terminology","task":"Definitions, notation and direct fact retrieval","minimum_verification":"Source and unit check"},
+      {"level":1,"label":"direct_substitution","task":"Direct formula substitution and unit conversion","minimum_verification":"Independent arithmetic, dimensions and magnitude"},
+      {"level":2,"label":"introductory_multistep","task":"Introductory mechanics, circuits, waves and thermodynamics","minimum_verification":"Reference answer and limiting cases"},
+      {"level":3,"label":"advanced_undergraduate","task":"Multi-step classical mechanics, electromagnetism and introductory quantum","minimum_verification":"Assumptions, conservation, dimensions and independent solution"},
+      {"level":4,"label":"upper_undergraduate","task":"Upper-undergraduate quantum, stat mech, optics and mathematical physics","minimum_verification":"Expert review and symbolic/numeric reproduction"},
+      {"level":5,"label":"graduate_known","task":"Graduate quantum, field theory, relativity or specialist known derivations","minimum_verification":"Specialist review, citations, boundary and normalization checks"},
+      {"level":6,"label":"bounded_research_subtask","task":"Paper synthesis, calculation reproduction or bounded research subtask","minimum_verification":"Independent implementation, logs, uncertainty and expert acceptance"},
+      {"level":7,"label":"frontier_research_candidate","task":"Novel research candidate or speculative-theory evaluation","minimum_verification":"Human-led research governance and independent methods"},
+      {"level":8,"label":"novel_validated_result","task":"Novel result requiring formal or empirical validation","minimum_verification":"Independent experts, reproducibility and empirical/formal validation"},
+      {"level":9,"label":"independent_scientific_authority","task":"Independent acceptance/publication of new physics","minimum_verification":"No autonomous model authority"}
+    ]
+  }
+}

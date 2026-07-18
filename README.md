@@ -180,6 +180,15 @@ The App Server calibration set is `rules/model_selection_eval_001.jsonl` with
 ./.venv/bin/pytest tests/test_model_selection_calibration_eval.py
 ```
 
+### Model capability research 1A
+
+The dated [model-selection research handbook](docs/model-research/README.md) and
+machine-readable [research knowledge pack](knowledge/model-selection/README.md)
+separate model identity from reasoning effort, agent count, tool access,
+context, pricing, and action authority. They are evidence artifacts and are not
+wired into runtime behavior by this research mission. Unassessed domains fail
+closed as `no_route`.
+
 ## Safety Model
 
 - `smart-codex` never uses `shell=True`.
