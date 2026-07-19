@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly REVIEWED_CODEX_VERSION="codex-cli 0.144.6"
+readonly SMART_ROUTER_REMOTE="github.com/luciferprosun/Kodex-OpenAI-Custom-Skill"
+
+refuse_startup() {
+  local category="$1"
+  printf 'SmartRouter Research refused safely: %s.\n' "${category}" >&2
+  if [[ -t 0 && -t 1 ]]; then
+    printf 'Press Enter to close this terminal.\n' >&2
+    read -r _ || true
+  fi
+  exit 2
+}
+
+SCRIPT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P)" \
+  || refuse_startup "REPOSITORY_ROOT_UNAVAILABLE"
+PROJECT_ROOT="$(cd -- "${SCRIPT_DIRECTORY}/.." 2>/dev/null && pwd -P)" \
+  || refuse_startup "REPOSITORY_ROOT_UNAVAILABLE"
+
+[[ -d "${PROJECT_ROOT}/.git" && ! -L "${PROJECT_ROOT}" ]] \
+  || refuse_startup "SMART_ROUTER_GIT_ROOT_INVALID"
+
+GIT_ROOT="$(git -C "${PROJECT_ROOT}" rev-parse --show-toplevel 2>/dev/null)" \
+  || refuse_startup "SMART_ROUTER_GIT_ROOT_INVALID"
+GIT_ROOT="$(cd -- "${GIT_ROOT}" 2>/dev/null && pwd -P)" \
+  || refuse_startup "SMART_ROUTER_GIT_ROOT_INVALID"
+[[ "${GIT_ROOT}" == "${PROJECT_ROOT}" ]] \
+  || refuse_startup "SMART_ROUTER_GIT_ROOT_INVALID"
+
+ORIGIN_URL="$(git -C "${PROJECT_ROOT}" remote get-url origin 2>/dev/null)" \
+  || refuse_startup "SMART_ROUTER_REPOSITORY_IDENTITY_MISMATCH"
+NORMALIZED_ORIGIN="${ORIGIN_URL#https://}"
+NORMALIZED_ORIGIN="${NORMALIZED_ORIGIN#ssh://git@}"
+NORMALIZED_ORIGIN="${NORMALIZED_ORIGIN#git@}"
+NORMALIZED_ORIGIN="${NORMALIZED_ORIGIN/:/\/}"
+NORMALIZED_ORIGIN="${NORMALIZED_ORIGIN%.git}"
+[[ "${NORMALIZED_ORIGIN}" == "${SMART_ROUTER_REMOTE}" ]] \
+  || refuse_startup "SMART_ROUTER_REPOSITORY_IDENTITY_MISMATCH"
+
+SMART_CODEX="${PROJECT_ROOT}/scripts/smart-codex"
+RESEARCH_LAUNCHER="${PROJECT_ROOT}/scripts/start-routed-codex-research"
+[[ -x "${SMART_CODEX}" && ! -L "${SMART_CODEX}" ]] \
+  || refuse_startup "REPOSITORY_PREFLIGHT_UNAVAILABLE"
+[[ -x "${RESEARCH_LAUNCHER}" && ! -L "${RESEARCH_LAUNCHER}" ]] \
+  || refuse_startup "RESEARCH_LAUNCHER_UNAVAILABLE"
+
+if [[ -x "${PROJECT_ROOT}/.venv/bin/python" ]]; then
+  PYTHON_BIN="${PROJECT_ROOT}/.venv/bin/python"
+else
+  PYTHON_BIN="$(command -v python3 2>/dev/null)" \
+    || refuse_startup "PYTHON_UNAVAILABLE"
+fi
+
+if ! PREFLIGHT_OUTPUT="$("${SMART_CODEX}" telemetry preflight 2>/dev/null)"; then
+  refuse_startup "TELEMETRY_PREFLIGHT_NOT_READY"
+fi
+if ! printf '%s' "${PREFLIGHT_OUTPUT}" | "${PYTHON_BIN}" -c '
+import json
+import sys
+
+try:
+    value = json.load(sys.stdin)
+except (TypeError, ValueError):
+    raise SystemExit(2)
+
+ready = (
+    value.get("ok") is True
+    and value.get("preflight") == "READY"
+    and value.get("storage_mode") == "external"
+    and value.get("enabled") is True
+    and value.get("mount_verification") == "VERIFIED"
+)
+raise SystemExit(0 if ready else 2)
+' 2>/dev/null; then
+  refuse_startup "TELEMETRY_PREFLIGHT_NOT_READY"
+fi
+unset PREFLIGHT_OUTPUT
+
+CODEX_BIN="$(command -v codex 2>/dev/null)" \
+  || refuse_startup "CODEX_UNAVAILABLE"
+if ! CODEX_VERSION="$("${CODEX_BIN}" --version 2>/dev/null)"; then
+  refuse_startup "CODEX_VERSION_UNAVAILABLE"
+fi
+[[ "${CODEX_VERSION}" == "${REVIEWED_CODEX_VERSION}" ]] \
+  || refuse_startup "CODEX_VERSION_MISMATCH"
+unset CODEX_VERSION
+
+if "${RESEARCH_LAUNCHER}" \
+  --window-id smart-router \
+  --cwd "${PROJECT_ROOT}"; then
+  exit 0
+fi
+refuse_startup "RESEARCH_STARTUP_FAILED"

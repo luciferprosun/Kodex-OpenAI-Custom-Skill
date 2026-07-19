@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=SmartRouter Research
+Comment=Open the fail-closed SmartRouter telemetry research session
+Exec=/home/l/Kodex-OpenAI-Custom-Skill/scripts/start-smart-router-research
+Path=/home/l/Kodex-OpenAI-Custom-Skill
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;

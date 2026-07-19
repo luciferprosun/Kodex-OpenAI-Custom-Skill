@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Rate SmartRouter Result
+Comment=Record a human outcome for the latest pending SmartRouter research run
+Exec=/home/l/Kodex-OpenAI-Custom-Skill/scripts/rate-latest-smart-router-run
+Path=/home/l/Kodex-OpenAI-Custom-Skill
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;
