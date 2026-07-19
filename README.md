@@ -187,7 +187,10 @@ smart-codex telemetry summary --by-model
 
 See [Local Codex Telemetry 2B-1](docs/LOCAL_CODEX_TELEMETRY_2B.md) for the
 schema, privacy model, disk limits, supported event surfaces, missing-value
-rules, and disable procedure.
+rules, and disable procedure. The opt-in external-storage, dual-window dataset
+and shadow-learning extension is documented in [Telemetry Research Loop
+2B-2](docs/TELEMETRY_RESEARCH_LOOP_2B2.md). Shadow recommendations never alter
+the live route and have no execution authority.
 
 ## Knowledge Library
 

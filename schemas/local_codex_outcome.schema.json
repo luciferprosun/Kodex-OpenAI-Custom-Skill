@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-router.invalid/schemas/local_codex_outcome.schema.json",
+  "title": "SmartRouter operator-authored outcome amendment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "record_type", "outcome_id", "run_id",
+    "original_record_hash", "operator_outcome", "operator_outcome_at",
+    "tests_passed", "tests_failed", "verification_available", "verifier_type",
+    "verifier_result", "escalated_to", "edit_magnitude", "followup_turns",
+    "failure_category", "supersedes_outcome_id", "privacy_classification",
+    "record_hash"
+  ],
+  "properties": {
+    "schema_version": {"const": "2.0.0"},
+    "record_type": {"const": "outcome"},
+    "outcome_id": {"type": "string", "format": "uuid"},
+    "run_id": {"type": "string", "format": "uuid"},
+    "original_record_hash": {"$ref": "#/$defs/hash"},
+    "operator_outcome": {"enum": ["accepted", "accepted-with-edits", "rejected", "aborted"]},
+    "operator_outcome_at": {"type": "string", "format": "date-time"},
+    "tests_passed": {"$ref": "#/$defs/nullableNonnegativeInteger"},
+    "tests_failed": {"$ref": "#/$defs/nullableNonnegativeInteger"},
+    "verification_available": {"type": ["boolean", "null"]},
+    "verifier_type": {"$ref": "#/$defs/nullableSafeString"},
+    "verifier_result": {"$ref": "#/$defs/nullableSafeString"},
+    "escalated_to": {"$ref": "#/$defs/nullableSafeString"},
+    "edit_magnitude": {"enum": ["none", "minor", "major", "unknown"]},
+    "followup_turns": {"$ref": "#/$defs/nullableNonnegativeInteger"},
+    "failure_category": {
+      "enum": [
+        "none", "incomplete", "incorrect_approach", "test_failure",
+        "safety_block", "environment_failure", "operator_abort",
+        "other_categorical"
+      ]
+    },
+    "supersedes_outcome_id": {"type": ["string", "null"], "format": "uuid"},
+    "privacy_classification": {"const": "metadata_only_hmac"},
+    "record_hash": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "nullableNonnegativeInteger": {"type": ["integer", "null"], "minimum": 0},
+    "nullableSafeString": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+@-]{0,159}$"
+    }
+  }
+}

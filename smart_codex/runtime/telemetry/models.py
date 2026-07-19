@@ -63,6 +63,11 @@ class RunMetadata:
     approval_policy: str
     product_surface: str
     session_id: str | None = None
+    window_id: str | None = None
+    workspace_signature: str | None = None
+    router_policy_version: str | None = None
+    codex_protocol_version: str | None = None
+    synthetic: bool = False
 
 
 def new_run_record(metadata: RunMetadata, *, started_at: str, run_id: str | None = None) -> dict[str, Any]:
@@ -132,5 +137,10 @@ def new_run_record(metadata: RunMetadata, *, started_at: str, run_id: str | None
         "invalid_event_count": 0,
         "collector_status": "completed",
         "process_exit_code": None,
+        "window_id": metadata.window_id,
+        "workspace_signature": metadata.workspace_signature,
+        "router_policy_version": metadata.router_policy_version,
+        "codex_protocol_version": metadata.codex_protocol_version,
+        "synthetic": metadata.synthetic,
         "record_hash": "",
     }

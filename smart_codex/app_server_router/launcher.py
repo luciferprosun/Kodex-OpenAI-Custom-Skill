@@ -43,7 +43,12 @@ def default_event_log() -> Path:
     return directory / f"routes-{os.getpid()}.jsonl"
 
 
-async def run(args: argparse.Namespace) -> int:
+async def run(
+    args: argparse.Namespace,
+    *,
+    telemetry_service: TelemetryService | None = None,
+    research_banner: dict[str, str] | None = None,
+) -> int:
     cwd = Path(args.cwd).expanduser().resolve()
     if not cwd.is_dir():
         raise BackendError("routed Codex working directory does not exist")
@@ -71,21 +76,35 @@ async def run(args: argparse.Namespace) -> int:
         mapper = PolicyMapper(discovered.registry, discovered.requirements)
         router = TurnRouter(mapper)
         event_path = Path(args.event_log).expanduser().resolve() if args.event_log else default_event_log()
+        if telemetry_service is None:
+            try:
+                telemetry_service = TelemetryService.from_default()
+            except (OSError, RuntimeError, ValueError):
+                telemetry_service = None
         proxy = AppServerProxy(
             backend_url=backend_url,
             turn_router=router,
             port=args.proxy_port,
             events=JsonlEventSink(event_path),
-            telemetry=TelemetryService.from_default(),
+            telemetry=telemetry_service,
         )
         await proxy.start()
         command = build_tui_command(args.codex_bin, proxy.url, cwd)
-        print("Smart Router ON (WebSocket App Server transport is experimental).")
-        print(f"Backend: {backend_url}")
-        print(f"Proxy:   {proxy.url}")
-        print(f"Events:  {event_path}")
+        if research_banner is None:
+            print("Smart Router ON (WebSocket App Server transport is experimental).")
+            print(f"Backend: {backend_url}")
+            print(f"Proxy:   {proxy.url}")
+            print(f"Events:  {event_path}")
+        else:
+            print("SMART ROUTER RESEARCH MODE")
+            for label, value in research_banner.items():
+                print(f"{label}: {value}")
+            print("Loopback transport: verified")
         if args.print_command:
-            print("TUI command: " + " ".join(command))
+            if research_banner is None:
+                print("TUI command: " + " ".join(command))
+            else:
+                print("TUI command: verified (prompt remains inside the TUI)")
             return 0
         if args.manager_only:
             stop = asyncio.Event()

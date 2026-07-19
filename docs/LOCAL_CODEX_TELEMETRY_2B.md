@@ -1,5 +1,11 @@
 # Local Codex Telemetry 2B-1
 
+Telemetry 2B-2 extends this original contract with external removable storage,
+dual-window identifiers, richer operator outcomes, deterministic datasets, and
+strictly non-authoritative shadow calibration. See
+[`TELEMETRY_RESEARCH_LOOP_2B2.md`](TELEMETRY_RESEARCH_LOOP_2B2.md). The details
+below remain the historical 2B-1 internal-storage baseline.
+
 ## Purpose and authority boundary
 
 This module records small, local metadata observations about runs launched by

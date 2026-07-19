@@ -16,7 +16,7 @@ def test_live_registry_records_only_sanitized_capability_metadata() -> None:
     value = registry()
     snapshot = value.snapshot()
 
-    assert snapshot.codex_version == "codex-cli 0.144.4"
+    assert snapshot.codex_version == "codex-cli 0.144.5"
     assert len(snapshot.models) == 5
     assert value.get("gpt-5.6-sol").supported_efforts[-1] == "ultra"  # type: ignore[union-attr]
     assert value.get("gpt-5.3-codex-spark").input_modalities == ("text",)  # type: ignore[union-attr]
@@ -62,12 +62,12 @@ def test_ambiguous_catalog_and_wire_identifiers_fail_closed() -> None:
 
 def test_malformed_or_empty_live_registry_fails_closed() -> None:
     with pytest.raises(RegistryError):
-        ModelRegistry.from_model_list([], codex_version="codex-cli 0.144.4")
+        ModelRegistry.from_model_list([], codex_version="codex-cli 0.144.5")
 
     broken = live_model_data()
     broken[0] = {**broken[0], "supportedReasoningEfforts": []}
     with pytest.raises(RegistryError):
-        ModelRegistry.from_model_list(broken, codex_version="codex-cli 0.144.4")
+        ModelRegistry.from_model_list(broken, codex_version="codex-cli 0.144.5")
 
 
 def test_backend_discovery_paginates_model_list_and_reads_requirements() -> None:
@@ -85,7 +85,7 @@ def test_backend_discovery_paginates_model_list_and_reads_requirements() -> None
                             {
                                 "id": message["id"],
                                 "result": {
-                                    "userAgent": "fake/0.144.4",
+                                    "userAgent": "fake/0.144.5",
                                     "codexHome": "/tmp/fake",
                                     "platformFamily": "unix",
                                     "platformOs": "linux",
@@ -127,7 +127,7 @@ def test_backend_discovery_paginates_model_list_and_reads_requirements() -> None
         try:
             discovered = await discover_backend(
                 f"ws://127.0.0.1:{server.bound_port}",
-                codex_version="codex-cli 0.144.4",
+                codex_version="codex-cli 0.144.5",
                 attempts=1,
             )
         finally:

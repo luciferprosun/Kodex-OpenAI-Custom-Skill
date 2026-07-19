@@ -139,12 +139,25 @@ def inspect_run(storage: LocalTelemetryStorage, run_id: str, *, show_signature: 
 
 def storage_status(storage: LocalTelemetryStorage) -> dict[str, Any]:
     runs, _ = load_valid_records(storage)
+    mount_warning = storage.verify_mount()
     return {
         "enabled": storage.enabled(),
-        "storage_directory": "~/.local/state/smart-codex/telemetry",
+        "storage_directory": (
+            "$MOUNT/SmartRouterTelemetry/raw"
+            if storage.external
+            else "~/.local/state/smart-codex/telemetry"
+        ),
+        "storage_mode": "external" if storage.external else "internal",
+        "mount_verification": mount_warning or "VERIFIED",
         "current_storage_bytes": storage.storage_size(),
-        "free_disk_bytes": storage.free_bytes(),
+        "free_disk_bytes": None if mount_warning is not None else storage.free_bytes(),
         "schema_version": SCHEMA_VERSION,
         "recorded_runs": len(runs),
         "last_record_timestamp": max((run["finished_at"] for run in runs), default=None),
+        "limits": {
+            "max_file_bytes": storage.limits.max_file_bytes,
+            "max_total_bytes": storage.limits.max_total_bytes,
+            "min_free_bytes": storage.limits.min_free_bytes,
+            "max_record_bytes": storage.limits.max_record_bytes,
+        },
     }

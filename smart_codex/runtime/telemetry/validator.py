@@ -13,6 +13,11 @@ from .models import canonical_json, verify_record_hash
 from .privacy import scan_record
 from .schema import (
     COLLECTOR_STATUSES,
+    EDIT_MAGNITUDES,
+    FAILURE_CATEGORIES,
+    LEGACY_OUTCOME_RECORD_FIELDS,
+    LEGACY_RUN_RECORD_FIELDS,
+    LEGACY_SCHEMA_VERSION,
     MAX_RECORD_BYTES,
     MEASUREMENT_STATUSES,
     MODEL_IDENTITY_STATUSES,
@@ -21,10 +26,12 @@ from .schema import (
     RECONCILIATION_METHODS,
     RUN_RECORD_FIELDS,
     SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
     SOURCED_FIELDS,
     TASK_DIFFICULTIES,
     TASK_RISKS,
     TASK_SCOPES,
+    WINDOW_IDS,
     expected_missing_fields,
 )
 
@@ -89,15 +96,25 @@ def _validate_size(record: dict[str, Any]) -> None:
 def validate_run_record(record: dict[str, Any]) -> None:
     if not isinstance(record, dict):
         _fail("RUN_NOT_OBJECT")
-    if set(record) != RUN_RECORD_FIELDS:
+    version = record.get("schema_version")
+    expected_fields = LEGACY_RUN_RECORD_FIELDS if version == LEGACY_SCHEMA_VERSION else RUN_RECORD_FIELDS
+    if set(record) != expected_fields:
         _fail("RUN_FIELD_SET_MISMATCH")
-    if record.get("schema_version") != SCHEMA_VERSION or record.get("record_type") != "run":
+    if version not in SUPPORTED_SCHEMA_VERSIONS or record.get("record_type") != "run":
         _fail("SCHEMA_VERSION_MISMATCH")
 
     _uuid(record.get("run_id"), "run_id")
     _uuid(record.get("router_decision_id"), "router_decision_id")
     _validate_hash(record.get("task_signature"), "task_signature")
     _validate_hash(record.get("record_hash"), "record_hash")
+    if version == SCHEMA_VERSION:
+        workspace_signature = record.get("workspace_signature")
+        if workspace_signature is not None:
+            _validate_hash(workspace_signature, "workspace_signature")
+        if record.get("window_id") not in WINDOW_IDS | {None}:
+            _fail("INVALID_WINDOW_ID")
+        if not isinstance(record.get("synthetic"), bool):
+            _fail("INVALID_SYNTHETIC_FLAG")
 
     started = _timestamp(record.get("started_at"), "started_at")
     finished = _timestamp(record.get("finished_at"), "finished_at")
@@ -149,6 +166,16 @@ def validate_run_record(record: dict[str, Any]) -> None:
         "product_surface",
     ):
         _safe_optional(record.get(field), field)
+    if version == SCHEMA_VERSION:
+        for field in ("window_id", "router_policy_version", "codex_protocol_version"):
+            _safe_optional(record.get(field), field)
+        if record.get("product_surface") == "codex_app_server_research":
+            if record.get("window_id") not in WINDOW_IDS:
+                _fail("MISSING_RESEARCH_WINDOW_ID")
+            if record.get("workspace_signature") is None:
+                _fail("MISSING_WORKSPACE_SIGNATURE")
+            if record.get("codex_protocol_version") is None:
+                _fail("MISSING_CODEX_PROTOCOL_VERSION")
     if not isinstance(record.get("task_domain"), str):
         _fail("MISSING_TASK_DOMAIN")
     if record.get("task_difficulty") not in TASK_DIFFICULTIES:
@@ -225,9 +252,13 @@ def validate_run_record(record: dict[str, Any]) -> None:
 
 
 def validate_outcome_record(record: dict[str, Any]) -> None:
-    if not isinstance(record, dict) or set(record) != OUTCOME_RECORD_FIELDS:
+    if not isinstance(record, dict):
+        _fail("OUTCOME_NOT_OBJECT")
+    version = record.get("schema_version")
+    expected_fields = LEGACY_OUTCOME_RECORD_FIELDS if version == LEGACY_SCHEMA_VERSION else OUTCOME_RECORD_FIELDS
+    if set(record) != expected_fields:
         _fail("OUTCOME_FIELD_SET_MISMATCH")
-    if record.get("schema_version") != SCHEMA_VERSION or record.get("record_type") != "outcome":
+    if version not in SUPPORTED_SCHEMA_VERSIONS or record.get("record_type") != "outcome":
         _fail("SCHEMA_VERSION_MISMATCH")
     _uuid(record.get("outcome_id"), "outcome_id")
     _uuid(record.get("run_id"), "run_id")
@@ -236,6 +267,33 @@ def validate_outcome_record(record: dict[str, Any]) -> None:
     _timestamp(record.get("operator_outcome_at"), "operator_outcome_at")
     if record.get("operator_outcome") not in OPERATOR_OUTCOMES:
         _fail("INVALID_OPERATOR_OUTCOME")
+    if version == SCHEMA_VERSION:
+        if record.get("edit_magnitude") not in EDIT_MAGNITUDES:
+            _fail("INVALID_EDIT_MAGNITUDE")
+        if record.get("failure_category") not in FAILURE_CATEGORIES:
+            _fail("INVALID_FAILURE_CATEGORY")
+        _nonnegative_optional(record.get("followup_turns"), "followup_turns")
+        supersedes = record.get("supersedes_outcome_id")
+        if supersedes is not None:
+            _uuid(supersedes, "supersedes_outcome_id")
+        outcome = record.get("operator_outcome")
+        edit = record.get("edit_magnitude")
+        failure = record.get("failure_category")
+        if outcome == "accepted" and (edit != "none" or failure != "none"):
+            _fail("INCONSISTENT_ACCEPTED_OUTCOME")
+        if outcome == "accepted-with-edits" and (
+            edit not in {"minor", "major", "unknown"} or failure != "none"
+        ):
+            _fail("INCONSISTENT_EDITED_OUTCOME")
+        if outcome == "rejected" and failure == "none":
+            _fail("REJECTED_OUTCOME_REQUIRES_FAILURE")
+        if outcome == "aborted" and failure not in {
+            "operator_abort",
+            "environment_failure",
+            "safety_block",
+            "other_categorical",
+        }:
+            _fail("INCONSISTENT_ABORTED_OUTCOME")
     for field in ("tests_passed", "tests_failed"):
         _nonnegative_optional(record.get(field), field)
     if record.get("verification_available") not in {True, False, None}:

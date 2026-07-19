@@ -58,10 +58,15 @@
     "invalid_event_count",
     "collector_status",
     "process_exit_code",
+    "window_id",
+    "workspace_signature",
+    "router_policy_version",
+    "codex_protocol_version",
+    "synthetic",
     "record_hash"
   ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "2.0.0"},
     "record_type": {"const": "run"},
     "run_id": {"type": "string", "format": "uuid"},
     "session_id": {"$ref": "#/$defs/nullableHash"},
@@ -163,6 +168,11 @@
     "invalid_event_count": {"$ref": "#/$defs/nonnegativeInteger"},
     "collector_status": {"enum": ["completed", "completed_with_invalid_events", "process_error", "aborted", "collector_interrupted", "partial_unreconciled"]},
     "process_exit_code": {"type": ["integer", "null"]},
+    "window_id": {"enum": ["aoia", "smart-router", null]},
+    "workspace_signature": {"$ref": "#/$defs/nullableHash"},
+    "router_policy_version": {"$ref": "#/$defs/nullableSafeString"},
+    "codex_protocol_version": {"$ref": "#/$defs/nullableSafeString"},
+    "synthetic": {"type": "boolean"},
     "record_hash": {"$ref": "#/$defs/hash"}
   },
   "$defs": {

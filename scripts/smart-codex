@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -x "${PROJECT_ROOT}/.venv/bin/python" ]]; then
+  PYTHON_BIN="${PROJECT_ROOT}/.venv/bin/python"
+else
+  PYTHON_BIN="$(command -v python3)"
+fi
+cd -- "${PROJECT_ROOT}"
+exec "${PYTHON_BIN}" -m smart_codex.cli "$@"

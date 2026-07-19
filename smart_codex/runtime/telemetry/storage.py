@@ -14,7 +14,7 @@ import shutil
 import stat
 import threading
 import time
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator
 import uuid
 
 from .errors import TelemetryError, TelemetryStorageError
@@ -27,7 +27,7 @@ DEFAULT_MAX_TOTAL_BYTES = 50 * 1024 * 1024
 DEFAULT_MIN_FREE_BYTES = 1024 * 1024 * 1024
 FILE_PATTERN = re.compile(r"^codex_runs-(\d{4})\.jsonl$")
 _THREAD_APPEND_LOCK = threading.Lock()
-LOCK_TIMEOUT_SECONDS = 0.25
+LOCK_TIMEOUT_SECONDS = 5.0
 LOCK_RETRY_SECONDS = 0.01
 
 
@@ -77,22 +77,53 @@ class AppendResult:
 
 
 class LocalTelemetryStorage:
-    def __init__(self, paths: TelemetryPaths | None = None, limits: StorageLimits | None = None):
+    def __init__(
+        self,
+        paths: TelemetryPaths | None = None,
+        limits: StorageLimits | None = None,
+        *,
+        mount_verifier: Callable[[], object] | None = None,
+        external_root: Path | None = None,
+    ):
         self.paths = paths or TelemetryPaths.default()
         self.limits = limits or StorageLimits()
+        self.mount_verifier = mount_verifier
+        self.external_root = external_root
+
+    @property
+    def external(self) -> bool:
+        return self.external_root is not None
+
+    def verify_mount(self) -> str | None:
+        if self.mount_verifier is None:
+            return None
+        try:
+            result = self.mount_verifier()
+        except (OSError, TelemetryStorageError):
+            return "MOUNT_VERIFICATION_FAILED"
+        if not bool(getattr(result, "ok", False)):
+            reason = getattr(result, "reason", "MOUNT_VERIFICATION_FAILED")
+            return str(reason) if isinstance(reason, str) else "MOUNT_VERIFICATION_FAILED"
+        return None
 
     def _ensure_root(self) -> None:
+        mount_warning = self.verify_mount()
+        if mount_warning is not None:
+            raise TelemetryStorageError(mount_warning)
         self.paths.root.mkdir(mode=0o700, parents=True, exist_ok=True)
         if self.paths.root.is_symlink():
             raise TelemetryStorageError("STORAGE_ROOT_SYMLINK")
         os.chmod(self.paths.root, 0o700)
-        summaries = self.paths.root / "summaries"
-        if summaries.exists() and summaries.is_symlink():
-            raise TelemetryStorageError("SUMMARIES_DIRECTORY_SYMLINK")
-        summaries.mkdir(mode=0o700, exist_ok=True)
-        os.chmod(summaries, 0o700)
+        if not self.external:
+            summaries = self.paths.root / "summaries"
+            if summaries.exists() and summaries.is_symlink():
+                raise TelemetryStorageError("SUMMARIES_DIRECTORY_SYMLINK")
+            summaries.mkdir(mode=0o700, exist_ok=True)
+            os.chmod(summaries, 0o700)
 
     def enabled(self) -> bool:
+        if self.verify_mount() is not None:
+            return False
         path = self.paths.state_file
         if not path.exists():
             return False
@@ -144,6 +175,9 @@ class LocalTelemetryStorage:
         return total
 
     def write_preflight(self) -> str | None:
+        mount_warning = self.verify_mount()
+        if mount_warning is not None:
+            return f"TELEMETRY_DISABLED_{mount_warning}"
         if not self.enabled():
             return "TELEMETRY_DISABLED"
         if self.free_bytes() < self.limits.min_free_bytes:
@@ -238,6 +272,9 @@ class LocalTelemetryStorage:
             return AppendResult(False, "TELEMETRY_REJECTED_FILE_LIMIT")
         try:
             with self._locked():
+                mount_warning = self.verify_mount()
+                if mount_warning is not None:
+                    return AppendResult(False, f"TELEMETRY_DISABLED_{mount_warning}")
                 if not self.enabled():
                     return AppendResult(False, "TELEMETRY_DISABLED")
                 if self.free_bytes() < self.limits.min_free_bytes:
@@ -276,6 +313,8 @@ class LocalTelemetryStorage:
             return AppendResult(False, "TELEMETRY_DISABLED_STORAGE_ERROR")
 
     def iter_records(self) -> Iterator[dict[str, Any]]:
+        if self.verify_mount() is not None:
+            return
         if not self.paths.root.exists():
             return
         for path in sorted(self.paths.root.rglob("codex_runs-*.jsonl")):

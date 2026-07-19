@@ -93,7 +93,14 @@ with the router's explicit `sandboxPolicy`. Retry that turn using ordinary
 
 ## Upgrade procedure
 
-Routed mode is pinned to the reviewed installed contract `codex-cli 0.144.4`.
+Routed mode is pinned to the reviewed installed contract `codex-cli 0.144.5`.
+
+Telemetry research uses the separate fail-closed launcher
+`scripts/start-routed-codex-research`; it requires an explicit `aoia` or
+`smart-router` window ID, a verified repository identity, enabled external
+storage, and the exact protocol contract. It does not replace this ordinary
+launcher or the official `codex` executable. See
+[`../TELEMETRY_RESEARCH_LOOP_2B2.md`](../TELEMETRY_RESEARCH_LOOP_2B2.md).
 After a CLI upgrade, regenerate both schema sets, review method and field
 changes, update the contract snapshot and tests, then deliberately update the
 supported version. Ordinary `codex` remains available during that review.

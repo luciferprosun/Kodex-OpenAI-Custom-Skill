@@ -114,6 +114,7 @@ def test_low_disk_telemetry_warning_does_not_block_codex_task(tmp_path, monkeypa
 
 def test_outcome_and_inspect_cli_keep_original_immutable(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr(cli, "_interactive_operator_terminal", lambda: True)
     assert cli.main(["telemetry", "enable"]) == 0
     capsys.readouterr()
     monkeypatch.setattr(

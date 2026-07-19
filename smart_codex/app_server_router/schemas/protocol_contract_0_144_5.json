@@ -1,0 +1,15 @@
+{
+  "codex_version": "codex-cli 0.144.5",
+  "generated_at": "2026-07-19",
+  "generation_mode": "local exact-version stable and experimental JSON Schema and TypeScript",
+  "bundles": {
+    "json_stable_combined": "7aa03caeced7c2dd4fa531df59bd056f05ea583744bd29b35e96f5b3d20c15ff",
+    "json_stable_v2": "17b8ab1b5c2b7c72489c7fe3894b35ebc3591c671e71afe3b8f3cada24db4ec0",
+    "json_experimental_combined": "85ea836927d6cfdd3c68a9bda17dba48d2573bbc282ab2d5775a5005e40bc9c3",
+    "json_experimental_v2": "262c457198882085c077f364df28b10221d0cb7092591188c220b118f13044bc"
+  },
+  "experimental_json_files": 337,
+  "experimental_typescript_files": 671,
+  "review_status": "reviewed",
+  "fail_closed": true
+}

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+from pathlib import Path
 import shlex
 import sys
 
@@ -39,6 +41,10 @@ def main(argv: list[str] | None = None) -> int:
         return telemetry_command(args_list[1:])
     if args_list and args_list[0] == "outcome":
         return outcome_command(args_list[1:])
+    if args_list and args_list[0] == "learning":
+        return learning_command(args_list[1:])
+    if args_list[:2] == ["research", "status"]:
+        return research_status_command()
 
     parser = build_parser()
     args = parser.parse_args(args_list)
@@ -124,7 +130,14 @@ def audit_models_command() -> int:
 def telemetry_command(argv: list[str]) -> int:
     from .runtime.telemetry.errors import TelemetryError
     from .runtime.telemetry.privacy import ensure_installation_salt
-    from .runtime.telemetry.storage import LocalTelemetryStorage
+    from .runtime.telemetry.config import (
+        configure_external_storage,
+        configured_storage,
+        load_external_config,
+        reset_external_config,
+    )
+    from .runtime.telemetry.mounts import discover_storage_candidates
+    from .runtime.telemetry.outcome import pending_runs
     from .runtime.telemetry.summary import inspect_run, storage_status, summarize
 
     parser = argparse.ArgumentParser(prog="smart-codex telemetry")
@@ -132,6 +145,17 @@ def telemetry_command(argv: list[str]) -> int:
     subparsers.add_parser("status")
     subparsers.add_parser("enable")
     subparsers.add_parser("disable")
+    subparsers.add_parser("preflight")
+    pending_parser = subparsers.add_parser("pending")
+    pending_parser.add_argument("--window-id", choices=["aoia", "smart-router"])
+    storage_parser = subparsers.add_parser("storage")
+    storage_subparsers = storage_parser.add_subparsers(dest="storage_action", required=True)
+    storage_subparsers.add_parser("discover")
+    storage_configure = storage_subparsers.add_parser("configure")
+    storage_configure.add_argument("--root", required=True)
+    storage_configure.add_argument("--device-uuid", required=True)
+    storage_subparsers.add_parser("status")
+    storage_subparsers.add_parser("reset")
     summary_parser = subparsers.add_parser("summary")
     group = summary_parser.add_mutually_exclusive_group()
     group.add_argument("--by-model", action="store_true")
@@ -140,7 +164,70 @@ def telemetry_command(argv: list[str]) -> int:
     inspect_parser.add_argument("run_id")
     inspect_parser.add_argument("--show-task-signature", action="store_true")
     args = parser.parse_args(argv)
-    storage = LocalTelemetryStorage()
+    if args.action == "storage":
+        try:
+            if args.storage_action == "discover":
+                candidates, selected = discover_storage_candidates()
+                print(
+                    json.dumps(
+                        {
+                            "candidates": [value.public_dict() for value in candidates],
+                            "selected": selected.public_dict() if selected is not None else None,
+                            "selection_status": "UNIQUE_SAFE_MICROSD" if selected is not None else "HUMAN_SELECTION_REQUIRED",
+                        },
+                        indent=2,
+                        sort_keys=True,
+                    )
+                )
+                return 0 if selected is not None else 2
+            if args.storage_action == "configure":
+                from pathlib import Path
+
+                config = configure_external_storage(Path(args.root), args.device_uuid)
+                print(
+                    json.dumps(
+                        {
+                            "ok": True,
+                            "storage_mode": "external",
+                            "mount_point": config.mount_point.as_posix(),
+                            "telemetry_root": config.telemetry_root.as_posix(),
+                            "device_uuid": config.device_uuid,
+                            "filesystem_type": config.filesystem_type,
+                        },
+                        indent=2,
+                        sort_keys=True,
+                    )
+                )
+                return 0
+            if args.storage_action == "reset":
+                removed = reset_external_config()
+                print(json.dumps({"ok": True, "configuration_removed": removed, "telemetry_data_deleted": False}, indent=2))
+                return 0
+            config = load_external_config()
+            if config is None:
+                print(json.dumps({"configured": False, "storage_mode": "internal"}, indent=2))
+                return 0
+            storage = configured_storage(require_external=True)
+            result = storage_status(storage)
+            result.update(
+                {
+                    "configured": True,
+                    "device_uuid": config.device_uuid,
+                    "mount_point": config.mount_point.as_posix(),
+                }
+            )
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return 0 if result["mount_verification"] == "VERIFIED" else 2
+        except (OSError, TelemetryError) as exc:
+            category = getattr(exc, "category", "STORAGE_COMMAND_FAILED")
+            print(json.dumps({"ok": False, "error": category}, indent=2))
+            return 2
+    try:
+        storage = configured_storage()
+    except (OSError, TelemetryError) as exc:
+        category = getattr(exc, "category", "TELEMETRY_CONFIGURATION_FAILED")
+        print(json.dumps({"ok": False, "error": category}, indent=2))
+        return 2
 
     if args.action == "enable":
         try:
@@ -162,6 +249,32 @@ def telemetry_command(argv: list[str]) -> int:
     if args.action == "status":
         print(json.dumps(storage_status(storage), indent=2, sort_keys=True))
         return 0
+    if args.action == "preflight":
+        warning = storage.write_preflight()
+        result = storage_status(storage)
+        result.update({"ok": warning is None, "preflight": warning or "READY"})
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0 if warning is None else 2
+    if args.action == "pending":
+        values = pending_runs(storage, window_id=args.window_id)
+        print(
+            json.dumps(
+                {
+                    "pending_count": len(values),
+                    "runs": [
+                        {
+                            "run_id": value["run_id"],
+                            "window_id": value.get("window_id"),
+                            "finished_at": value.get("finished_at"),
+                        }
+                        for value in values
+                    ],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
     if args.action == "summary":
         grouping = "model" if args.by_model else "task_level" if args.by_task_level else None
         print(json.dumps(summarize(storage, group_by=grouping), indent=2, sort_keys=True))
@@ -176,41 +289,163 @@ def telemetry_command(argv: list[str]) -> int:
 
 def outcome_command(argv: list[str]) -> int:
     from .runtime.telemetry.errors import TelemetryError
-    from .runtime.telemetry.outcome import record_outcome
-    from .runtime.telemetry.schema import OPERATOR_OUTCOMES
-    from .runtime.telemetry.storage import LocalTelemetryStorage
+    from .runtime.telemetry.config import configured_storage
+    from .runtime.telemetry.outcome import latest_pending_run, record_outcome
+    from .runtime.telemetry.schema import EDIT_MAGNITUDES, FAILURE_CATEGORIES, OPERATOR_OUTCOMES
+
+    if not _interactive_operator_terminal():
+        print(json.dumps({"ok": False, "warning": "OUTCOME_REQUIRES_INTERACTIVE_OPERATOR_TTY"}, indent=2))
+        return 2
 
     parser = argparse.ArgumentParser(prog="smart-codex outcome")
-    parser.add_argument("run_id")
-    parser.add_argument("outcome", choices=sorted(OPERATOR_OUTCOMES))
+    latest_mode = bool(argv and argv[0] == "latest")
+    if latest_mode:
+        parser.add_argument("latest", choices=["latest"])
+        parser.add_argument("--window-id", required=True, choices=["aoia", "smart-router"])
+        parser.add_argument("outcome", choices=sorted(OPERATOR_OUTCOMES))
+    else:
+        parser.add_argument("run_id")
+        parser.add_argument("outcome", choices=sorted(OPERATOR_OUTCOMES))
     parser.add_argument("--tests-passed", type=int)
     parser.add_argument("--tests-failed", type=int)
     parser.add_argument("--verification-unavailable", action="store_true")
     parser.add_argument("--escalated-to")
+    parser.add_argument("--edit-magnitude", choices=sorted(EDIT_MAGNITUDES))
+    parser.add_argument("--followup-turns", type=int)
+    parser.add_argument("--failure-category", choices=sorted(FAILURE_CATEGORIES))
     args = parser.parse_args(argv)
     if args.verification_unavailable and (args.tests_passed is not None or args.tests_failed is not None):
         parser.error("test counts cannot be combined with --verification-unavailable")
+    if args.outcome == "rejected" and args.failure_category in {None, "none"}:
+        parser.error("a rejected outcome requires --failure-category")
+    if args.outcome == "accepted" and args.edit_magnitude not in {None, "none"}:
+        parser.error("accepted requires --edit-magnitude none")
     try:
+        storage = configured_storage()
+        if latest_mode:
+            latest = latest_pending_run(storage, window_id=args.window_id)
+            if latest is None:
+                print(json.dumps({"ok": False, "warning": "NO_PENDING_RUN_FOR_WINDOW"}, indent=2))
+                return 2
+            run_id = str(latest["run_id"])
+        else:
+            run_id = args.run_id
         result = record_outcome(
-            LocalTelemetryStorage(),
-            args.run_id,
+            storage,
+            run_id,
             args.outcome,
             tests_passed=args.tests_passed,
             tests_failed=args.tests_failed,
             verification_unavailable=args.verification_unavailable,
             escalated_to=args.escalated_to,
+            edit_magnitude=args.edit_magnitude,
+            followup_turns=args.followup_turns,
+            failure_category=args.failure_category,
         )
     except (OSError, TelemetryError):
-        print(json.dumps({"ok": False, "run_id": args.run_id, "warning": "OUTCOME_REJECTED"}, indent=2))
+        print(json.dumps({"ok": False, "run_id": locals().get("run_id"), "warning": "OUTCOME_REJECTED"}, indent=2))
         return 2
+    learning_refresh = "NOT_ATTEMPTED"
+    if result.appended and storage.external:
+        try:
+            from .learning.dataset import build_dataset, mark_dataset_stale
+
+            mark_dataset_stale()
+            build_dataset()
+            learning_refresh = "CURRENT"
+        except Exception:
+            learning_refresh = "STALE_RAW_OUTCOME_PRESERVED"
     print(
         json.dumps(
-            {"ok": result.appended, "run_id": args.run_id, "warning": result.warning},
+            {
+                "ok": result.appended,
+                "run_id": run_id,
+                "warning": result.warning,
+                "learning_refresh": learning_refresh,
+            },
             indent=2,
             sort_keys=True,
         )
     )
     return 0 if result.appended else 2
+
+
+def _interactive_operator_terminal() -> bool:
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        return False
+    try:
+        if os.getpgrp() != os.tcgetpgrp(sys.stdin.fileno()):
+            return False
+    except (OSError, AttributeError):
+        return False
+    process_id = os.getppid()
+    for _ in range(12):
+        if process_id <= 1:
+            break
+        try:
+            command = (Path("/proc") / str(process_id) / "comm").read_text(
+                encoding="utf-8"
+            ).strip().casefold()
+            stat_fields = (Path("/proc") / str(process_id) / "stat").read_text(
+                encoding="utf-8"
+            ).split()
+            process_id = int(stat_fields[3])
+        except (OSError, ValueError, IndexError):
+            break
+        if "codex" in command:
+            return False
+    return True
+
+
+def learning_command(argv: list[str]) -> int:
+    from .runtime.telemetry.errors import TelemetryError
+
+    parser = argparse.ArgumentParser(prog="smart-codex learning")
+    subparsers = parser.add_subparsers(dest="action", required=True)
+    subparsers.add_parser("build-dataset")
+    subparsers.add_parser("dataset-status")
+    subparsers.add_parser("refresh")
+    subparsers.add_parser("shadow-status")
+    subparsers.add_parser("candidate-report")
+    subparsers.add_parser("propose-policy")
+    validate = subparsers.add_parser("validate-candidate")
+    validate.add_argument("candidate_id")
+    args = parser.parse_args(argv)
+    try:
+        from .learning.dataset import build_dataset, dataset_status
+        from .learning.learner import candidate_report, propose_policy, shadow_status, validate_candidate
+
+        if args.action in {"build-dataset", "refresh"}:
+            result = build_dataset()
+        elif args.action == "dataset-status":
+            result = dataset_status()
+        elif args.action == "shadow-status":
+            result = shadow_status()
+        elif args.action == "candidate-report":
+            result = candidate_report()
+        elif args.action == "propose-policy":
+            result = propose_policy()
+        else:
+            result = validate_candidate(args.candidate_id)
+    except (OSError, TelemetryError) as exc:
+        category = getattr(exc, "category", "LEARNING_COMMAND_FAILED")
+        print(json.dumps({"ok": False, "error": category}, indent=2))
+        return 2
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def research_status_command() -> int:
+    try:
+        from .learning.status import research_status
+
+        result = research_status()
+    except Exception as exc:
+        category = getattr(exc, "category", "RESEARCH_STATUS_UNAVAILABLE")
+        print(json.dumps({"ok": False, "error": category}, indent=2))
+        return 2
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
 
 
 def print_decision(decision, argv: list[str], *, explain: bool) -> None:

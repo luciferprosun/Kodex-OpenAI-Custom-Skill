@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+import sys
 from typing import Any
 
 from .protocol import (
@@ -87,6 +88,16 @@ class AppServerProxy:
             return
         if result.warning:
             self.events.emit({"event": "telemetry", "status": result.warning})
+        elif result.appended and self.telemetry is not None and self.telemetry.window_id is not None:
+            window = self.telemetry.window_id
+            print(f"run ID: {result.run_id}", file=sys.stderr)
+            print(f"window ID: {window}", file=sys.stderr)
+            print("outcome pending: yes", file=sys.stderr)
+            print(
+                f"label: smart-codex outcome latest --window-id {window} accepted "
+                "--edit-magnitude none",
+                file=sys.stderr,
+            )
 
     async def _flush_telemetry_tasks(self) -> None:
         tasks = tuple(self._telemetry_tasks)

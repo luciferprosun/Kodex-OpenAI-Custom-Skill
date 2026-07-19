@@ -134,12 +134,30 @@ class TelemetryRun:
 
 
 class TelemetryService:
-    def __init__(self, storage: LocalTelemetryStorage | None = None):
+    def __init__(
+        self,
+        storage: LocalTelemetryStorage | None = None,
+        *,
+        window_id: str | None = None,
+        workspace_signature: str | None = None,
+        router_policy_version: str | None = None,
+        codex_protocol_version: str | None = None,
+        synthetic: bool = False,
+        shadow_recorder: object | None = None,
+    ):
         self.storage = storage or LocalTelemetryStorage()
+        self.window_id = window_id
+        self.workspace_signature = workspace_signature
+        self.router_policy_version = router_policy_version
+        self.codex_protocol_version = codex_protocol_version
+        self.synthetic = synthetic
+        self.shadow_recorder = shadow_recorder
 
     @classmethod
     def from_default(cls) -> "TelemetryService":
-        return cls(LocalTelemetryStorage())
+        from .config import configured_storage
+
+        return cls(configured_storage())
 
     def start_run(
         self,
@@ -162,6 +180,12 @@ class TelemetryService:
         approval_policy: object = "unknown",
         product_surface: str = "smart_codex_cli",
         session_id: object = None,
+        window_id: object = None,
+        workspace: object = None,
+        workspace_signature: object = None,
+        router_policy_version: object = None,
+        codex_protocol_version: object = None,
+        synthetic: bool | None = None,
     ) -> StartResult:
         if not self.storage.enabled():
             return StartResult(None)
@@ -178,6 +202,28 @@ class TelemetryService:
             private_identifier(salt, "session", str(session_id))
             if isinstance(session_id, str) and session_id
             else None
+        )
+        effective_window = window_id if window_id is not None else self.window_id
+        effective_workspace_signature = (
+            workspace_signature
+            if workspace_signature is not None
+            else self.workspace_signature
+        )
+        if effective_workspace_signature is None and workspace is not None:
+            effective_workspace_signature = private_identifier(
+                salt,
+                "workspace",
+                str(workspace),
+            )
+        effective_policy_version = (
+            router_policy_version
+            if router_policy_version is not None
+            else self.router_policy_version
+        )
+        effective_protocol_version = (
+            codex_protocol_version
+            if codex_protocol_version is not None
+            else self.codex_protocol_version
         )
         metadata = RunMetadata(
             task_signature=task_signature(salt, task),
@@ -198,8 +244,31 @@ class TelemetryService:
             approval_policy=_approval_value(approval_policy),
             product_surface=_safe_category(product_surface),
             session_id=safe_session,
+            window_id=_safe_category(effective_window) if effective_window is not None else None,
+            workspace_signature=(
+                str(effective_workspace_signature)
+                if effective_workspace_signature is not None
+                else None
+            ),
+            router_policy_version=(
+                _safe_category(effective_policy_version)
+                if effective_policy_version is not None
+                else None
+            ),
+            codex_protocol_version=(
+                _safe_category(effective_protocol_version)
+                if effective_protocol_version is not None
+                else None
+            ),
+            synthetic=self.synthetic if synthetic is None else bool(synthetic),
         )
         record = new_run_record(metadata, started_at=utc_now())
+        if self.shadow_recorder is not None:
+            try:
+                getattr(self.shadow_recorder, "record")(record)
+            except Exception:
+                # Shadow evidence is never allowed to block or alter the incumbent route.
+                pass
         return StartResult(TelemetryRun(record, storage=self.storage, salt=salt))
 
     def start_from_decision(
@@ -264,7 +333,11 @@ class AppServerTelemetryBridge:
             agent_count=None,
             sandbox=getattr(routed, "sandbox_mode", "unknown"),
             approval_policy=getattr(routed, "approval_policy", "unknown"),
-            product_surface="codex_app_server",
+            product_surface=(
+                "codex_app_server_research"
+                if self.service.window_id is not None
+                else "codex_app_server"
+            ),
             session_id=thread_id,
         )
 

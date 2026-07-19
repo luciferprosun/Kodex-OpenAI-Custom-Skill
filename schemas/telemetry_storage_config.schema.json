@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-router.invalid/schemas/telemetry_storage_config.schema.json",
+  "title": "SmartRouter external telemetry storage configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config_version",
+    "storage_mode",
+    "telemetry_root",
+    "device_uuid",
+    "mount_point",
+    "filesystem_type",
+    "configured_at",
+    "limits"
+  ],
+  "properties": {
+    "config_version": {"const": "1.0.0"},
+    "storage_mode": {"const": "external"},
+    "telemetry_root": {"type": "string", "pattern": "^/.+/SmartRouterTelemetry$"},
+    "device_uuid": {"type": "string", "minLength": 1, "maxLength": 128},
+    "mount_point": {"type": "string", "pattern": "^/"},
+    "filesystem_type": {"type": "string", "pattern": "^[A-Za-z0-9._+-]+$"},
+    "configured_at": {"type": "string", "format": "date-time"},
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_file_bytes", "max_total_bytes", "min_free_bytes", "max_record_bytes"],
+      "properties": {
+        "max_file_bytes": {"type": "integer", "minimum": 1},
+        "max_total_bytes": {"type": "integer", "minimum": 1},
+        "min_free_bytes": {"type": "integer", "minimum": 1},
+        "max_record_bytes": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

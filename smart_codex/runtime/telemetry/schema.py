@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "2.0.0"
+LEGACY_SCHEMA_VERSION = "1.0.0"
+SUPPORTED_SCHEMA_VERSIONS = {LEGACY_SCHEMA_VERSION, SCHEMA_VERSION}
 MAX_RECORD_BYTES = 64 * 1024
 
 MODEL_IDENTITY_STATUSES = {
@@ -39,6 +41,18 @@ OPERATOR_OUTCOMES = {
     "rejected",
     "aborted",
 }
+WINDOW_IDS = {"aoia", "smart-router"}
+EDIT_MAGNITUDES = {"none", "minor", "major", "unknown"}
+FAILURE_CATEGORIES = {
+    "none",
+    "incomplete",
+    "incorrect_approach",
+    "test_failure",
+    "safety_block",
+    "environment_failure",
+    "operator_abort",
+    "other_categorical",
+}
 COLLECTOR_STATUSES = {
     "completed",
     "completed_with_invalid_events",
@@ -54,7 +68,7 @@ RECONCILIATION_METHODS = {
     "unknown",
 }
 
-RUN_RECORD_FIELDS = {
+LEGACY_RUN_RECORD_FIELDS = {
     "schema_version",
     "record_type",
     "run_id",
@@ -111,7 +125,15 @@ RUN_RECORD_FIELDS = {
     "record_hash",
 }
 
-OUTCOME_RECORD_FIELDS = {
+RUN_RECORD_FIELDS = LEGACY_RUN_RECORD_FIELDS | {
+    "window_id",
+    "workspace_signature",
+    "router_policy_version",
+    "codex_protocol_version",
+    "synthetic",
+}
+
+LEGACY_OUTCOME_RECORD_FIELDS = {
     "schema_version",
     "record_type",
     "outcome_id",
@@ -127,6 +149,13 @@ OUTCOME_RECORD_FIELDS = {
     "escalated_to",
     "privacy_classification",
     "record_hash",
+}
+
+OUTCOME_RECORD_FIELDS = LEGACY_OUTCOME_RECORD_FIELDS | {
+    "edit_magnitude",
+    "followup_turns",
+    "failure_category",
+    "supersedes_outcome_id",
 }
 
 SOURCED_FIELDS = {
@@ -184,6 +213,17 @@ MISSINGNESS_FIELDS = {
     "operator_outcome",
     "operator_outcome_at",
     "process_exit_code",
+    "window_id",
+    "workspace_signature",
+    "router_policy_version",
+    "codex_protocol_version",
+}
+
+LEGACY_MISSINGNESS_FIELDS = MISSINGNESS_FIELDS - {
+    "window_id",
+    "workspace_signature",
+    "router_policy_version",
+    "codex_protocol_version",
 }
 
 
@@ -192,4 +232,9 @@ def unknown_measurement_sources() -> dict[str, str]:
 
 
 def expected_missing_fields(record: dict[str, object]) -> list[str]:
-    return sorted(field for field in MISSINGNESS_FIELDS if record.get(field) is None)
+    fields = (
+        LEGACY_MISSINGNESS_FIELDS
+        if record.get("schema_version") == LEGACY_SCHEMA_VERSION
+        else MISSINGNESS_FIELDS
+    )
+    return sorted(field for field in fields if record.get(field) is None)
