@@ -99,6 +99,13 @@ def _stratum_summary(runs: list[dict[str, Any]], outcomes: dict[str, dict[str, A
 
 def summarize(storage: LocalTelemetryStorage, *, group_by: str | None = None) -> dict[str, Any]:
     runs, outcome_records = load_valid_records(storage)
+    runs = [run for run in runs if run.get("synthetic") is not True]
+    production_run_ids = {str(run["run_id"]) for run in runs}
+    outcome_records = [
+        outcome
+        for outcome in outcome_records
+        if str(outcome.get("run_id")) in production_run_ids
+    ]
     outcomes = latest_outcomes(outcome_records)
     if group_by is None:
         return {"schema_version": runs[0]["schema_version"] if runs else None, "summary": _stratum_summary(runs, outcomes)}

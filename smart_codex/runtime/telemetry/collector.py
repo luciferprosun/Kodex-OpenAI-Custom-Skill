@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+import threading
 import time
 from typing import Any
 
@@ -150,6 +151,17 @@ class TelemetryService:
         self.router_policy_version = router_policy_version
         self.codex_protocol_version = codex_protocol_version
         self.synthetic = synthetic
+        self._salt: bytes | None = None
+        self._salt_lock = threading.Lock()
+
+    def _installation_salt(self) -> bytes:
+        salt = self._salt
+        if salt is not None:
+            return salt
+        with self._salt_lock:
+            if self._salt is None:
+                self._salt = ensure_installation_salt(self.storage.paths.salt)
+            return self._salt
 
     @classmethod
     def from_default(cls) -> "TelemetryService":
@@ -191,7 +203,7 @@ class TelemetryService:
         if warning is not None:
             return StartResult(None, warning)
         try:
-            salt = ensure_installation_salt(self.storage.paths.salt)
+            salt = self._installation_salt()
         except TelemetryError as exc:
             return StartResult(None, f"TELEMETRY_DISABLED_{exc.category}")
         except OSError:

@@ -121,6 +121,9 @@ and separate sanitized runtime-event files.
 `--print-command` performs manager startup and discovery without submitting a
 model turn or printing the absolute workspace path.
 
+Synthetic validation records remain append-only evidence but are excluded from
+pending-outcome lists and all telemetry summaries.
+
 ## Operator outcomes
 
 Outcomes are separate append-only, hash-linked events. Supported values are:

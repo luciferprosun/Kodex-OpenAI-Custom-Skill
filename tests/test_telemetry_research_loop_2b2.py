@@ -41,6 +41,7 @@ from smart_codex.runtime.telemetry.outcome import (
     record_outcome,
 )
 from smart_codex.runtime.telemetry.storage import LocalTelemetryStorage, StorageLimits, TelemetryPaths
+from smart_codex.runtime.telemetry.summary import summarize
 
 from telemetry_test_helpers import exec_usage_event
 
@@ -529,6 +530,30 @@ def test_workspace_path_is_replaced_by_hmac_signature(tmp_path) -> None:
     assert len(record["workspace_signature"]) == 64
 
 
+def test_summaries_and_pending_exclude_synthetic_validation_runs(tmp_path) -> None:
+    config = fake_config(tmp_path)
+    storage = external_storage(config)
+    service = TelemetryService(
+        storage,
+        window_id="smart-router",
+        workspace_signature="a" * 64,
+        router_policy_version="policy-v1",
+        codex_protocol_version="codex-cli_0.144.6",
+        synthetic=True,
+    )
+    started = service.start_run(
+        task="Synthetic summary exclusion fixture",
+        task_domain="unknown",
+        product_surface="codex_app_server_research",
+    )
+    assert started.run is not None
+    assert started.run.finish(status="completed").appended
+
+    assert pending_runs(storage) == []
+    assert summarize(storage)["summary"]["run_count"] == 0
+    assert summarize(storage, group_by="model")["strata"] == {}
+
+
 def test_outcome_combinations_corrections_and_pending_are_enforced(tmp_path) -> None:
     config = fake_config(tmp_path)
     storage = external_storage(config)
@@ -640,12 +665,18 @@ def test_concurrent_rotation_preserves_every_valid_run(tmp_path) -> None:
     storage.set_enabled(True)
     service = TelemetryService(storage, synthetic=True)
 
-    def append(index: int) -> bool:
+    def append(index: int) -> tuple[bool, str | None]:
         start = service.start_run(task=f"Synthetic rotating task {index}", task_domain="unknown")
-        return bool(start.run and start.run.finish(status="completed").appended)
+        if start.run is None:
+            return False, start.warning
+        result = start.run.finish(status="completed")
+        return result.appended, result.warning
 
     with ThreadPoolExecutor(max_workers=16) as pool:
-        assert all(pool.map(append, range(100)))
+        results = list(pool.map(append, range(100)))
+    assert all(appended for appended, _ in results), [
+        warning for appended, warning in results if not appended
+    ]
     files = list(storage.paths.root.rglob("codex_runs-*.jsonl"))
     assert len(files) > 1
     assert all(path.read_bytes().endswith(b"\n") for path in files)
