@@ -13,10 +13,7 @@ import pytest
 from smart_codex import cli
 from smart_codex.app_server_router import launcher as app_launcher
 from smart_codex.app_server_router.backend import BackendError, SUPPORTED_CODEX_VERSION
-from smart_codex.learning import dataset as dataset_module
-from smart_codex.learning.dataset import build_dataset, dataset_status
-from smart_codex.learning.learner import candidate_report, propose_policy, shadow_status, validate_candidate
-from smart_codex.learning.shadow import ShadowRecorder
+from smart_codex.app_server_router.protocol import JsonlEventSink, ProtocolError
 from smart_codex import research_launcher
 from smart_codex.runtime.telemetry.collector import TelemetryService
 from smart_codex.runtime.telemetry.config import (
@@ -30,7 +27,13 @@ from smart_codex.runtime.telemetry.config import (
 )
 from smart_codex.runtime.telemetry.errors import TelemetryStorageError, TelemetryValidationError
 from smart_codex.runtime.telemetry.models import seal_record, utc_now
-from smart_codex.runtime.telemetry.mounts import MountedFilesystem, MountVerification, verify_mount
+from smart_codex.runtime.telemetry import mounts as mounts_module
+from smart_codex.runtime.telemetry.mounts import (
+    MountedFilesystem,
+    MountVerification,
+    discover_storage_candidates,
+    verify_mount,
+)
 from smart_codex.runtime.telemetry.outcome import (
     build_outcome_record,
     latest_pending_run,
@@ -55,7 +58,7 @@ def _append_process(root: str, salt: str, window_id: str, count: int, queue) -> 
         window_id=window_id,
         workspace_signature=("a" if window_id == "aoia" else "b") * 64,
         router_policy_version="policy-v1",
-        codex_protocol_version="codex-cli_0.144.5",
+        codex_protocol_version="codex-cli_0.144.6",
         synthetic=True,
     )
     appended = 0
@@ -99,7 +102,15 @@ def mounted(tmp_path: Path, **overrides) -> MountedFilesystem:
 
 def fake_config(tmp_path: Path) -> ExternalTelemetryConfig:
     root = tmp_path / "SmartRouterTelemetry"
-    for name in ("raw", "derived", "manifests", "policy-candidates", "reports", "runtime-events"):
+    for name in (
+        "raw",
+        "outcomes",
+        "derived",
+        "manifests",
+        "reports",
+        "runtime-events",
+        "quarantine",
+    ):
         (root / name).mkdir(parents=True, exist_ok=True)
     return ExternalTelemetryConfig(
         telemetry_root=root,
@@ -115,22 +126,15 @@ def fake_config(tmp_path: Path) -> ExternalTelemetryConfig:
     )
 
 
-def patch_dataset_config(monkeypatch, config: ExternalTelemetryConfig) -> None:
-    monkeypatch.setattr(dataset_module, "load_external_config", lambda: config)
-    monkeypatch.setattr(
-        dataset_module,
-        "verify_mount",
-        lambda *args, **kwargs: MountVerification(True, "VERIFIED", mounted(config.mount_point)),
-    )
-
-
 def external_storage(config: ExternalTelemetryConfig) -> LocalTelemetryStorage:
     storage = LocalTelemetryStorage(
         TelemetryPaths(
             root=config.telemetry_root / "raw",
             salt=config.telemetry_root.parent / "internal-salt",
+            outcomes_root=config.telemetry_root / "outcomes",
         ),
         config.limits,
+        external_root=config.telemetry_root,
     )
     storage.set_enabled(True)
     return storage
@@ -150,7 +154,7 @@ def add_run(
         window_id=window_id,
         workspace_signature="a" * 64,
         router_policy_version="policy-v1",
-        codex_protocol_version="codex-cli_0.144.5",
+        codex_protocol_version="codex-cli_0.144.6",
     )
     started = service.start_run(
         task=f"Synthetic metadata-only task {os.urandom(4).hex()}",
@@ -201,7 +205,7 @@ def add_run(
 
 def test_exact_codex_version_mismatch_fails_before_backend_start(tmp_path, monkeypatch) -> None:
     async def mismatched(_: str) -> str:
-        return "codex-cli 0.144.6"
+        return "codex-cli 0.144.5"
 
     monkeypatch.setattr(app_launcher, "read_codex_version", mismatched)
     monkeypatch.setattr(
@@ -225,15 +229,17 @@ def test_exact_codex_version_mismatch_fails_before_backend_start(tmp_path, monke
 
 def test_regenerated_protocol_contract_is_exact_and_reviewed() -> None:
     manifest = json.loads(
-        (ROOT / "smart_codex/app_server_router/schemas/protocol_contract_0_144_5.json").read_text(
+        (ROOT / "smart_codex/app_server_router/schemas/protocol_contract_0_144_6.json").read_text(
             encoding="utf-8"
         )
     )
-    assert SUPPORTED_CODEX_VERSION == "codex-cli 0.144.5"
+    assert SUPPORTED_CODEX_VERSION == "codex-cli 0.144.6"
     assert manifest["codex_version"] == SUPPORTED_CODEX_VERSION
     assert manifest["review_status"] == "reviewed"
     assert manifest["fail_closed"] is True
     assert all(len(value) == 64 for value in manifest["bundles"].values())
+    assert all(len(value) == 64 for value in manifest["canonical_bundles"].values())
+    assert manifest["semantic_equivalence_to"] == "codex-cli 0.144.5"
 
 
 def test_verify_mount_accepts_exact_uuid_and_rejects_changed_or_internal(tmp_path) -> None:
@@ -241,11 +247,37 @@ def test_verify_mount_accepts_exact_uuid_and_rejects_changed_or_internal(tmp_pat
     root.mkdir()
     good = mounted(tmp_path)
     assert verify_mount(root, "TEST-1234", minimum_free_bytes=1, filesystems=[good]).ok
+    missing = verify_mount(root, "TEST-1234", minimum_free_bytes=1, filesystems=[])
+    assert missing.reason == "MOUNT_NOT_FOUND"
     changed = verify_mount(root, "WRONG", minimum_free_bytes=1, filesystems=[good])
     assert changed.reason == "FILESYSTEM_UUID_MISMATCH"
     internal = mounted(Path("/"), device="/dev/root", mount_point="/", uuid="TEST-1234")
-    fallback = verify_mount(root, "TEST-1234", minimum_free_bytes=1, filesystems=[internal])
-    assert fallback.reason == "INTERNAL_FILESYSTEM_FALLBACK"
+    empty_mount_point_fallback = verify_mount(
+        root,
+        "TEST-1234",
+        minimum_free_bytes=1,
+        filesystems=[internal],
+    )
+    assert empty_mount_point_fallback.reason == "INTERNAL_FILESYSTEM_FALLBACK"
+
+
+def test_storage_discovery_never_guesses_when_multiple_candidates_exist(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    micro_sd = mounted(tmp_path, device="/dev/mmc-test1", transport="mmc")
+    usb = mounted(
+        tmp_path / "usb",
+        device="/dev/usb-test1",
+        transport="usb",
+        uuid="USB-1234",
+    )
+    monkeypatch.setattr(mounts_module, "mounted_filesystems", lambda: [micro_sd, usb])
+    candidates, selected = discover_storage_candidates()
+    assert candidates == [micro_sd, usb]
+    assert selected is None
+    monkeypatch.setattr(mounts_module, "mounted_filesystems", lambda: [micro_sd])
+    assert discover_storage_candidates() == ([micro_sd], micro_sd)
 
 
 def test_verify_mount_rejects_symlink_read_only_and_low_space(tmp_path) -> None:
@@ -265,6 +297,8 @@ def test_verify_mount_rejects_symlink_read_only_and_low_space(tmp_path) -> None:
 
 def test_configuration_is_strict_atomic_private_and_reset_preserves_data(tmp_path, monkeypatch) -> None:
     root = tmp_path / "SmartRouterTelemetry"
+    root.mkdir(mode=0o755)
+    (root / "raw").mkdir(mode=0o755)
     target = tmp_path / "config" / "smart-codex" / "telemetry.json"
     verification = MountVerification(True, "VERIFIED", mounted(tmp_path))
     monkeypatch.setattr("smart_codex.runtime.telemetry.config.verify_mount", lambda *args, **kwargs: verification)
@@ -272,6 +306,8 @@ def test_configuration_is_strict_atomic_private_and_reset_preserves_data(tmp_pat
     assert config.telemetry_root == root
     assert target.stat().st_mode & 0o777 == 0o600
     assert target.parent.stat().st_mode & 0o777 == 0o700
+    assert root.stat().st_mode & 0o777 == 0o700
+    assert all(path.stat().st_mode & 0o777 == 0o700 for path in root.iterdir())
     assert load_external_config(target) == config
     marker = root / "raw" / "preserve"
     marker.write_text("immutable evidence", encoding="utf-8")
@@ -313,6 +349,38 @@ def test_external_storage_never_falls_back_when_mount_verification_fails(tmp_pat
     assert not root.exists()
 
 
+@pytest.mark.parametrize(
+    "reason",
+    ["MOUNT_NOT_FOUND", "FILESYSTEM_UUID_MISMATCH", "FILESYSTEM_NOT_WRITABLE"],
+)
+def test_append_refuses_removed_changed_or_read_only_device(tmp_path, reason: str) -> None:
+    config = fake_config(tmp_path)
+    verification = {
+        "result": MountVerification(True, "VERIFIED", mounted(tmp_path)),
+    }
+    storage = LocalTelemetryStorage(
+        TelemetryPaths(
+            root=config.telemetry_root / "raw",
+            salt=config.telemetry_root.parent / "internal-salt",
+            outcomes_root=config.telemetry_root / "outcomes",
+        ),
+        config.limits,
+        mount_verifier=lambda: verification["result"],
+        external_root=config.telemetry_root,
+    )
+    storage.set_enabled(True)
+    run = add_run(storage)
+    raw_file = next((config.telemetry_root / "raw").rglob("codex_runs-*.jsonl"))
+    before = raw_file.read_bytes()
+
+    verification["result"] = MountVerification(False, reason)
+    result = storage.append(run)
+
+    assert result.appended is False
+    assert result.warning == f"TELEMETRY_DISABLED_{reason}"
+    assert raw_file.read_bytes() == before
+
+
 def test_one_hundred_overlapping_appends_are_complete_and_window_isolated(tmp_path) -> None:
     config = fake_config(tmp_path)
     storage = external_storage(config)
@@ -322,7 +390,7 @@ def test_one_hundred_overlapping_appends_are_complete_and_window_isolated(tmp_pa
             window_id=window,
             workspace_signature=("a" if window == "aoia" else "b") * 64,
             router_policy_version="policy-v1",
-            codex_protocol_version="codex-cli_0.144.5",
+            codex_protocol_version="codex-cli_0.144.6",
         )
         for window in ("aoia", "smart-router")
     }
@@ -388,10 +456,13 @@ def test_two_research_launchers_keep_independent_window_context(tmp_path, monkey
     async def exact_version(_: str) -> str:
         return SUPPORTED_CODEX_VERSION
 
-    async def fake_routed(args, *, telemetry_service, research_banner):
+    async def fake_routed(args, *, telemetry_service, research_banner, event_preflight):
         observed.append((telemetry_service.window_id, Path(args.event_log).name))
         await asyncio.sleep(0)
-        assert research_banner["Storage filesystem"] == "verified"
+        assert research_banner["Storage filesystem"] == "VERIFIED"
+        assert research_banner["Codex contract"] == "VERIFIED"
+        assert research_banner["Routing authority"] == "CURRENT POLICY ONLY"
+        assert event_preflight() is None
         return 0
 
     monkeypatch.setattr(research_launcher, "_verify_workspace", lambda *args: None)
@@ -399,12 +470,6 @@ def test_two_research_launchers_keep_independent_window_context(tmp_path, monkey
     monkeypatch.setattr(research_launcher, "configured_storage", lambda **kwargs: storage)
     monkeypatch.setattr(research_launcher, "read_codex_version", exact_version)
     monkeypatch.setattr(research_launcher, "run_routed_tui", fake_routed)
-    monkeypatch.setattr(
-        research_launcher,
-        "shadow_status",
-        lambda: {"decision": "ABSTAIN — INSUFFICIENT_DATA"},
-    )
-
     async def scenario() -> None:
         values = []
         for window in ("aoia", "smart-router"):
@@ -449,7 +514,7 @@ def test_research_launcher_refuses_when_telemetry_is_disabled(tmp_path, monkeypa
 def test_workspace_path_is_replaced_by_hmac_signature(tmp_path) -> None:
     config = fake_config(tmp_path)
     storage = external_storage(config)
-    service = TelemetryService(storage, window_id="smart-router", codex_protocol_version="codex-cli_0.144.5")
+    service = TelemetryService(storage, window_id="smart-router", codex_protocol_version="codex-cli_0.144.6")
     start = service.start_run(
         task="Synthetic private workspace fixture",
         task_domain="normal_coding",
@@ -473,6 +538,8 @@ def test_outcome_combinations_corrections_and_pending_are_enforced(tmp_path) -> 
         build_outcome_record(aoia, "accepted", failure_category="incorrect_approach")
     with pytest.raises(TelemetryValidationError, match="REJECTED_OUTCOME_REQUIRES_FAILURE"):
         build_outcome_record(smart, "rejected", failure_category="none")
+    with pytest.raises(TelemetryValidationError, match="REJECTED_OUTCOME_REQUIRES_FAILURE"):
+        build_outcome_record(smart, "rejected")
     assert latest_pending_run(storage, window_id="aoia")["run_id"] == aoia["run_id"]
     assert len(pending_runs(storage, window_id="smart-router")) == 1
     assert record_outcome(storage, aoia["run_id"], "accepted", edit_magnitude="none").appended
@@ -486,6 +553,12 @@ def test_outcome_combinations_corrections_and_pending_are_enforced(tmp_path) -> 
     outcomes = [value for value in storage.iter_records() if value.get("record_type") == "outcome"]
     assert outcomes[-1]["supersedes_outcome_id"] == outcomes[-2]["outcome_id"]
     assert pending_runs(storage, window_id="aoia") == []
+    assert record_outcome(
+        storage,
+        smart["run_id"],
+        "rejected",
+        failure_category="other",
+    ).appended
 
 
 def test_noninteractive_process_cannot_write_operator_outcome(tmp_path, monkeypatch, capsys) -> None:
@@ -521,101 +594,79 @@ def test_latest_outcome_cli_selects_only_requested_window(tmp_path, monkeypatch,
     assert len(pending_runs(storage, window_id="smart-router")) == 1
 
 
-def test_dataset_is_reproducible_separates_versions_and_excludes_unknown_tokens(tmp_path, monkeypatch) -> None:
+def test_external_layout_separates_outcomes_and_contains_no_learning_surface(tmp_path) -> None:
     config = fake_config(tmp_path)
-    patch_dataset_config(monkeypatch, config)
     storage = external_storage(config)
-    add_run(storage, input_tokens=100, outcome="accepted")
-    add_run(storage, input_tokens=None)
-    legacy = json.loads((ROOT / "examples/sanitized_telemetry_record.json").read_text(encoding="utf-8"))
-    target = next((config.telemetry_root / "raw").rglob("codex_runs-*.jsonl"))
-    with target.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(legacy, sort_keys=True) + "\n")
-    first = build_dataset()
-    second = build_dataset()
-    assert first == second
-    assert len(first["schema_protocol_groups"]) == 2
-    assert first["known_token_run_count"] == 2
-    assert first["record_count"] == 3
-    assert dataset_status()["state"] == "CURRENT"
+    run = add_run(storage)
+    assert record_outcome(storage, run["run_id"], "accepted", edit_magnitude="none").appended
+    assert list((config.telemetry_root / "raw").rglob("codex_runs-*.jsonl"))
+    assert list((config.telemetry_root / "outcomes").rglob("codex_outcomes-*.jsonl"))
+    assert not (config.telemetry_root / "policy-candidates").exists()
+    assert not list((ROOT / "smart_codex" / "learning").glob("*.py"))
+    assert not hasattr(cli, "learning_command")
 
 
-def test_corrupt_record_is_excluded_without_losing_valid_run(tmp_path, monkeypatch) -> None:
-    config = fake_config(tmp_path)
-    patch_dataset_config(monkeypatch, config)
-    storage = external_storage(config)
-    add_run(storage, outcome="accepted")
-    target = next((config.telemetry_root / "raw").rglob("codex_runs-*.jsonl"))
-    with target.open("ab") as handle:
-        handle.write(b"{not-json}\n")
-    manifest = build_dataset()
-    assert manifest["record_count"] == 1
-    assert manifest["exclusions"]["INVALID_JSON"] == 1
+def test_runtime_event_sink_rechecks_storage_before_every_append(tmp_path) -> None:
+    state = {"warning": None}
+    path = tmp_path / "runtime-events" / "routes-smart-router.jsonl"
+    sink = JsonlEventSink(path, preflight=lambda: state["warning"])
+    sink.emit({"event": "route", "status": "forwarded", "selected_model": "gpt-test"})
+    before = path.read_bytes()
+    state["warning"] = "TELEMETRY_DISABLED_MOUNT_NOT_FOUND"
+    sink.emit({"event": "route", "status": "accepted", "selected_model": "gpt-test"})
+    assert path.read_bytes() == before
 
 
-def test_shadow_abstains_with_empty_data_and_never_applies_route(tmp_path, monkeypatch) -> None:
-    config = fake_config(tmp_path)
-    patch_dataset_config(monkeypatch, config)
-    storage = external_storage(config)
-    empty = build_dataset()
-    assert empty["record_count"] == 0
-    status = shadow_status()
-    assert status["decision"] == "ABSTAIN — INSUFFICIENT_DATA"
-    service = TelemetryService(
-        storage,
-        window_id="smart-router",
-        workspace_signature="a" * 64,
-        router_policy_version="policy-v1",
-        codex_protocol_version="codex-cli_0.144.5",
-        shadow_recorder=ShadowRecorder(),
+def test_runtime_event_sink_is_bounded_and_rejects_symlinked_parent(tmp_path) -> None:
+    path = tmp_path / "runtime-events" / "routes.jsonl"
+    sink = JsonlEventSink(path, max_file_bytes=200)
+    sink.emit({"event": "route", "status": "forwarded", "selected_model": "gpt-test"})
+    before = path.read_bytes()
+    sink.emit({"event": "route", "status": "forwarded", "selected_model": "gpt-test"})
+    assert path.read_bytes() == before
+    real = tmp_path / "real"
+    real.mkdir()
+    linked = tmp_path / "linked"
+    linked.symlink_to(real, target_is_directory=True)
+    with pytest.raises(ProtocolError, match="symlink"):
+        JsonlEventSink(linked / "routes.jsonl")
+
+
+def test_concurrent_rotation_preserves_every_valid_run(tmp_path) -> None:
+    storage = LocalTelemetryStorage(
+        TelemetryPaths(root=tmp_path / "raw", salt=tmp_path / "salt"),
+        StorageLimits(max_file_bytes=4096, max_total_bytes=1024 * 1024, min_free_bytes=0),
     )
-    started = service.start_run(
-        task="Synthetic shadow fixture",
-        task_domain="normal_coding",
-        task_difficulty="low",
-        task_scope="single_file",
-        task_risk="low",
-        recommended_model="incumbent",
-        launched_model="incumbent",
-        model_identity_status="client_requested_only",
-        reasoning_effort="medium",
-        sandbox="read-only",
-        approval_policy="on-request",
-        product_surface="codex_app_server_research",
-    )
-    assert started.run is not None
-    event = json.loads((config.telemetry_root / "runtime-events/shadow-decisions.jsonl").read_text(encoding="utf-8"))
-    assert event["decision"] == "INSUFFICIENT_DATA"
-    assert event["applied"] is False
-    assert event["authority"] is False
-    assert started.run.record["recommended_model"] == "incumbent"
+    storage.set_enabled(True)
+    service = TelemetryService(storage, synthetic=True)
+
+    def append(index: int) -> bool:
+        start = service.start_run(task=f"Synthetic rotating task {index}", task_domain="unknown")
+        return bool(start.run and start.run.finish(status="completed").appended)
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        assert all(pool.map(append, range(100)))
+    files = list(storage.paths.root.rglob("codex_runs-*.jsonl"))
+    assert len(files) > 1
+    assert all(path.read_bytes().endswith(b"\n") for path in files)
+    runs = [record for record in storage.iter_records() if record.get("record_type") == "run"]
+    assert len(runs) == 100
 
 
-def test_candidate_generation_requires_comparable_threshold_and_manifest_binding(tmp_path, monkeypatch) -> None:
-    config = fake_config(tmp_path)
-    patch_dataset_config(monkeypatch, config)
-    storage = external_storage(config)
-    for _ in range(31):
-        add_run(storage, model="incumbent", input_tokens=100, outcome="accepted")
-    for _ in range(30):
-        add_run(storage, model="efficient", input_tokens=50, outcome="accepted")
-    build_dataset()
-    report = candidate_report()
-    assert len(report["affected_strata"]) == 1
-    assert report["affected_strata"][0]["shadow_candidate"]["model"] == "efficient"
-    candidate = propose_policy()
-    assert candidate["authority"] is False
-    assert candidate["live_routing_mutation"] is False
-    validation = validate_candidate(candidate["candidate_id"])
-    assert validation["valid"] is True
-    assert validation["manifest_bound"] is True
-    assert validation["safety_fields_absent"] is True
+def test_runtime_event_sink_refuses_initial_failed_preflight(tmp_path) -> None:
+    with pytest.raises(ProtocolError, match="TELEMETRY_DISABLED_FILESYSTEM_UUID_MISMATCH"):
+        JsonlEventSink(
+            tmp_path / "routes.jsonl",
+            preflight=lambda: "TELEMETRY_DISABLED_FILESYSTEM_UUID_MISMATCH",
+        )
+    assert not (tmp_path / "routes.jsonl").exists()
 
 
 def test_repository_contains_no_raw_telemetry_files() -> None:
     tracked_like = [
         path
-        for path in ROOT.rglob("codex_runs-*.jsonl")
+        for pattern in ("codex_runs-*.jsonl", "codex_outcomes-*.jsonl", "routes-*.jsonl")
+        for path in ROOT.rglob(pattern)
         if ".git" not in path.parts and ".venv" not in path.parts
     ]
     assert tracked_like == []

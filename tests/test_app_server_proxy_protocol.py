@@ -37,7 +37,7 @@ def test_initialize_notifications_errors_and_ids_are_transparent() -> None:
                             {
                                 "id": message["id"],
                                 "result": {
-                                    "userAgent": "fake/0.144.5",
+                                    "userAgent": "fake/0.144.6",
                                     "codexHome": "/tmp/fake",
                                     "platformFamily": "unix",
                                     "platformOs": "linux",

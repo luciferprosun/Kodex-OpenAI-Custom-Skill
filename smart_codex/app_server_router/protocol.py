@@ -7,7 +7,8 @@ import json
 import os
 from pathlib import Path
 import re
-from typing import Any, Mapping, Protocol
+import stat
+from typing import Any, Callable, Mapping, Protocol
 
 
 ROUTING_ERROR_CODE = -32090
@@ -94,16 +95,84 @@ class MemoryEventSink:
 
 
 class JsonlEventSink:
-    def __init__(self, path: Path):
+    def __init__(
+        self,
+        path: Path,
+        *,
+        preflight: Callable[[], str | None] | None = None,
+        max_file_bytes: int = 16 * 1024 * 1024,
+    ):
         self.path = path
+        self.preflight = preflight
+        self.max_file_bytes = max_file_bytes
+        warning = self._preflight_warning()
+        if warning is not None:
+            raise ProtocolError(f"event storage preflight failed: {warning}")
+        _reject_symlink_components(self.path)
         self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-        self.path.touch(mode=0o600, exist_ok=True)
+        _reject_symlink_components(self.path)
+        if self.path.exists() and (self.path.is_symlink() or not self.path.is_file()):
+            raise ProtocolError("event log path is unsafe")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        descriptor = os.open(self.path, flags, 0o600)
+        os.close(descriptor)
+        os.chmod(self.path.parent, 0o700)
         os.chmod(self.path, 0o600)
 
+    def _preflight_warning(self) -> str | None:
+        if self.preflight is None:
+            return None
+        try:
+            warning = self.preflight()
+        except Exception:
+            return "EVENT_STORAGE_PREFLIGHT_ERROR"
+        return warning if isinstance(warning, str) and warning else None
+
     def emit(self, event: Mapping[str, object]) -> None:
+        if self._preflight_warning() is not None:
+            return
         sanitized = sanitize_event(event)
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(encode_message(sanitized) + "\n")
+        payload = (encode_message(sanitized) + "\n").encode("utf-8")
+        try:
+            _reject_symlink_components(self.path)
+            if self.path.exists():
+                info = self.path.lstat()
+                if not stat.S_ISREG(info.st_mode) or info.st_size + len(payload) > self.max_file_bytes:
+                    return
+            flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            descriptor = os.open(self.path, flags, 0o600)
+            try:
+                written = 0
+                while written < len(payload):
+                    count = os.write(descriptor, payload[written:])
+                    if count <= 0:
+                        return
+                    written += count
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+            os.chmod(self.path, 0o600)
+        except (OSError, ProtocolError):
+            return
+
+
+def _reject_symlink_components(path: Path) -> None:
+    absolute = path.absolute()
+    current = Path(absolute.anchor)
+    for part in absolute.parts[1:]:
+        current = current / part
+        try:
+            info = current.lstat()
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise ProtocolError("event log path inspection failed") from exc
+        if stat.S_ISLNK(info.st_mode):
+            raise ProtocolError("event log path contains a symlink")
 
 
 def sanitize_event(event: Mapping[str, object]) -> dict[str, object]:

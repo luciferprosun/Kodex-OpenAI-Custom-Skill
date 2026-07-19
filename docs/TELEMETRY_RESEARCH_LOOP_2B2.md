@@ -1,101 +1,146 @@
-# SmartRouter Telemetry Research Loop 2B-2
+# SmartRouter Safe Routing and Telemetry Foundation 2B-2
 
 ## Purpose and authority boundary
 
-This opt-in research loop measures the existing SmartRouter route and builds
-reviewable shadow evidence. It does not select a different live model, change
-reasoning effort, modify source code, alter sandbox or approval policy, grant
-tool/network/write authority, or promote a candidate policy. Raw telemetry is
-evidence only. A future promotion requires an explicit human decision bound to
-an immutable candidate hash.
+This opt-in foundation measures the route selected by the existing SmartRouter.
+Telemetry is evidence only. It cannot select a model, alter reasoning effort,
+change sandbox or approval policy, authorize tools, update routing rules, or
+modify source code.
 
-The ordinary `codex` executable and ordinary SmartRouter launcher remain
-untouched. The dedicated launcher is only:
+No learning engine, policy candidate generator, automatic calibration,
+contextual bandit, nightly job, or promotion path is connected. The current
+checked-in routing policy remains the only routing authority.
+
+The ordinary `codex` executable and ordinary routed launcher remain available.
+The dedicated fail-closed launcher is:
 
 ```text
 scripts/start-routed-codex-research
 ```
 
-It supports two explicit window identities, `aoia` and `smart-router`, and
-verifies the corresponding Git remote before opening the original Codex TUI.
-The prompt is entered inside that TUI and never appears in launcher arguments.
+It supports the explicit window IDs `aoia` and `smart-router`. The prompt is
+entered inside the original Codex TUI and never appears in launcher arguments.
 
 ## Privacy model
 
-Records contain numeric or categorical metadata only. They never contain raw
-prompts, responses, source, diffs, commands, tool arguments/output,
-environment variables, credentials, emails, chats, or absolute workspace
-paths. A random installation salt remains on the internal system disk with
-mode `0600`. HMAC-SHA-256 produces task, session, and workspace identifiers;
-the normalized source text is not retained. The salt is never copied to the
-external device or Git.
+Persisted records contain validated numeric or categorical metadata only. They
+never contain prompts, responses, hidden reasoning, source, diffs, commands,
+tool arguments or output, environment variables, credentials, authorization
+headers, email/chat content, or absolute workspace paths.
+
+A random installation salt remains on the internal system disk with mode
+`0600`. HMAC-SHA-256 produces task, session, and workspace identifiers; source
+text is not retained. The salt is never copied to external storage or Git.
 
 Run schema `2.0.0` adds `window_id`, `workspace_signature`,
 `router_policy_version`, `codex_protocol_version`, and a synthetic-validation
-marker. The reader remains compatible with immutable `1.0.0` evidence.
-Synthetic records are always excluded from the research dataset.
+marker. Readers retain compatibility with immutable schema `1.0.0` records.
 
-Operator outcomes are separate append-only records. Production outcome writes
-require the foreground interactive terminal and reject a Codex ancestor
-process. Models and non-interactive child processes cannot mark work accepted.
-Outcome corrections append another hash-linked event. There is no free-form
-notes field.
+## External storage and configuration
 
-## External storage and mount identity
-
-Authoritative configuration is an atomic, strict JSON document at:
+Authoritative configuration is a strict, atomic JSON document at:
 
 ```text
 ~/.config/smart-codex/telemetry.json
 ```
 
-The directory is `0700` and the file is `0600`. Unknown keys are rejected. An
-environment variable cannot override the configured storage root.
-
-Configuration stores the exact filesystem UUID and mount identity. Before a
-research startup and every raw append, SmartRouter verifies:
-
-- the configured root is named `SmartRouterTelemetry` and is below the
-  expected non-root mount;
-- no root or parent component is a symlink;
-- the current filesystem UUID is the configured UUID;
-- the mount is read/write, owned/writable by the current operator, and has
-  sufficient free space.
-
-If the card is removed, the empty mount-point directory resolves to the system
-filesystem and the UUID/root-mount checks reject it. There is no internal-disk
-fallback. Ordinary Codex remains usable; the dedicated research launcher
-refuses to start.
+The directory is `0700` and the file is `0600`. Unknown fields are rejected.
+Configuration contains no secret, prompt, response, task signature, or source
+path. The external root and exact filesystem UUID must be configured
+explicitly. Reset removes only the configuration reference and never deletes
+telemetry data.
 
 External layout:
 
 ```text
 SmartRouterTelemetry/
-├── raw/                 # immutable state and append-only JSONL
-├── derived/             # reproducible datasets and manifests
-├── manifests/
-├── policy-candidates/   # immutable, non-authoritative proposals
-├── reports/
-└── runtime-events/      # sanitized route/shadow events
+├── raw/                 # state and append-only run JSONL
+├── outcomes/            # append-only operator outcome JSONL
+├── manifests/           # collection metadata only
+├── derived/             # reserved; no routing or learning policy
+├── reports/             # collection metadata only
+├── runtime-events/      # bounded sanitized routing events
+└── quarantine/          # rejected metadata-only records when explicitly used
 ```
 
-External defaults are 16 MiB per raw JSONL, 2 GiB total raw storage, a 1 GiB
-free-space floor, and 64 KiB per record. Files rotate; no evidence is deleted
-automatically. Without an external configuration, the safer 2B-1 internal
-defaults remain 5 MiB per file and 50 MiB total.
+External defaults are 16 MiB per JSONL file, 2 GiB total run/outcome storage,
+a 1 GiB free-space floor, and 64 KiB per record. Files rotate. Existing
+evidence is never automatically deleted. Without an external configuration,
+the original 2B-1 internal defaults remain 5 MiB per file and 50 MiB total.
 
-`telemetry storage reset` removes only the configuration reference. It never
-removes telemetry data.
+## Mount identity safety
 
-Filesystems such as exFAT apply permissions through mount-wide masks instead of
-per-file POSIX modes. On those media, the operator must retain a private parent
-mount boundary; the internal configuration and HMAC salt still remain `0600`.
-The raw format remains metadata-only even when the removable filesystem cannot
-represent a per-file `0600` mode.
+Before each research startup and each telemetry append, SmartRouter verifies:
+
+- the configured root is named `SmartRouterTelemetry`;
+- the root is below the expected non-root mount;
+- the current filesystem UUID exactly matches configuration;
+- the mount point and filesystem type match configuration;
+- no root or parent component is a symlink;
+- the mount is writable and the root is owned by the operator;
+- minimum free space and active storage limits remain satisfied.
+
+If removable storage disappears, an empty mount-point directory resolves to the
+internal root filesystem and is rejected. External configuration never falls
+back to internal telemetry storage. Ordinary Codex can continue when optional
+telemetry is unavailable; the dedicated research launcher refuses startup.
+
+The runtime-event sink repeats the same preflight before every append, uses
+`O_APPEND`, flushes with `fsync`, rejects symlinks, and stops at a bounded file
+size. A failed event write cannot change or block the authorized Codex turn.
+
+## Exact Codex App Server contract
+
+Routed mode is pinned to `codex-cli 0.144.6` by exact string comparison.
+Stable and experimental JSON Schema and TypeScript artifacts were generated
+from the installed binary and compared directly with regenerated `0.144.5`
+artifacts.
+
+JSON schemas are semantically identical after object-key canonicalization, and
+both TypeScript trees are byte-identical. No method, notification, token field,
+required set, enum, or payload shape changed. Raw JSON ordering changes are
+recorded separately from canonical semantic hashes in:
+
+```text
+smart_codex/app_server_router/schemas/protocol_contract_0_144_6.json
+```
+
+Any other Codex version fails before the backend starts. A future update
+requires fresh stable and experimental generation, comparison, checksums,
+tests, and documentation. WebSocket transport remains experimental and both
+listeners bind only to `127.0.0.1`.
+
+## Dual-window launchers
+
+The launcher requires `--window-id` and `--cwd`, verifies the exact Git root
+and expected remote, selects loopback ports automatically, verifies storage and
+the Codex contract, discovers App Server metadata, and then opens the original
+TUI. Two simultaneous windows receive independent HMAC workspace signatures
+and separate sanitized runtime-event files.
+
+`--print-command` performs manager startup and discovery without submitting a
+model turn or printing the absolute workspace path.
+
+## Operator outcomes
+
+Outcomes are separate append-only, hash-linked events. Supported values are:
+
+- `accepted`;
+- `accepted-with-edits`;
+- `rejected`;
+- `aborted`.
+
+Categorical evidence includes edit magnitude, failure category, paired test
+counts, verification-unavailable status, follow-up turns, and escalation
+target. Rejected outcomes require an explicit failure category. Corrections
+append a new event linked to the preceding outcome; existing evidence is never
+mutated.
+
+Production outcome commands require a foreground interactive operator
+terminal. Non-interactive processes and processes launched beneath Codex cannot
+mark their own run accepted. There is no free-form comment field.
 
 ## Commands
-
-Discovery and setup:
 
 ```bash
 smart-codex telemetry storage discover
@@ -103,107 +148,32 @@ smart-codex telemetry storage configure --root MOUNT/SmartRouterTelemetry --devi
 smart-codex telemetry storage status
 smart-codex telemetry enable
 smart-codex telemetry preflight
-```
+smart-codex telemetry status
 
-Research windows:
-
-```bash
 scripts/start-routed-codex-research --window-id aoia --cwd AOIA_GIT_ROOT
 scripts/start-routed-codex-research --window-id smart-router --cwd SMARTROUTER_GIT_ROOT
-```
 
-Outcome labeling:
-
-```bash
 smart-codex telemetry pending --window-id aoia
-smart-codex outcome latest --window-id aoia accepted --edit-magnitude none --tests-passed 12 --tests-failed 0
+smart-codex outcome latest --window-id aoia accepted --edit-magnitude none
 smart-codex outcome latest --window-id smart-router accepted-with-edits --edit-magnitude minor --followup-turns 1
 smart-codex outcome latest --window-id aoia rejected --failure-category test_failure --tests-passed 10 --tests-failed 2
-```
 
-Learning and status:
-
-```bash
-smart-codex learning build-dataset
-smart-codex learning dataset-status
-smart-codex learning refresh
-smart-codex learning shadow-status
-smart-codex learning candidate-report
-smart-codex learning propose-policy
-smart-codex learning validate-candidate CANDIDATE_ID
-smart-codex research status
+smart-codex telemetry summary
+smart-codex telemetry summary --by-model
+smart-codex telemetry summary --by-task-level
 smart-codex telemetry disable
 ```
 
-## Dataset construction
+## Filesystem limitation
 
-The builder validates every JSONL record and record hash, rejects duplicates,
-orphaned outcomes and broken correction links, selects the latest valid outcome,
-and records exclusion counts. Missing token fields stay null. Rows without a
-measured/reported total are retained for non-token analyses but excluded from
-token comparisons.
+Filesystems such as exFAT apply permissions through mount-wide masks rather
+than per-file POSIX modes. The operator must retain a private parent mount
+boundary. Internal configuration and the HMAC salt still enforce `0600`, and
+external records remain metadata-only.
 
-Schema and exact Codex protocol versions are separated into deterministic
-contract-group files and are never silently pooled. The complete input hash,
-derived dataset hash, exclusion counts, evidence cutoff, and contract map are
-recorded in `dataset_manifest.json`. Rebuilding the same input yields identical
-bytes and hashes. Raw JSONL remains the source of truth; derived files can be
-discarded and rebuilt.
+## Collection boundary
 
-## Fixed shadow algorithm
-
-Comparable strata include schema/protocol, HMAC workspace, window, task domain
-and subdomain, difficulty, scope, risk, verifier availability, product surface,
-counter-reconciliation method, backend identity status, sandbox, and approval
-policy. AOIA and SmartRouter observations therefore cannot be combined merely
-because they are contemporaneous.
-
-For each model-and-effort action the learner reports valid and labeled counts,
-acceptance and verified-success rates, major-edit/rejection rates, median and
-p90 measured tokens and wall time, retry/compaction rates, and unknown-field
-rate. Acceptance uncertainty uses a two-sided 95% Wilson interval:
-
-```text
-center = (p + z²/(2n)) / (1 + z²/n)
-margin = z * sqrt((p(1-p) + z²/(4n))/n) / (1 + z²/n)
-z = 1.959963984540054
-```
-
-Fewer than five comparable measurements are descriptive
-`INSUFFICIENT_DATA`. Fewer than 30 valid outcome labels for an action cannot
-produce a candidate. A candidate also needs a comparable incumbent, a Wilson
-lower bound within 0.05 of the incumbent lower bound, and at least 10% lower
-median measured tokens or wall time. High/critical-risk strata abstain from
-learned model changes. A 20 percentage-point recent quality shift after at
-least 60 labels is `DRIFT_DETECTED`.
-
-Possible results are `INSUFFICIENT_DATA`, `NO_COMPARABLE_ALTERNATIVE`,
-`CANDIDATE_AVAILABLE`, `CANDIDATE_REJECTED_BY_SAFETY`, and `DRIFT_DETECTED`.
-An empty dataset produces `ABSTAIN — INSUFFICIENT_DATA`.
-
-Shadow decisions are separate hash-linked metadata events. `applied` and
-`authority` are always false. Candidate files bind the algorithm version,
-dataset-manifest hash, affected strata, evidence counts, and every abstention.
-There is intentionally no promotion command.
-
-## Exact Codex protocol contract
-
-Routed research mode is pinned to `codex-cli 0.144.5`. Stable and experimental
-JSON Schema and TypeScript bindings were regenerated from that installed
-binary. The reviewed methods, notification shapes, token fields, and bundle
-hashes are indexed under `smart_codex/app_server_router/schemas/`.
-
-Any other version fails before the routed TUI opens. The gate is an exact
-string comparison, not a range, wildcard, or warning. A future upgrade requires
-fresh generated artifacts, field review, checksums, tests, and documentation.
-
-## Retention and limitations
-
-No telemetry is uploaded automatically. Aggregate export is an explicit future
-operator action. Public reports must never contain real records, HMACs, salts,
-filesystem UUIDs, private mount paths, prompts, or responses.
-
-Token/caching/backend fields remain null when Codex does not expose them. The
-learner does not infer missing values. Public or local observations cannot make
-telemetry an authorization source. Thirty labels are only the minimum candidate
-barrier, not proof that promotion is appropriate.
+This foundation only collects and summarizes operator-controlled evidence.
+Token Intelligence, automated experimentation, policy optimization, automatic
+calibration, and self-learning routing remain outside this mission and are not
+connected.

@@ -11,8 +11,6 @@ import sys
 
 from smart_codex.app_server_router.backend import SUPPORTED_CODEX_VERSION, BackendError, read_codex_version
 from smart_codex.app_server_router.launcher import run as run_routed_tui
-from smart_codex.learning.learner import shadow_status
-from smart_codex.learning.shadow import ShadowRecorder
 from smart_codex.runtime.telemetry.collector import TelemetryService
 from smart_codex.runtime.telemetry.config import configured_storage, load_external_config
 from smart_codex.runtime.telemetry.errors import TelemetryError
@@ -80,7 +78,6 @@ async def _run(args: argparse.Namespace) -> int:
         workspace_signature=workspace_signature,
         router_policy_version=ROUTER_POLICY_VERSION,
         codex_protocol_version=protocol_value,
-        shadow_recorder=ShadowRecorder(),
     )
     events = config.telemetry_root / "runtime-events" / f"routes-{args.window_id}-{os.getpid()}.jsonl"
     routed_args = argparse.Namespace(
@@ -93,21 +90,21 @@ async def _run(args: argparse.Namespace) -> int:
         print_command=args.print_command,
         manager_only=args.manager_only,
     )
-    shadow = shadow_status()
-    decision = str(shadow.get("decision", "ABSTAIN — INSUFFICIENT_DATA"))
     banner = {
         "Telemetry": "ACTIVE",
         "Window": args.window_id,
-        "Storage filesystem": "verified",
+        "Storage filesystem": "VERIFIED",
         "Storage root": "$MOUNT/SmartRouterTelemetry",
         "Schema version": SCHEMA_VERSION,
+        "Codex contract": "VERIFIED",
         "Router policy version": ROUTER_POLICY_VERSION,
-        "Shadow policy": "ACTIVE" if decision == "CANDIDATE_AVAILABLE" else "ABSTAINING",
+        "Routing authority": "CURRENT POLICY ONLY",
     }
     return await run_routed_tui(
         routed_args,
         telemetry_service=service,
         research_banner=banner,
+        event_preflight=storage.write_preflight,
     )
 
 

@@ -51,7 +51,7 @@ FAILURE_CATEGORIES = {
     "safety_block",
     "environment_failure",
     "operator_abort",
-    "other_categorical",
+    "other",
 }
 COLLECTOR_STATUSES = {
     "completed",

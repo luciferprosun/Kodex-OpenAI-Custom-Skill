@@ -91,7 +91,7 @@ def live_model_data() -> list[dict[str, object]]:
 def registry(data: list[dict[str, object]] | None = None) -> ModelRegistry:
     return ModelRegistry.from_model_list(
         data or live_model_data(),
-        codex_version="codex-cli 0.144.5",
+        codex_version="codex-cli 0.144.6",
     )
 
 

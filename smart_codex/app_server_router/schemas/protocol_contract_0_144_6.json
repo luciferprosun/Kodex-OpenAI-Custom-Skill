@@ -1,0 +1,42 @@
+{
+  "codex_version": "codex-cli 0.144.6",
+  "generated_at": "2026-07-19",
+  "generation_mode": "local exact-version stable and experimental JSON Schema and TypeScript",
+  "bundles": {
+    "json_stable_combined": "40c67e463e6170a8666b681caa4636a030e303cee94e7f0cc893fa8af7680466",
+    "json_stable_v2": "cd6f010ba946216e7dc5a248af0de6ef9d6a03383323181c2819250a200f5a09",
+    "json_experimental_combined": "85ea836927d6cfdd3c68a9bda17dba48d2573bbc282ab2d5775a5005e40bc9c3",
+    "json_experimental_v2": "c15c9cff1c58ebbcb20827a09cd7ac1e1899b2060ac88c55e10e6a46bb789281"
+  },
+  "canonical_bundles": {
+    "json_stable_combined": "e4b1a0ad7d3dc94d1ee3e2d640658ef93bb7edf111436fb8d26ee2814a7e5748",
+    "json_stable_v2": "5d8251e1e2f713a3c567c927386f84f2f94692d4721b90d8ff36d0ff92877621",
+    "json_experimental_combined": "d3ddc63ba322a975d9b9b89700a0beecd46d45c5367a9f27f0d6b47cf0267ba1",
+    "json_experimental_v2": "f5e8d20f3a8f9bb5e5b23ab0c5aa6bde7b12e7e0713606c5d0132651a4959d37"
+  },
+  "typescript_tree_sha256": {
+    "stable": "245c5862b40e007052542bb0de70b68f7ad57475dd371748ba34d602147c603b",
+    "experimental": "d64c8fbadf596041d29fc39a9ed6fb41c2e6eb0ecd70f03c9b544f7f99cb8b2b"
+  },
+  "file_counts": {
+    "stable_json": 267,
+    "stable_typescript": 598,
+    "experimental_json": 337,
+    "experimental_typescript": 671
+  },
+  "semantic_equivalence_to": "codex-cli 0.144.5",
+  "semantic_comparison": {
+    "stable_json": "equal_after_json_object_key_canonicalization",
+    "experimental_json": "equal_after_json_object_key_canonicalization",
+    "stable_typescript": "byte_identical",
+    "experimental_typescript": "byte_identical",
+    "methods_added": [],
+    "methods_removed": [],
+    "notifications_added": [],
+    "notifications_removed": [],
+    "token_usage_shape_changed": false
+  },
+  "raw_hash_note": "Raw V2 combined-bundle hashes preserve the reviewed invocation; canonical hashes remove nondeterministic JSON object property ordering.",
+  "review_status": "reviewed",
+  "fail_closed": true
+}

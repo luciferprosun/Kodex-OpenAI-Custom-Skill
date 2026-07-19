@@ -86,10 +86,11 @@ def build_outcome_record(
             "aborted": "unknown",
         }[outcome]
     if failure_category is None:
+        if outcome == "rejected":
+            raise TelemetryValidationError("REJECTED_OUTCOME_REQUIRES_FAILURE")
         failure_category = {
             "accepted": "none",
             "accepted-with-edits": "none",
-            "rejected": "other_categorical",
             "aborted": "operator_abort",
         }[outcome]
     if edit_magnitude not in EDIT_MAGNITUDES:

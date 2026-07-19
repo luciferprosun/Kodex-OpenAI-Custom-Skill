@@ -10,6 +10,7 @@ import signal
 import socket
 import sys
 import tempfile
+from typing import Callable
 
 from .backend import (
     SUPPORTED_CODEX_VERSION,
@@ -48,6 +49,7 @@ async def run(
     *,
     telemetry_service: TelemetryService | None = None,
     research_banner: dict[str, str] | None = None,
+    event_preflight: Callable[[], str | None] | None = None,
 ) -> int:
     cwd = Path(args.cwd).expanduser().resolve()
     if not cwd.is_dir():
@@ -85,7 +87,7 @@ async def run(
             backend_url=backend_url,
             turn_router=router,
             port=args.proxy_port,
-            events=JsonlEventSink(event_path),
+            events=JsonlEventSink(event_path, preflight=event_preflight),
             telemetry=telemetry_service,
         )
         await proxy.start()

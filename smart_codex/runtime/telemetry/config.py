@@ -34,11 +34,12 @@ CONFIG_FIELDS = {
 LIMIT_FIELDS = {"max_file_bytes", "max_total_bytes", "min_free_bytes", "max_record_bytes"}
 LAYOUT_DIRECTORIES = (
     "raw",
+    "outcomes",
     "derived",
     "manifests",
-    "policy-candidates",
     "reports",
     "runtime-events",
+    "quarantine",
 )
 
 
@@ -218,11 +219,13 @@ def configure_external_storage(
     root.mkdir(mode=0o700, parents=False, exist_ok=True)
     if root.is_symlink() or root.stat().st_uid != os.getuid():
         raise TelemetryStorageError("EXTERNAL_ROOT_UNSAFE")
+    os.chmod(root, 0o700)
     for name in LAYOUT_DIRECTORIES:
         directory = root / name
         if directory.exists() and (directory.is_symlink() or not directory.is_dir()):
             raise TelemetryStorageError("EXTERNAL_LAYOUT_UNSAFE")
         directory.mkdir(mode=0o700, exist_ok=True)
+        os.chmod(directory, 0o700)
     _atomic_write_config(config, path or config_path())
     return config
 
@@ -265,7 +268,11 @@ def configured_storage(*, require_external: bool = False) -> LocalTelemetryStora
         return LocalTelemetryStorage()
     salt = Path.home() / ".local" / "state" / "smart-codex" / "telemetry_salt"
     return LocalTelemetryStorage(
-        TelemetryPaths(root=config.telemetry_root / "raw", salt=salt),
+        TelemetryPaths(
+            root=config.telemetry_root / "raw",
+            salt=salt,
+            outcomes_root=config.telemetry_root / "outcomes",
+        ),
         config.limits,
         mount_verifier=ConfiguredMountVerifier(config),
         external_root=config.telemetry_root,

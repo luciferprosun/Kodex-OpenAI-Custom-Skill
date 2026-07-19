@@ -26,6 +26,7 @@ DEFAULT_MAX_FILE_BYTES = 5 * 1024 * 1024
 DEFAULT_MAX_TOTAL_BYTES = 50 * 1024 * 1024
 DEFAULT_MIN_FREE_BYTES = 1024 * 1024 * 1024
 FILE_PATTERN = re.compile(r"^codex_runs-(\d{4})\.jsonl$")
+OUTCOME_FILE_PATTERN = re.compile(r"^codex_outcomes-(\d{4})\.jsonl$")
 _THREAD_APPEND_LOCK = threading.Lock()
 LOCK_TIMEOUT_SECONDS = 5.0
 LOCK_RETRY_SECONDS = 0.01
@@ -54,6 +55,7 @@ class StorageLimits:
 class TelemetryPaths:
     root: Path
     salt: Path
+    outcomes_root: Path | None = None
 
     @classmethod
     def default(cls) -> "TelemetryPaths":
@@ -114,6 +116,11 @@ class LocalTelemetryStorage:
         if self.paths.root.is_symlink():
             raise TelemetryStorageError("STORAGE_ROOT_SYMLINK")
         os.chmod(self.paths.root, 0o700)
+        if self.paths.outcomes_root is not None:
+            if self.paths.outcomes_root.exists() and self.paths.outcomes_root.is_symlink():
+                raise TelemetryStorageError("OUTCOMES_DIRECTORY_SYMLINK")
+            self.paths.outcomes_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+            os.chmod(self.paths.outcomes_root, 0o700)
         if not self.external:
             summaries = self.paths.root / "summaries"
             if summaries.exists() and summaries.is_symlink():
@@ -163,15 +170,19 @@ class LocalTelemetryStorage:
 
     def storage_size(self) -> int:
         total = 0
-        if not self.paths.root.exists():
-            return 0
-        for path in self.paths.root.rglob("codex_runs-*.jsonl"):
-            try:
-                info = path.lstat()
-            except OSError:
+        locations = [(self.paths.root, "codex_runs-*.jsonl")]
+        if self.paths.outcomes_root is not None:
+            locations.append((self.paths.outcomes_root, "codex_outcomes-*.jsonl"))
+        for root, pattern in locations:
+            if not root.exists():
                 continue
-            if stat.S_ISREG(info.st_mode):
-                total += info.st_size
+            for path in root.rglob(pattern):
+                try:
+                    info = path.lstat()
+                except OSError:
+                    continue
+                if stat.S_ISREG(info.st_mode):
+                    total += info.st_size
         return total
 
     def write_preflight(self) -> str | None:
@@ -227,7 +238,12 @@ class LocalTelemetryStorage:
             parsed = datetime.fromisoformat(timestamp)
         except ValueError as exc:
             raise TelemetryStorageError("INVALID_RECORD_TIMESTAMP") from exc
-        directory = self.paths.root / f"{parsed.year:04d}" / f"{parsed.month:02d}"
+        separate_outcome = record.get("record_type") == "outcome" and self.paths.outcomes_root is not None
+        base = self.paths.outcomes_root if separate_outcome else self.paths.root
+        assert base is not None
+        pattern = OUTCOME_FILE_PATTERN if separate_outcome else FILE_PATTERN
+        prefix = "codex_outcomes" if separate_outcome else "codex_runs"
+        directory = base / f"{parsed.year:04d}" / f"{parsed.month:02d}"
         year_directory = directory.parent
         if year_directory.exists() and year_directory.is_symlink():
             raise TelemetryStorageError("YEAR_DIRECTORY_SYMLINK")
@@ -237,8 +253,8 @@ class LocalTelemetryStorage:
         os.chmod(year_directory, 0o700)
         os.chmod(directory, 0o700)
         candidates: list[tuple[int, Path]] = []
-        for path in directory.glob("codex_runs-*.jsonl"):
-            match = FILE_PATTERN.fullmatch(path.name)
+        for path in directory.glob(f"{prefix}-*.jsonl"):
+            match = pattern.fullmatch(path.name)
             if match and path.is_file() and not path.is_symlink():
                 candidates.append((int(match.group(1)), path))
         if candidates:
@@ -248,7 +264,7 @@ class LocalTelemetryStorage:
             number += 1
         else:
             number = 1
-        return directory / f"codex_runs-{number:04d}.jsonl"
+        return directory / f"{prefix}-{number:04d}.jsonl"
 
     def append(self, record: dict[str, Any]) -> AppendResult:
         try:
@@ -315,9 +331,16 @@ class LocalTelemetryStorage:
     def iter_records(self) -> Iterator[dict[str, Any]]:
         if self.verify_mount() is not None:
             return
-        if not self.paths.root.exists():
-            return
-        for path in sorted(self.paths.root.rglob("codex_runs-*.jsonl")):
+        locations = [(self.paths.root, "codex_runs-*.jsonl")]
+        if self.paths.outcomes_root is not None:
+            locations.append((self.paths.outcomes_root, "codex_outcomes-*.jsonl"))
+        paths = sorted(
+            path
+            for root, pattern in locations
+            if root.exists()
+            for path in root.rglob(pattern)
+        )
+        for path in paths:
             try:
                 info = path.lstat()
             except OSError:

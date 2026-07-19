@@ -32,7 +32,7 @@
       "enum": [
         "none", "incomplete", "incorrect_approach", "test_failure",
         "safety_block", "environment_failure", "operator_abort",
-        "other_categorical"
+        "other"
       ]
     },
     "supersedes_outcome_id": {"type": ["string", "null"], "format": "uuid"},

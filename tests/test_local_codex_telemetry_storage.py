@@ -142,7 +142,13 @@ def test_all_operator_outcomes_are_supported(tmp_path, outcome: str) -> None:
     service, storage = enabled_service(tmp_path)
     assert start_basic(service, task=f"Synthetic {outcome} fixture").finish(status="completed").appended
     run_id = records(storage, "run")[0]["run_id"]
-    assert record_outcome(storage, run_id, outcome).appended is True
+    failure_category = "other" if outcome == "rejected" else None
+    assert record_outcome(
+        storage,
+        run_id,
+        outcome,
+        failure_category=failure_category,
+    ).appended is True
 
 
 def test_outcome_cannot_target_missing_or_invalid_run(tmp_path) -> None:
@@ -187,7 +193,13 @@ def test_append_only_outcome_adds_line_instead_of_rewriting(tmp_path) -> None:
     target = next(storage.paths.root.rglob("codex_runs-*.jsonl"))
     before = target.read_bytes()
     run_id = records(storage, "run")[0]["run_id"]
-    assert record_outcome(storage, run_id, "rejected", verification_unavailable=True).appended
+    assert record_outcome(
+        storage,
+        run_id,
+        "rejected",
+        verification_unavailable=True,
+        failure_category="other",
+    ).appended
     after = target.read_bytes()
     assert after.startswith(before)
     assert after.count(b"\n") == before.count(b"\n") + 1

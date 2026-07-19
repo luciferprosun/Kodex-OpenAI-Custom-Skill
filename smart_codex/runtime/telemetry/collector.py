@@ -143,7 +143,6 @@ class TelemetryService:
         router_policy_version: str | None = None,
         codex_protocol_version: str | None = None,
         synthetic: bool = False,
-        shadow_recorder: object | None = None,
     ):
         self.storage = storage or LocalTelemetryStorage()
         self.window_id = window_id
@@ -151,7 +150,6 @@ class TelemetryService:
         self.router_policy_version = router_policy_version
         self.codex_protocol_version = codex_protocol_version
         self.synthetic = synthetic
-        self.shadow_recorder = shadow_recorder
 
     @classmethod
     def from_default(cls) -> "TelemetryService":
@@ -263,12 +261,6 @@ class TelemetryService:
             synthetic=self.synthetic if synthetic is None else bool(synthetic),
         )
         record = new_run_record(metadata, started_at=utc_now())
-        if self.shadow_recorder is not None:
-            try:
-                getattr(self.shadow_recorder, "record")(record)
-            except Exception:
-                # Shadow evidence is never allowed to block or alter the incumbent route.
-                pass
         return StartResult(TelemetryRun(record, storage=self.storage, salt=salt))
 
     def start_from_decision(

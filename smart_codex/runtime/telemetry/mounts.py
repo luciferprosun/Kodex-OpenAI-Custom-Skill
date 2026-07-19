@@ -218,8 +218,7 @@ def discover_storage_candidates() -> tuple[list[MountedFilesystem], MountedFiles
         and item.device.startswith("/dev/")
         and (item.hotplug or item.removable)
     ]
-    micro_sd = [item for item in candidates if item.transport == "mmc"]
-    selected = micro_sd[0] if len(micro_sd) == 1 else candidates[0] if len(candidates) == 1 else None
+    selected = candidates[0] if len(candidates) == 1 else None
     return candidates, selected
 
 

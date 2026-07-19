@@ -39,7 +39,7 @@ def calibration_registry(
 ) -> ModelRegistry:
     return ModelRegistry.from_model_list(
         data or calibration_model_data(),
-        codex_version="codex-cli 0.144.5",
+        codex_version="codex-cli 0.144.6",
         temporarily_unavailable=temporarily_unavailable,
     )
 

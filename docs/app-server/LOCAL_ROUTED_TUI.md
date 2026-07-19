@@ -93,7 +93,7 @@ with the router's explicit `sandboxPolicy`. Retry that turn using ordinary
 
 ## Upgrade procedure
 
-Routed mode is pinned to the reviewed installed contract `codex-cli 0.144.5`.
+Routed mode is pinned to the reviewed installed contract `codex-cli 0.144.6`.
 
 Telemetry research uses the separate fail-closed launcher
 `scripts/start-routed-codex-research`; it requires an explicit `aoia` or

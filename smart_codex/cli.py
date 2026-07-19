@@ -41,11 +41,6 @@ def main(argv: list[str] | None = None) -> int:
         return telemetry_command(args_list[1:])
     if args_list and args_list[0] == "outcome":
         return outcome_command(args_list[1:])
-    if args_list and args_list[0] == "learning":
-        return learning_command(args_list[1:])
-    if args_list[:2] == ["research", "status"]:
-        return research_status_command()
-
     parser = build_parser()
     args = parser.parse_args(args_list)
     prompt = " ".join(args.prompt)
@@ -173,7 +168,11 @@ def telemetry_command(argv: list[str]) -> int:
                         {
                             "candidates": [value.public_dict() for value in candidates],
                             "selected": selected.public_dict() if selected is not None else None,
-                            "selection_status": "UNIQUE_SAFE_MICROSD" if selected is not None else "HUMAN_SELECTION_REQUIRED",
+                            "selection_status": (
+                                "UNIQUE_SAFE_REMOVABLE_STORAGE"
+                                if selected is not None
+                                else "HUMAN_SELECTION_REQUIRED"
+                            ),
                         },
                         indent=2,
                         sort_keys=True,
@@ -345,23 +344,12 @@ def outcome_command(argv: list[str]) -> int:
     except (OSError, TelemetryError):
         print(json.dumps({"ok": False, "run_id": locals().get("run_id"), "warning": "OUTCOME_REJECTED"}, indent=2))
         return 2
-    learning_refresh = "NOT_ATTEMPTED"
-    if result.appended and storage.external:
-        try:
-            from .learning.dataset import build_dataset, mark_dataset_stale
-
-            mark_dataset_stale()
-            build_dataset()
-            learning_refresh = "CURRENT"
-        except Exception:
-            learning_refresh = "STALE_RAW_OUTCOME_PRESERVED"
     print(
         json.dumps(
             {
                 "ok": result.appended,
                 "run_id": run_id,
                 "warning": result.warning,
-                "learning_refresh": learning_refresh,
             },
             indent=2,
             sort_keys=True,
@@ -395,57 +383,6 @@ def _interactive_operator_terminal() -> bool:
         if "codex" in command:
             return False
     return True
-
-
-def learning_command(argv: list[str]) -> int:
-    from .runtime.telemetry.errors import TelemetryError
-
-    parser = argparse.ArgumentParser(prog="smart-codex learning")
-    subparsers = parser.add_subparsers(dest="action", required=True)
-    subparsers.add_parser("build-dataset")
-    subparsers.add_parser("dataset-status")
-    subparsers.add_parser("refresh")
-    subparsers.add_parser("shadow-status")
-    subparsers.add_parser("candidate-report")
-    subparsers.add_parser("propose-policy")
-    validate = subparsers.add_parser("validate-candidate")
-    validate.add_argument("candidate_id")
-    args = parser.parse_args(argv)
-    try:
-        from .learning.dataset import build_dataset, dataset_status
-        from .learning.learner import candidate_report, propose_policy, shadow_status, validate_candidate
-
-        if args.action in {"build-dataset", "refresh"}:
-            result = build_dataset()
-        elif args.action == "dataset-status":
-            result = dataset_status()
-        elif args.action == "shadow-status":
-            result = shadow_status()
-        elif args.action == "candidate-report":
-            result = candidate_report()
-        elif args.action == "propose-policy":
-            result = propose_policy()
-        else:
-            result = validate_candidate(args.candidate_id)
-    except (OSError, TelemetryError) as exc:
-        category = getattr(exc, "category", "LEARNING_COMMAND_FAILED")
-        print(json.dumps({"ok": False, "error": category}, indent=2))
-        return 2
-    print(json.dumps(result, indent=2, sort_keys=True))
-    return 0
-
-
-def research_status_command() -> int:
-    try:
-        from .learning.status import research_status
-
-        result = research_status()
-    except Exception as exc:
-        category = getattr(exc, "category", "RESEARCH_STATUS_UNAVAILABLE")
-        print(json.dumps({"ok": False, "error": category}, indent=2))
-        return 2
-    print(json.dumps(result, indent=2, sort_keys=True))
-    return 0
 
 
 def print_decision(decision, argv: list[str], *, explain: bool) -> None:

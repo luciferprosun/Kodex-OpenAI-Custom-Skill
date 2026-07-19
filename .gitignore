@@ -6,6 +6,11 @@
 auth.json
 history.jsonl
 *.log
+codex_runs-*.jsonl
+codex_outcomes-*.jsonl
+routes-*.jsonl
+telemetry_salt
+SmartRouterTelemetry/
 router_logs/
 local_model_catalog.json
 private/
@@ -18,4 +23,3 @@ venv/
 build/
 dist/
 *.egg-info/
-

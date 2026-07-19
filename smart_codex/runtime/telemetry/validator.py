@@ -291,7 +291,7 @@ def validate_outcome_record(record: dict[str, Any]) -> None:
             "operator_abort",
             "environment_failure",
             "safety_block",
-            "other_categorical",
+            "other",
         }:
             _fail("INCONSISTENT_ABORTED_OUTCOME")
     for field in ("tests_passed", "tests_failed"):

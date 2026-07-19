@@ -17,7 +17,7 @@ class BackendError(RuntimeError):
     pass
 
 
-SUPPORTED_CODEX_VERSION = "codex-cli 0.144.5"
+SUPPORTED_CODEX_VERSION = "codex-cli 0.144.6"
 
 
 @dataclass(frozen=True)
