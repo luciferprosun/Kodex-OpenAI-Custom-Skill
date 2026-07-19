@@ -35,6 +35,10 @@ def main(argv: list[str] | None = None) -> int:
     args_list = list(sys.argv[1:] if argv is None else argv)
     if args_list and args_list[0] == "audit-models":
         return audit_models_command()
+    if args_list and args_list[0] == "telemetry":
+        return telemetry_command(args_list[1:])
+    if args_list and args_list[0] == "outcome":
+        return outcome_command(args_list[1:])
 
     parser = build_parser()
     args = parser.parse_args(args_list)
@@ -74,7 +78,39 @@ def main(argv: list[str] | None = None) -> int:
     print_decision(decision, command.argv, explain=args.explain)
 
     if command.execute:
-        completed = run_codex_command(command)
+        telemetry_run = None
+        try:
+            from .runtime.telemetry.collector import TelemetryService
+
+            start = TelemetryService.from_default().start_from_decision(
+                task=prompt,
+                decision=decision,
+                requested_model=args.model,
+                launched_model=args.model,
+                product_surface="smart_codex_cli",
+            )
+            telemetry_run = start.run
+            if start.warning:
+                print(start.warning, file=sys.stderr)
+        except (OSError, RuntimeError, ValueError):
+            print("TELEMETRY_DISABLED_INITIALIZATION_ERROR", file=sys.stderr)
+        try:
+            completed = run_codex_command(command)
+        except BaseException:
+            if telemetry_run is not None:
+                result = telemetry_run.finish(status="process_error")
+                if result.warning:
+                    print(result.warning, file=sys.stderr)
+            raise
+        if telemetry_run is not None:
+            result = telemetry_run.finish(
+                status="completed" if completed.returncode == 0 else "process_error",
+                process_exit_code=completed.returncode,
+            )
+            if result.warning:
+                print(result.warning, file=sys.stderr)
+            elif result.appended:
+                print(f"telemetry_run_id: {result.run_id}", file=sys.stderr)
         return completed.returncode
     return 0
 
@@ -83,6 +119,98 @@ def audit_models_command() -> int:
     result = audit_models()
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result.get("ok") else 1
+
+
+def telemetry_command(argv: list[str]) -> int:
+    from .runtime.telemetry.errors import TelemetryError
+    from .runtime.telemetry.privacy import ensure_installation_salt
+    from .runtime.telemetry.storage import LocalTelemetryStorage
+    from .runtime.telemetry.summary import inspect_run, storage_status, summarize
+
+    parser = argparse.ArgumentParser(prog="smart-codex telemetry")
+    subparsers = parser.add_subparsers(dest="action", required=True)
+    subparsers.add_parser("status")
+    subparsers.add_parser("enable")
+    subparsers.add_parser("disable")
+    summary_parser = subparsers.add_parser("summary")
+    group = summary_parser.add_mutually_exclusive_group()
+    group.add_argument("--by-model", action="store_true")
+    group.add_argument("--by-task-level", action="store_true")
+    inspect_parser = subparsers.add_parser("inspect")
+    inspect_parser.add_argument("run_id")
+    inspect_parser.add_argument("--show-task-signature", action="store_true")
+    args = parser.parse_args(argv)
+    storage = LocalTelemetryStorage()
+
+    if args.action == "enable":
+        try:
+            ensure_installation_salt(storage.paths.salt)
+            storage.set_enabled(True)
+        except (OSError, TelemetryError):
+            print(json.dumps({"ok": False, "error": "TELEMETRY_ENABLE_FAILED"}, indent=2))
+            return 2
+        print(json.dumps({"ok": True, **storage_status(storage)}, indent=2, sort_keys=True))
+        return 0
+    if args.action == "disable":
+        try:
+            storage.set_enabled(False)
+        except (OSError, TelemetryError):
+            print(json.dumps({"ok": False, "error": "TELEMETRY_DISABLE_FAILED"}, indent=2))
+            return 2
+        print(json.dumps({"ok": True, **storage_status(storage)}, indent=2, sort_keys=True))
+        return 0
+    if args.action == "status":
+        print(json.dumps(storage_status(storage), indent=2, sort_keys=True))
+        return 0
+    if args.action == "summary":
+        grouping = "model" if args.by_model else "task_level" if args.by_task_level else None
+        print(json.dumps(summarize(storage, group_by=grouping), indent=2, sort_keys=True))
+        return 0
+    record = inspect_run(storage, args.run_id, show_signature=args.show_task_signature)
+    if record is None:
+        print(json.dumps({"ok": False, "error": "RUN_NOT_FOUND_OR_INVALID"}, indent=2))
+        return 2
+    print(json.dumps(record, indent=2, sort_keys=True))
+    return 0
+
+
+def outcome_command(argv: list[str]) -> int:
+    from .runtime.telemetry.errors import TelemetryError
+    from .runtime.telemetry.outcome import record_outcome
+    from .runtime.telemetry.schema import OPERATOR_OUTCOMES
+    from .runtime.telemetry.storage import LocalTelemetryStorage
+
+    parser = argparse.ArgumentParser(prog="smart-codex outcome")
+    parser.add_argument("run_id")
+    parser.add_argument("outcome", choices=sorted(OPERATOR_OUTCOMES))
+    parser.add_argument("--tests-passed", type=int)
+    parser.add_argument("--tests-failed", type=int)
+    parser.add_argument("--verification-unavailable", action="store_true")
+    parser.add_argument("--escalated-to")
+    args = parser.parse_args(argv)
+    if args.verification_unavailable and (args.tests_passed is not None or args.tests_failed is not None):
+        parser.error("test counts cannot be combined with --verification-unavailable")
+    try:
+        result = record_outcome(
+            LocalTelemetryStorage(),
+            args.run_id,
+            args.outcome,
+            tests_passed=args.tests_passed,
+            tests_failed=args.tests_failed,
+            verification_unavailable=args.verification_unavailable,
+            escalated_to=args.escalated_to,
+        )
+    except (OSError, TelemetryError):
+        print(json.dumps({"ok": False, "run_id": args.run_id, "warning": "OUTCOME_REJECTED"}, indent=2))
+        return 2
+    print(
+        json.dumps(
+            {"ok": result.appended, "run_id": args.run_id, "warning": result.warning},
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0 if result.appended else 2
 
 
 def print_decision(decision, argv: list[str], *, explain: bool) -> None:

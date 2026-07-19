@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "captured_from": "e32c176adbd42acc732e4a374b301814d1a158f0",
+    "live_registry_fixture": "calibration_model_data",
+    "purpose": "telemetry non-regression gate"
+  },
+  "cases": {
+    "advanced_mathematics": {
+      "prompt": "Prove a graduate-level theorem in algebraic topology.",
+      "category": "math_theory",
+      "complexity": "high",
+      "risk": "low",
+      "profile": "math",
+      "classic_model": "REPLACE_WITH_MATH_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-sol",
+      "fallback_model": "gpt-5.5",
+      "reasoning_effort": "xhigh",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "math", "--sandbox", "read-only", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "destructive_deployment": {
+      "prompt": "Deploy to production and delete obsolete database tables.",
+      "category": "release_management",
+      "complexity": "medium",
+      "risk": "high",
+      "profile": "security",
+      "classic_model": "REPLACE_WITH_SECURITY_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-terra",
+      "fallback_model": "gpt-5.5",
+      "reasoning_effort": "medium",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "security", "--sandbox", "read-only", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "multi_file_feature": {
+      "prompt": "Implement a multi-file feature across parser and CLI modules with tests.",
+      "category": "complex_coding",
+      "complexity": "high",
+      "risk": "medium",
+      "profile": "deep",
+      "classic_model": "REPLACE_WITH_DEEP_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-terra",
+      "fallback_model": "gpt-5.5",
+      "reasoning_effort": "high",
+      "sandbox": "workspace-write",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "deep", "--sandbox", "workspace-write", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "physics_research": {
+      "prompt": "Research a quantum field theory derivation and compare primary sources.",
+      "category": "research",
+      "complexity": "medium",
+      "risk": "low",
+      "profile": "research",
+      "classic_model": "REPLACE_WITH_RESEARCH_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-terra",
+      "fallback_model": "gpt-5.5",
+      "reasoning_effort": "high",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "research", "--sandbox", "read-only", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "repository_security_audit": {
+      "prompt": "Perform a read-only repository security audit for secrets and permission risks.",
+      "category": "secret_handling",
+      "complexity": "low",
+      "risk": "critical",
+      "profile": "security",
+      "classic_model": "REPLACE_WITH_SECURITY_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-luna",
+      "fallback_model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "security", "--sandbox", "read-only", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "single_file_bug_fix": {
+      "prompt": "Fix the off-by-one bug in one Python file.",
+      "category": "normal_coding",
+      "complexity": "low",
+      "risk": "low",
+      "profile": "standard",
+      "classic_model": "REPLACE_WITH_STANDARD_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-terra",
+      "fallback_model": "gpt-5.5",
+      "reasoning_effort": "medium",
+      "sandbox": "workspace-write",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "standard", "--sandbox", "workspace-write", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "tiny_readme_correction": {
+      "prompt": "Fix one typo in README.md.",
+      "category": "documentation",
+      "complexity": "low",
+      "risk": "low",
+      "profile": "fast",
+      "classic_model": "REPLACE_WITH_FAST_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-luna",
+      "fallback_model": "gpt-5.6-terra",
+      "reasoning_effort": "low",
+      "sandbox": "read-only",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "fast", "--sandbox", "read-only", "--ask-for-approval", "on-request", "<task>"]
+    },
+    "unknown_task": {
+      "prompt": "Handle florb zeta without any known task.",
+      "category": "unknown",
+      "complexity": "medium",
+      "risk": "low",
+      "profile": "standard",
+      "classic_model": "REPLACE_WITH_STANDARD_MODEL_FROM_CODEX_DEBUG_MODELS",
+      "live_model": "gpt-5.6-terra",
+      "fallback_model": "gpt-5.5",
+      "reasoning_effort": "medium",
+      "sandbox": "workspace-write",
+      "approval": "on-request",
+      "command": ["<codex>", "--profile", "standard", "--sandbox", "workspace-write", "--ask-for-approval", "on-request", "<task>"]
+    }
+  }
+}
