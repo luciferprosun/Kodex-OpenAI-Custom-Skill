@@ -38,6 +38,11 @@ class RoutedTurn:
     selection_explanation: str = "capability_aware_live_selection"
     drift_warnings: tuple[str, ...] = ()
     migration_warning: str | None = None
+    task_difficulty: str = "unknown"
+    task_scope: str = "unknown"
+    task_risk: str = "unknown"
+    action_danger: str = "unknown"
+    verification_available: bool | None = None
 
 
 def _safe_original_model(value: object) -> str | None:
@@ -238,4 +243,9 @@ class TurnRouter:
             selection_explanation=applied.selection_explanation,
             drift_warnings=applied.drift_warnings,
             migration_warning=applied.migration_warning,
+            task_difficulty=decision.complexity_level,
+            task_scope=decision.execution_scope,
+            task_risk=decision.risk_level,
+            action_danger=decision.action_danger,
+            verification_available=None,
         )

@@ -22,6 +22,7 @@ from .policy_mapper import PolicyMapper
 from .protocol import JsonlEventSink
 from .proxy import AppServerProxy
 from .turn_router import TurnRouter
+from smart_codex.runtime.telemetry.collector import TelemetryService
 
 
 def _free_port() -> int:
@@ -75,6 +76,7 @@ async def run(args: argparse.Namespace) -> int:
             turn_router=router,
             port=args.proxy_port,
             events=JsonlEventSink(event_path),
+            telemetry=TelemetryService.from_default(),
         )
         await proxy.start()
         command = build_tui_command(args.codex_bin, proxy.url, cwd)

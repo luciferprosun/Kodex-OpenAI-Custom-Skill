@@ -14,6 +14,12 @@ from .protocol import (
     routing_error,
 )
 from .turn_router import RoutedTurn, RoutingFailure, TurnRouter
+from .turn_router import extract_turn_input
+from smart_codex.runtime.telemetry.collector import (
+    AppServerTelemetryBridge,
+    PendingFinish,
+    TelemetryService,
+)
 from .websocket import (
     WebSocketConnection,
     WebSocketError,
@@ -27,9 +33,13 @@ class _SessionState:
     pending_threads: dict[object, str]
     pending_turns: dict[object, RoutedTurn]
     thread_models: dict[str, tuple[str | None, str | None]]
+    telemetry: AppServerTelemetryBridge
 
 
 class AppServerProxy:
+    _TELEMETRY_START_TIMEOUT_SECONDS = 0.5
+    _TELEMETRY_FLUSH_TIMEOUT_SECONDS = 1.0
+
     def __init__(
         self,
         *,
@@ -38,13 +48,16 @@ class AppServerProxy:
         host: str = "127.0.0.1",
         port: int = 0,
         events: EventSink | None = None,
+        telemetry: TelemetryService | None = None,
     ):
         if host != "127.0.0.1":
             raise ValueError("Smart Router proxy must bind exactly to 127.0.0.1")
         self.backend_url = backend_url
         self.turn_router = turn_router
         self.events = events or NullEventSink()
+        self.telemetry = telemetry
         self.server = WebSocketServer(host, port, self._handle_client)
+        self._telemetry_tasks: set[asyncio.Task[None]] = set()
 
     @property
     def url(self) -> str:
@@ -55,6 +68,36 @@ class AppServerProxy:
 
     async def close(self) -> None:
         await self.server.close()
+        await self._flush_telemetry_tasks()
+
+    def _schedule_telemetry_finish(self, pending: PendingFinish) -> None:
+        task = asyncio.create_task(self._finish_telemetry(pending))
+        self._telemetry_tasks.add(task)
+        task.add_done_callback(self._telemetry_tasks.discard)
+
+    async def _finish_telemetry(self, pending: PendingFinish) -> None:
+        try:
+            result = await asyncio.to_thread(
+                pending.run.finish,
+                status=pending.status,
+                process_exit_code=pending.process_exit_code,
+            )
+        except Exception:
+            self.events.emit({"event": "telemetry", "status": "TELEMETRY_OBSERVER_ERROR"})
+            return
+        if result.warning:
+            self.events.emit({"event": "telemetry", "status": result.warning})
+
+    async def _flush_telemetry_tasks(self) -> None:
+        tasks = tuple(self._telemetry_tasks)
+        if not tasks:
+            return
+        _, pending = await asyncio.wait(
+            tasks,
+            timeout=self._TELEMETRY_FLUSH_TIMEOUT_SECONDS,
+        )
+        if pending:
+            self.events.emit({"event": "telemetry", "status": "TELEMETRY_FLUSH_TIMEOUT"})
 
     async def _handle_client(self, frontend: WebSocketConnection) -> None:
         try:
@@ -62,7 +105,12 @@ class AppServerProxy:
         except (OSError, WebSocketError):
             await frontend.close(code=1011, reason="backend unavailable")
             return
-        state = _SessionState({}, {}, {})
+        state = _SessionState(
+            {},
+            {},
+            {},
+            AppServerTelemetryBridge(self.telemetry),
+        )
         upstream = asyncio.create_task(self._client_to_backend(frontend, backend, state))
         downstream = asyncio.create_task(self._backend_to_client(backend, frontend, state))
         done, pending = await asyncio.wait(
@@ -73,6 +121,9 @@ class AppServerProxy:
             task.cancel()
         await asyncio.gather(*pending, return_exceptions=True)
         await asyncio.gather(*done, return_exceptions=True)
+        for unfinished in state.telemetry.detach_all():
+            self._schedule_telemetry_finish(unfinished)
+        await self._flush_telemetry_tasks()
         await backend.close()
 
     async def _client_to_backend(
@@ -148,6 +199,30 @@ class AppServerProxy:
                         "migration_warning": routed.migration_warning,
                     }
                 )
+                try:
+                    prompt, _ = extract_turn_input(message.get("params"))
+                    start_result = await asyncio.wait_for(
+                        asyncio.to_thread(
+                            state.telemetry.create,
+                            thread_id=thread_id,
+                            prompt=prompt,
+                            routed=routed,
+                        ),
+                        timeout=self._TELEMETRY_START_TIMEOUT_SECONDS,
+                    )
+                    telemetry_warning = start_result.warning
+                    if start_result.run is not None:
+                        state.telemetry.register(
+                            request_id=request_id,
+                            thread_id=thread_id,
+                            run=start_result.run,
+                        )
+                except TimeoutError:
+                    telemetry_warning = "TELEMETRY_DISABLED_START_TIMEOUT"
+                except (OSError, RuntimeError, ValueError):
+                    telemetry_warning = "TELEMETRY_OBSERVER_ERROR"
+                if telemetry_warning:
+                    self.events.emit({"event": "telemetry", "status": telemetry_warning})
                 await backend.send_text(encode_message(routed.message))
                 continue
             if method in {"thread/start", "thread/resume"}:
@@ -170,6 +245,17 @@ class AppServerProxy:
             except ProtocolError:
                 continue
             self._observe_backend(message, state)
+            try:
+                completions = (
+                    state.telemetry.observe_response(message),
+                    state.telemetry.observe_notification(message),
+                )
+            except (OSError, RuntimeError, ValueError):
+                self.events.emit({"event": "telemetry", "status": "TELEMETRY_OBSERVER_ERROR"})
+                continue
+            for completion in completions:
+                if completion is not None:
+                    self._schedule_telemetry_finish(completion)
 
     def _observe_backend(self, message: dict[str, Any], state: _SessionState) -> None:
         response_id = message.get("id")

@@ -27,6 +27,7 @@ The internal Python package, import paths, rules, and standalone commands intent
 - A profile selector for task categories such as coding, research, writing, math, security, and repo operations.
 - A JSON-backed Knowledge Library in `rules/` for prompt weights, hard safety triggers, action danger, complexity, context, evidence, tie breakers, and profile policy.
 - A privacy-safe routing metadata logger.
+- Disabled-by-default, append-only local Codex run telemetry with operator-authored outcomes.
 - An isolated, opt-in App Server proxy for actual per-turn model rotation in the original Codex TUI.
 
 ## What It Is Not
@@ -162,6 +163,31 @@ Audit local Codex models:
 ```bash
 smart-codex audit-models
 ```
+
+## Opt-in local telemetry
+
+Local run telemetry is disabled by default. Enabling it is an explicit operator
+action:
+
+```bash
+smart-codex telemetry enable
+smart-codex telemetry status
+```
+
+The module stores only validated numeric and categorical metadata in bounded,
+append-only local JSONL. It does not store prompts, responses, source code,
+tool arguments or output, credentials, or private conversation content. It
+does not change routing or authorize execution. Outcomes are recorded later by
+the operator as separate hash-linked events:
+
+```bash
+smart-codex outcome <run-id> accepted
+smart-codex telemetry summary --by-model
+```
+
+See [Local Codex Telemetry 2B-1](docs/LOCAL_CODEX_TELEMETRY_2B.md) for the
+schema, privacy model, disk limits, supported event surfaces, missing-value
+rules, and disable procedure.
 
 ## Knowledge Library
 
