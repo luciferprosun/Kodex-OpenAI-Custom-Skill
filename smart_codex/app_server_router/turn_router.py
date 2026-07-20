@@ -43,6 +43,9 @@ class RoutedTurn:
     task_risk: str = "unknown"
     action_danger: str = "unknown"
     verification_available: bool | None = None
+    task_subdomain: str | None = None
+    semantic_reason_codes: tuple[str, ...] = ()
+    policy_version: str | None = None
 
 
 def _safe_original_model(value: object) -> str | None:
@@ -247,5 +250,8 @@ class TurnRouter:
             task_scope=decision.execution_scope,
             task_risk=decision.risk_level,
             action_danger=decision.action_danger,
+            task_subdomain=decision.task_subdomain,
+            semantic_reason_codes=tuple(decision.semantic_reason_codes),
+            policy_version=decision.policy_version,
             verification_available=None,
         )

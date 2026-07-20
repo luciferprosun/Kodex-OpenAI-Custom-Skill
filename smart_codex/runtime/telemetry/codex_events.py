@@ -138,12 +138,16 @@ class CodexEventAccumulator:
         self._final_usage: UsageSnapshot | None = None
         self._final_cumulative_total: int | None = None
         self._cumulative_conflict = False
-        self._request_usages: list[UsageSnapshot] = []
+        self._request_usages: dict[str, UsageSnapshot] = {}
+        self._request_usage_conflict = False
         self._session_id: str | None = None
         self._backend_model: str | None = None
         self._model_identity_status: str | None = None
         self._explicit_counts: dict[str, int] = {}
         self._count_sources: dict[str, str] = {}
+        self._counter_snapshots: dict[str, int] = {}
+        self._counter_conflicts: set[str] = set()
+        self._retry_evidence_unresolved = False
         self.duplicate_event_count = 0
         self.invalid_event_count = 0
 
@@ -189,7 +193,15 @@ class CodexEventAccumulator:
         usage = event.get("usage")
         if isinstance(params, dict) and usage is None:
             usage = params.get("tokenUsage")
-        safe = json.dumps([identifiers, usage], sort_keys=True, default=str, separators=(",", ":"))
+        explicit_count = event.get("count")
+        if isinstance(params, dict) and explicit_count is None:
+            explicit_count = params.get("count")
+        safe = json.dumps(
+            [identifiers, usage, explicit_count],
+            sort_keys=True,
+            default=str,
+            separators=(",", ":"),
+        )
         return hashlib.sha256(safe.encode("utf-8")).hexdigest()
 
     def consume(self, event: object) -> bool:
@@ -228,8 +240,21 @@ class CodexEventAccumulator:
             safe_id = str(request_id)
             if safe_id not in self._request_ids:
                 self._request_ids.add(safe_id)
-                self._request_usages.append(usage)
+                self._request_usages[safe_id] = usage
+            elif self._request_usages[safe_id] != usage:
+                self._request_usage_conflict = True
             return True
+        if raw_name != "retry.count" and re.search(
+            r"(?:^|_)retr(?:y|ied|ies|ying)(?:$|_)",
+            _snake(raw_name),
+            flags=re.IGNORECASE,
+        ):
+            # No individual retry lifecycle event is part of the installed,
+            # authoritative protocol contract. Such an event cannot quantify
+            # retries, but its presence makes a trusted zero unsafe.
+            self._retry_evidence_unresolved = True
+            self.invalid_event_count += 1
+            return False
         if raw_name in {"item.started", "item.completed", "item/started", "item/completed"}:
             item = event.get("item") if isinstance(event.get("item"), dict) else params.get("item")
             return self._consume_item(item, raw_name, params)
@@ -257,11 +282,29 @@ class CodexEventAccumulator:
         if explicit:
             count = _integer(event.get("count") if "count" in event else params.get("count"))
             if count is None:
+                if explicit == "retry_count":
+                    self._retry_evidence_unresolved = True
                 self.invalid_event_count += 1
                 return False
+            if explicit in {"request_count", "retry_count"}:
+                return self._consume_counter_snapshot(explicit, count)
             self._explicit_counts[explicit] = count
             self._count_sources[explicit] = "provider_reported"
             return True
+        return True
+
+    def _consume_counter_snapshot(self, field: str, count: int) -> bool:
+        previous = self._counter_snapshots.get(field)
+        if previous is None:
+            self._counter_snapshots[field] = count
+            return True
+        if count == previous:
+            self.duplicate_event_count += 1
+            return False
+        if count < previous:
+            self._counter_conflicts.add(field)
+            return True
+        self._counter_snapshots[field] = count
         return True
 
     def _consume_app_usage(self, params: dict[str, Any]) -> bool:
@@ -334,7 +377,7 @@ class CodexEventAccumulator:
                 return False
         return True
 
-    def finalize(self) -> EventMetrics:
+    def finalize(self, *, lifecycle_status: str | None = None) -> EventMetrics:
         values: dict[str, Any] = {
             "session_id": self._session_id,
             "backend_model": self._backend_model,
@@ -353,10 +396,10 @@ class CodexEventAccumulator:
             "compaction_count": None,
         }
         sources = unknown_measurement_sources()
-        request_sum = self._sum_request_usage(self._request_usages)
+        request_sum = self._sum_request_usage(list(self._request_usages.values()))
         usage: UsageSnapshot | None = None
         unreconciled = False
-        if self._cumulative_conflict:
+        if self._cumulative_conflict or self._request_usage_conflict:
             reconciliation = "unknown"
             unreconciled = True
         elif request_sum is not None and self._final_usage is not None:
@@ -378,9 +421,41 @@ class CodexEventAccumulator:
             token_values, token_sources = usage.as_record_values()
             values.update(token_values)
             sources.update(token_sources)
-        if self._request_ids:
-            values["request_count"] = len(self._request_ids)
+        measured_requests = len(self._request_ids) if self._request_ids else None
+        explicit_requests = self._counter_snapshots.get("request_count")
+        request_conflict = (
+            self._request_usage_conflict
+            or "request_count" in self._counter_conflicts
+            or (
+                measured_requests is not None
+                and explicit_requests is not None
+                and measured_requests != explicit_requests
+            )
+        )
+        if request_conflict:
+            unreconciled = True
+            reconciliation = "unknown"
+        elif measured_requests is not None:
+            values["request_count"] = measured_requests
             sources["request_count"] = "measured"
+        elif explicit_requests is not None:
+            values["request_count"] = explicit_requests
+            sources["request_count"] = "provider_reported"
+
+        explicit_retries = self._counter_snapshots.get("retry_count")
+        retry_conflict = (
+            self._retry_evidence_unresolved
+            or "retry_count" in self._counter_conflicts
+        )
+        if retry_conflict:
+            unreconciled = True
+            reconciliation = "unknown"
+        elif explicit_retries is not None and explicit_retries > 0:
+            values["retry_count"] = explicit_retries
+            sources["retry_count"] = "provider_reported"
+        elif explicit_retries == 0 and lifecycle_status == "completed":
+            values["retry_count"] = 0
+            sources["retry_count"] = "provider_reported"
         if self._tool_counts:
             values["tool_calls_by_type"] = dict(sorted(self._tool_counts.items()))
             values["tool_call_count"] = sum(self._tool_counts.values())

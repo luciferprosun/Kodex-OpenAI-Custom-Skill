@@ -11,6 +11,7 @@ import sys
 
 from smart_codex.app_server_router.backend import SUPPORTED_CODEX_VERSION, BackendError, read_codex_version
 from smart_codex.app_server_router.launcher import run as run_routed_tui
+from smart_codex.policy_version import MODEL_POLICY_VERSION
 from smart_codex.runtime.telemetry.collector import TelemetryService
 from smart_codex.runtime.telemetry.config import configured_storage, load_external_config
 from smart_codex.runtime.telemetry.errors import TelemetryError
@@ -22,7 +23,7 @@ WINDOW_REMOTES = {
     "aoia": "github.com/luciferprosun/AOIA-Core",
     "smart-router": "github.com/luciferprosun/Kodex-OpenAI-Custom-Skill",
 }
-ROUTER_POLICY_VERSION = "model-policy-calibration-v0.1"
+ROUTER_POLICY_VERSION = MODEL_POLICY_VERSION
 
 
 def _verify_workspace(window_id: str, cwd: Path) -> None:

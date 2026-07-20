@@ -64,7 +64,7 @@
     "repository_security_audit": {
       "prompt": "Perform a read-only repository security audit for secrets and permission risks.",
       "category": "secret_handling",
-      "complexity": "low",
+      "complexity": "medium",
       "risk": "critical",
       "profile": "security",
       "classic_model": "REPLACE_WITH_SECURITY_MODEL_FROM_CODEX_DEBUG_MODELS",

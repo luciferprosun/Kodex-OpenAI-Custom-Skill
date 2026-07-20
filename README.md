@@ -198,6 +198,12 @@ quarantines known-defective semantic classifier labels. See [Local Telemetry
 Demo View 1A](docs/LOCAL_TELEMETRY_DEMO_VIEW_1A.md) for its panels, privacy
 allowlist, demo sequence, and read-only guarantees.
 
+The current deterministic classifier policy and its compatibility boundaries
+are documented in [Classifier Semantic Repair
+1A/1B](docs/CLASSIFIER_SEMANTIC_REPAIR_1A.md). The dashboard continues to
+quarantine affected semantic labels until they have independent validation;
+policy version `v0.2` does not bypass that quarantine.
+
 See [Local Codex Telemetry 2B-1](docs/LOCAL_CODEX_TELEMETRY_2B.md) for the
 schema, privacy model, disk limits, supported event surfaces, missing-value
 rules, and disable procedure. The opt-in external-storage and dual-window

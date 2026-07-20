@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 
 from .profiles import (
@@ -10,6 +10,7 @@ from .profiles import (
     validate_profile_override,
     validate_sandbox_override,
 )
+from .policy_version import MODEL_POLICY_VERSION
 from .scorer import RISK_ORDER, is_analysis_only_request, score
 
 
@@ -81,6 +82,9 @@ class RoutingDecision:
     execution_scope: str
     safety_constraints: list[str]
     score_source: str
+    task_subdomain: str | None = None
+    semantic_reason_codes: list[str] = field(default_factory=list)
+    policy_version: str | None = None
 
 
 def hash_prompt(prompt: str) -> str:
@@ -122,7 +126,10 @@ def route_prompt(
 
     override_used = False
     safety_forced = False
-    analysis_only = is_analysis_only_request(prompt)
+    analysis_only = is_analysis_only_request(prompt) or (
+        "descriptive_test_action_suppressed"
+        in score_card.semantic_reason_codes
+    )
 
     if (
         action_danger == "database_operation"
@@ -244,7 +251,10 @@ def route_prompt(
         execution_scope=score_card.execution_scope,
         safety_constraints=list(score_card.safety_constraints),
         score_source=score_card.source,
-)
+        task_subdomain=score_card.task_subdomain,
+        semantic_reason_codes=list(score_card.semantic_reason_codes),
+        policy_version=MODEL_POLICY_VERSION,
+    )
 
 
 def append_warning(existing: str | None, addition: str) -> str:

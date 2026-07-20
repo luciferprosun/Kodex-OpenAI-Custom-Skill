@@ -8,6 +8,11 @@ import threading
 import time
 from typing import Any
 
+from smart_codex.policy_version import (
+    MODEL_POLICY_VERSION,
+    normalize_policy_provenance,
+)
+
 from .codex_events import CodexEventAccumulator
 from .errors import TelemetryError
 from .models import RunMetadata, new_run_record, seal_record, utc_now
@@ -52,6 +57,12 @@ def _approval_value(value: object) -> str:
     return "unknown"
 
 
+def _policy_provenance(value: object) -> str:
+    """Preserve explicit policy provenance without inferring the current policy."""
+
+    return normalize_policy_provenance(value)
+
+
 class TelemetryRun:
     def __init__(
         self,
@@ -91,7 +102,7 @@ class TelemetryRun:
         if self._finished:
             return self._result or FinishResult(self.run_id, False, "TELEMETRY_ALREADY_FINISHED")
         self._finished = True
-        metrics = self.events.finalize()
+        metrics = self.events.finalize(lifecycle_status=status)
         record = dict(self.record)
         for field, value in metrics.values.items():
             if value is not None:
@@ -167,7 +178,10 @@ class TelemetryService:
     def from_default(cls) -> "TelemetryService":
         from .config import configured_storage
 
-        return cls(configured_storage())
+        return cls(
+            configured_storage(),
+            router_policy_version=MODEL_POLICY_VERSION,
+        )
 
     def start_run(
         self,
@@ -289,7 +303,7 @@ class TelemetryService:
         return self.start_run(
             task=task,
             task_domain=getattr(decision, "category", "unknown"),
-            task_subdomain=getattr(decision, "action_danger", None),
+            task_subdomain=getattr(decision, "task_subdomain", None),
             task_difficulty=getattr(decision, "complexity_level", "unknown"),
             task_scope=getattr(decision, "execution_scope", "unknown"),
             task_risk=getattr(decision, "risk_level", "unknown"),
@@ -304,6 +318,9 @@ class TelemetryService:
             approval_policy=getattr(decision, "approval_policy", "unknown"),
             product_surface=product_surface,
             session_id=session_id,
+            router_policy_version=_policy_provenance(
+                getattr(decision, "policy_version", None)
+            ),
         )
 
 
@@ -324,7 +341,7 @@ class AppServerTelemetryBridge:
         return self.service.start_run(
             task=prompt,
             task_domain=getattr(routed, "category", "unknown"),
-            task_subdomain=getattr(routed, "action_danger", None),
+            task_subdomain=getattr(routed, "task_subdomain", None),
             task_difficulty=getattr(routed, "task_difficulty", "unknown"),
             task_scope=getattr(routed, "task_scope", "unknown"),
             task_risk=getattr(routed, "task_risk", "unknown"),
@@ -343,6 +360,9 @@ class AppServerTelemetryBridge:
                 else "codex_app_server"
             ),
             session_id=thread_id,
+            router_policy_version=_policy_provenance(
+                getattr(routed, "policy_version", None)
+            ),
         )
 
     def register(self, *, request_id: object, thread_id: object, run: TelemetryRun) -> None:

@@ -2,15 +2,174 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 import re
 from typing import Any
 
 from .knowledge import KnowledgeLibrary, load_rules
-from .preprocessor import analyze_prompt_semantics, normalize_prompt
+from .preprocessor import (
+    PromptSemantics,
+    analyze_prompt_semantics,
+    is_document_comparison,
+    normalize_prompt,
+)
 
 
 RISK_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 COMPLEXITY_ORDER = {"low": 0, "medium": 1, "high": 2}
+TASK_SUBDOMAINS = frozenset(
+    {
+        "document_comparison",
+        "read_only_analysis",
+        "test_execution",
+        "code_generation",
+        "code_modification",
+        "security_audit",
+        "architecture_design",
+        "general_research",
+    }
+)
+
+_CODE_MODIFICATION_RE = re.compile(
+    r"\b(?:change|edit|fix|modify|patch|refactor|repair|rename|replace|update|"
+    r"delete|remove|move|append|overwrite|save|commit|push|merge|"
+    r"zapisz|edytuj|zmodyfikuj|zmień|zmien|napraw|usuń|usun|przenieś|"
+    r"przenies|dopisz|nadpisz|zacommituj|wypchnij)\b",
+    flags=re.IGNORECASE,
+)
+_CODE_GENERATION_RE = re.compile(
+    r"\b(?:add|create|generate|implement|write|utwórz|utworz)\b",
+    flags=re.IGNORECASE,
+)
+_NEGATED_CODE_CHANGE_RE = re.compile(
+    r"\b(?:modify\s+nothing|(?:do\s+not|don['’]t|never)\s+"
+    r"(?:append|change|commit|create|delete|edit|generate|implement|merge|modify|"
+    r"move|overwrite|patch|push|refactor|remove|rename|repair|replace|save|"
+    r"update|write)|without\s+(?:appending|changing|creating|deleting|editing|"
+    r"modifying|moving|overwriting|removing|renaming|saving|writing)|"
+    r"(?:nie|bez)\s+(?:dopisywania|edycji|modyfikowania|naprawiania|"
+    r"nadpisywania|przenoszenia|usuwania|zapisywania|zmieniania)|"
+    r"no\s+(?:code|file|repository)\s+changes?)\b",
+    flags=re.IGNORECASE,
+)
+_EXTERNAL_RESEARCH_RE = re.compile(
+    r"\b(?:api|browse|browser|download|fetch|internet|network|online|web|"
+    r"search\s+the\s+web|web\s+research|external\s+(?:api|service|source)|"
+    r"(?:call|query|request|use)\s+(?:an\s+|the\s+)?api|current\s+landscape|"
+    r"latest\s+(?:information|sources|documentation)|zewnętrzne\s+api|"
+    r"zewnetrzne\s+api|przeszukaj\s+internet|pobierz|wyślij\s+żądanie|"
+    r"wyslij\s+zadanie)\b|https?://",
+    flags=re.IGNORECASE,
+)
+_SENSITIVE_ANALYSIS_SUBJECT_RE = re.compile(
+    r"\b(?:security|privacy|compliance|incident(?:[- ]response)?|credentials?|"
+    r"authorization|authentication|secret(?:[- ]handling|s)?|threats?)\b|"
+    r"\b(?:bezpieczeństw\w*|bezpieczenstw\w*|prywatnoś\w*|prywatnos\w*|"
+    r"zgodnoś\w*|zgodnos\w*|incydent\w*|poświadcze\w*|poswiadcze\w*|"
+    r"autoryzac\w*|uwierzyteln\w*|sekret\w*|zagroże\w*|zagroze\w*)\b",
+    flags=re.IGNORECASE,
+)
+_INCIDENT_ANALYSIS_RE = re.compile(
+    r"\b(?:incident|incident[- ]response|incydent\w*)\b",
+    flags=re.IGNORECASE,
+)
+_COMPLIANCE_ANALYSIS_RE = re.compile(
+    r"\b(?:compliance|zgodnoś\w*|zgodnos\w*)\b",
+    flags=re.IGNORECASE,
+)
+_NON_COMPLIANCE_SECURITY_SUBJECT_RE = re.compile(
+    r"\b(?:security|privacy|incident(?:[- ]response)?|credentials?|"
+    r"authorization|authentication|secret(?:[- ]handling|s)?|threats?)\b|"
+    r"\b(?:bezpieczeństw\w*|bezpieczenstw\w*|prywatnoś\w*|prywatnos\w*|"
+    r"incydent\w*|poświadcze\w*|poswiadcze\w*|autoryzac\w*|"
+    r"uwierzyteln\w*|sekret\w*|zagroże\w*|zagroze\w*)\b",
+    flags=re.IGNORECASE,
+)
+_SENSITIVE_ANALYSIS_ACTION_RE = re.compile(
+    r"\b(?:audit|review|analy[sz]e|assess|compare|comparison|investigate|"
+    r"inspect|summarize|summary|list|report|identify|explain|describe|"
+    r"differences|findings|"
+    r"przeprowadź|przeprowadz|audyt|porównaj|porownaj|przeanalizuj|"
+    r"oceń|ocen|zbadaj|podsumuj|podaj|wymień|wymien)\b",
+    flags=re.IGNORECASE,
+)
+_SENSITIVE_ANALYSIS_COMPOUND_RE = re.compile(
+    r"\b(?:security\s+controls?|privacy\s+protections?|compliance\s+review|"
+    r"incident\s+(?:report|investigation|response)|authentication\s+(?:and\s+)?"
+    r"authorization\s+(?:rules?|controls?)|secret[- ]handling|threat\s+analysis)\b|"
+    r"\b(?:zasad\w*\s+prywatnoś\w*|zasad\w*\s+prywatnos\w*|"
+    r"audyt\w*\s+bezpieczeństw\w*|audyt\w*\s+bezpieczenstw\w*)\b",
+    flags=re.IGNORECASE,
+)
+_ARCHITECTURE_SYNTHESIS_RE = re.compile(
+    r"\b(?:architecture|architectural|system\s+design|broad\s+synthesis|"
+    r"synthesize|synthesis|architektura|projekt\s+systemu|synteza)\b",
+    flags=re.IGNORECASE,
+)
+_EXHAUSTIVE_SCOPE_RE = re.compile(
+    r"\b(?:exhaustive(?:ly)?|complete(?:ly)?|every\s+clause|clause[- ]by[- ]clause|"
+    r"all\s+files|entire|whole|large\s+corpus|pełn\w*|pel[nł]\w*|każd\w*\s+"
+    r"(?:klauzul|plik)|cał\w*)\b",
+    flags=re.IGNORECASE,
+)
+_LARGE_CORPUS_RE = re.compile(
+    r"\b(?:large|huge|entire|whole|all)\s+(?:corpus|dataset|document\s+set|"
+    r"knowledge\s+base)|\b(?:hundreds|thousands|millions)\s+of\s+(?:files|documents)\b",
+    flags=re.IGNORECASE,
+)
+_COMPLEX_TOOL_CHAIN_RE = re.compile(
+    r"\b(?:pipeline|tool\s+chain|multiple\s+tools|install|compile|build\s+and\s+run|"
+    r"shell\s+script|docker|container)\b",
+    flags=re.IGNORECASE,
+)
+_BOUNDED_OUTPUT_RE = re.compile(
+    r"\b(?:(?:brief|concise|short)\s+(?:summary|comparison|report)|"
+    r"summar(?:ize|y)\s+(?:briefly|concisely)|"
+    r"(?:report|list|give|identify)\s+(?:exactly\s+|at\s+most\s+)?"
+    r"(?:one|two|three|four|five|\d+)\s+"
+    r"(?:differences|points|items|bullets|findings|sentences|paragraphs)|"
+    r"(?:exactly|at\s+most)\s+(?:one|two|three|four|five|\d+)\s+"
+    r"(?:differences|points|items|bullets|findings|sentences|paragraphs)|"
+    r"(?:one|two|three|four|five|\d+)\s+(?:differences|points|bullets))\b",
+    flags=re.IGNORECASE,
+)
+_DOCUMENT_READ_RE = re.compile(
+    r"\b(?:compare|comparison|differences?|read|review|summarize|summary|"
+    r"inspect|describe|przeczytaj|porównaj|porownaj|podsumuj)\b",
+    flags=re.IGNORECASE,
+)
+_KNOWN_TOOL_RE = re.compile(
+    r"\b(?:awk|curl|git|grep|jq|make|pytest|sed|wget)\b",
+    flags=re.IGNORECASE,
+)
+
+
+def _has_code_change_intent(text: str) -> bool:
+    actionable = _NEGATED_CODE_CHANGE_RE.sub(" ", text)
+    return (
+        _CODE_MODIFICATION_RE.search(actionable) is not None
+        or _CODE_GENERATION_RE.search(actionable) is not None
+    )
+
+
+def _has_multi_tool_workflow(text: str) -> bool:
+    if _COMPLEX_TOOL_CHAIN_RE.search(text) is not None:
+        return True
+    return len({match.group(0).casefold() for match in _KNOWN_TOOL_RE.finditer(text)}) >= 2
+
+
+def _is_sensitive_analysis(semantics: PromptSemantics, text: str) -> bool:
+    """Use only internal semantic evidence; never emit filenames or fragments."""
+
+    if semantics.sensitive_document_reference:
+        return True
+    return bool(
+        _SENSITIVE_ANALYSIS_SUBJECT_RE.search(text)
+        and (
+            _SENSITIVE_ANALYSIS_ACTION_RE.search(text)
+            or _SENSITIVE_ANALYSIS_COMPOUND_RE.search(text)
+        )
+    )
 
 CATEGORY_PRIORITY = [
     "secret_handling",
@@ -71,11 +230,19 @@ ANALYSIS_ONLY_MARKERS = (
     "do not run",
     "don't run",
     "propose but do not execute",
+    "nie uruchamiaj",
+    "nie wykonuj",
+    "nie używaj",
+    "nie uzywaj",
+    "bez uruchamiania",
+    "bez wykonywania",
 )
 
 ANALYSIS_LEAD_RE = re.compile(
     r"^(?:please\s+)?(?:explain|describe|review|analy[sz]e|audit|inspect|"
-    r"simulate|assess|evaluate|show\s+where|why\b|what\s+does\b)"
+    r"simulate|assess|evaluate|show\s+where|why\b|what\s+does\b|"
+    r"wyjaśnij|wyjasnij|opisz|udokumentuj|przeanalizuj|"
+    r"dokumentacja\s+(?:zawiera|mówi|mowi))"
 )
 
 FOLLOWED_BY_EXECUTION_RE = re.compile(
@@ -141,11 +308,18 @@ class ScoreCard:
     execution_scope: str = "unknown"
     safety_constraints: list[str] = field(default_factory=list)
     source: str = "knowledge_library"
+    task_subdomain: str | None = None
+    semantic_reason_codes: list[str] = field(default_factory=list)
+
+
+@lru_cache(maxsize=2048)
+def _compiled_rule_pattern(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern, flags=re.IGNORECASE)
 
 
 def _regex_or_substr(pattern: str, text: str) -> bool:
     try:
-        return re.search(pattern, text, flags=re.IGNORECASE) is not None
+        return _compiled_rule_pattern(pattern).search(text) is not None
     except re.error:
         return pattern.lower() in text
 
@@ -156,8 +330,16 @@ def _term_matches(term: str, text: str) -> bool:
         return _regex_or_substr(lowered, text)
     if " " in lowered or "_" in lowered or "-" in lowered or "." in lowered:
         return lowered in text
+    # Most rule terms are absent from a given prompt. Avoid compiling a word
+    # boundary expression when the required literal stem cannot occur; this
+    # preserves matching semantics while keeping first-turn routing bounded.
+    if lowered not in text:
+        return False
     plural = "" if lowered.endswith("s") or lowered in {"service"} else "s?"
-    return re.search(rf"\b{re.escape(lowered)}{plural}\b", text, flags=re.IGNORECASE) is not None
+    return (
+        _compiled_rule_pattern(rf"\b{re.escape(lowered)}{plural}\b").search(text)
+        is not None
+    )
 
 
 def _contains_any(text: str, terms: tuple[str, ...] | list[str]) -> bool:
@@ -288,7 +470,12 @@ def _score_category(text: str, cfg: dict[str, Any]) -> tuple[float, list[str]]:
     return max(score, 0.0), matched
 
 
-def _apply_structural_boosts(text: str, scores: dict[str, float], matched: dict[str, list[str]]) -> None:
+def _apply_structural_boosts(
+    text: str,
+    scores: dict[str, float],
+    matched: dict[str, list[str]],
+    semantics: PromptSemantics,
+) -> None:
     boosts = [
         (r"\bfix\b.*\b(error|bug|loop)\b", "normal_coding", 6, "fix error/bug"),
         (r"\bbutton\b.*\bonclick\b", "normal_coding", 8, "button onclick"),
@@ -328,6 +515,29 @@ def _apply_structural_boosts(text: str, scores: dict[str, float], matched: dict[
         scores["security_audit"] = scores.get("security_audit", 0.0) + 12
         matched.setdefault("security_audit", []).append("secret leak check")
 
+    if semantics.test_intent in {"positive", "mixed"}:
+        scores["testing"] = scores.get("testing", 0.0) + 12
+        matched.setdefault("testing", []).append("positive_test_action")
+
+    if _is_sensitive_analysis(semantics, text):
+        if _INCIDENT_ANALYSIS_RE.search(text) is not None:
+            scores["incident_response"] = scores.get("incident_response", 0.0) + 18
+            matched.setdefault("incident_response", []).append(
+                "sensitive_incident_analysis"
+            )
+        elif not (
+            _COMPLIANCE_ANALYSIS_RE.search(text) is not None
+            and _NON_COMPLIANCE_SECURITY_SUBJECT_RE.search(text) is None
+        ):
+            scores["security_audit"] = scores.get("security_audit", 0.0) + 18
+            matched.setdefault("security_audit", []).append(
+                "sensitive_read_only_analysis"
+            )
+
+    if is_document_comparison(semantics):
+        scores["research"] = scores.get("research", 0.0) + 12
+        matched.setdefault("research", []).append("document_comparison")
+
 
 def _priority_index(category: str) -> int:
     try:
@@ -354,8 +564,14 @@ def _apply_tie_breakers(text: str, scores: dict[str, float], matched: dict[str, 
         matched.setdefault("security_audit", []).append("security tie-breaker")
 
 
-def score_categories(prompt: str, rules: KnowledgeLibrary) -> tuple[str, dict[str, float], float, str, list[str], list[CategoryMatch]]:
-    text = normalize_prompt(prompt)
+def score_categories(
+    prompt: str,
+    rules: KnowledgeLibrary,
+    *,
+    semantics: PromptSemantics | None = None,
+) -> tuple[str, dict[str, float], float, str, list[str], list[CategoryMatch]]:
+    semantics = semantics or analyze_prompt_semantics(prompt)
+    text = normalize_prompt(semantics.actionable_text)
     categories = rules.category_weights.get("categories", {})
     raw_scores: dict[str, float] = {}
     matched: dict[str, list[str]] = {}
@@ -365,7 +581,7 @@ def score_categories(prompt: str, rules: KnowledgeLibrary) -> tuple[str, dict[st
         raw_scores[name] = score_value
         matched[name] = matched_terms
 
-    _apply_structural_boosts(text, raw_scores, matched)
+    _apply_structural_boosts(text, raw_scores, matched, semantics)
     _apply_tie_breakers(text, raw_scores, matched)
 
     ordered = sorted(raw_scores.items(), key=lambda item: (-item[1], _priority_index(item[0]), item[0]))
@@ -414,10 +630,14 @@ def _score_level_group(prompt: str, levels: dict[str, Any], order: dict[str, int
     return best
 
 
-def _action_danger(prompt: str, rules: KnowledgeLibrary) -> str:
+def _action_danger(
+    prompt: str,
+    rules: KnowledgeLibrary,
+    *,
+    semantics: PromptSemantics | None = None,
+) -> str:
     text = normalize_prompt(prompt)
-    if is_analysis_only_request(text):
-        return "read_only_analysis"
+    semantics = semantics or analyze_prompt_semantics(prompt)
     order = {
         "read_only_analysis": 0,
         "write_local_files": 1,
@@ -433,7 +653,19 @@ def _action_danger(prompt: str, rules: KnowledgeLibrary) -> str:
         "unknown": -1,
     }
     danger = _score_level_group(prompt, rules.action_danger_rules.get("levels", {}), order, "read_only_analysis")
-    if danger == "read_only_analysis" and "fix" in text and "bug" in text:
+    if semantics.test_intent in {"positive", "mixed"} and order.get(danger, -1) <= order["run_tests"]:
+        return "run_tests"
+    if is_analysis_only_request(text):
+        return "read_only_analysis"
+    if danger == "run_tests" and semantics.test_intent not in {"positive", "mixed"}:
+        if _has_code_change_intent(text):
+            return "write_local_files"
+        return "read_only_analysis"
+    actionable_change = _NEGATED_CODE_CHANGE_RE.sub(" ", text)
+    if (
+        danger == "read_only_analysis"
+        and _CODE_MODIFICATION_RE.search(actionable_change) is not None
+    ):
         return "write_local_files"
     return danger
 
@@ -458,7 +690,71 @@ def _risk_for_category(category: str, base_risk: str, prompt: str) -> str:
     return base_risk
 
 
-def _complexity_for(prompt: str, category: str, base_complexity: str, rules: KnowledgeLibrary) -> str:
+def _is_bounded_read_only_document_task(
+    semantics: PromptSemantics,
+    *,
+    category: str,
+    action_danger: str,
+    risk_level: str,
+    rules: KnowledgeLibrary,
+    base_complexity: str | None = None,
+    current_complexity: str | None = None,
+) -> bool:
+    text = semantics.actionable_text
+    if not (
+        1 <= semantics.explicit_file_count <= 2
+        and semantics.explicit_document_count == semantics.explicit_file_count
+        and action_danger == "read_only_analysis"
+        and semantics.test_intent not in {"positive", "mixed"}
+        and category in {"documentation", "research", "simple_text"}
+        and risk_level == "low"
+        and _DOCUMENT_READ_RE.search(text) is not None
+        and _BOUNDED_OUTPUT_RE.search(text) is not None
+    ):
+        return False
+    if not (
+        is_document_comparison(semantics)
+        or category in {"documentation", "simple_text"}
+        or re.search(r"\b(?:read|review|summarize|summary|inspect)\b", text)
+    ):
+        return False
+    if (
+        _has_code_change_intent(text)
+        or _EXTERNAL_RESEARCH_RE.search(text)
+        or _is_sensitive_analysis(semantics, text)
+        or _ARCHITECTURE_SYNTHESIS_RE.search(text)
+        or _EXHAUSTIVE_SCOPE_RE.search(text)
+        or _LARGE_CORPUS_RE.search(text)
+        or _has_multi_tool_workflow(text)
+    ):
+        return False
+    for level in ("medium", "high"):
+        patterns = rules.complexity_rules.get(level, [])
+        if isinstance(patterns, dict):
+            patterns = patterns.get("signals", [])
+        if any(_term_matches(str(pattern), text) for pattern in patterns):
+            return False
+    if current_complexity == "high":
+        return False
+    if (
+        current_complexity == "medium"
+        and base_complexity is not None
+        and base_complexity != "medium"
+    ):
+        return False
+    return True
+
+
+def _complexity_for(
+    prompt: str,
+    category: str,
+    base_complexity: str,
+    rules: KnowledgeLibrary,
+    *,
+    semantics: PromptSemantics | None = None,
+    action_danger: str = "read_only_analysis",
+    risk_level: str = "low",
+) -> str:
     text = normalize_prompt(prompt)
     complexity = _level_from_rules(prompt, rules.complexity_rules, COMPLEXITY_ORDER, base_complexity)
     low_patterns = [
@@ -507,16 +803,110 @@ def _complexity_for(prompt: str, category: str, base_complexity: str, rules: Kno
         complexity = "medium"
     if category == "grant_work" and _contains_any(text, ["grant reviewers", "readme acronym"]):
         complexity = "low"
+    if (
+        semantics is not None
+        and 1 <= semantics.explicit_document_count <= 2
+        and (
+            _is_sensitive_analysis(semantics, text)
+            or _EXTERNAL_RESEARCH_RE.search(text)
+            or _EXHAUSTIVE_SCOPE_RE.search(text)
+            or _has_multi_tool_workflow(text)
+        )
+        and complexity == "low"
+    ):
+        complexity = "medium"
+    if (
+        semantics is not None
+        and _is_sensitive_analysis(semantics, text)
+        and complexity == "low"
+    ):
+        complexity = "medium"
+    if semantics is not None and _is_bounded_read_only_document_task(
+        semantics,
+        category=category,
+        action_danger=action_danger,
+        risk_level=risk_level,
+        rules=rules,
+        base_complexity=base_complexity,
+        current_complexity=complexity,
+    ):
+        complexity = "low"
     return complexity
 
 
-def _dimensions(prompt: str, risk_level: str, action_danger: str) -> tuple[str, str, str, str]:
+def _dimensions(
+    prompt: str,
+    risk_level: str,
+    action_danger: str,
+    *,
+    semantics: PromptSemantics | None = None,
+) -> tuple[str, str, str, str]:
     text = normalize_prompt(prompt)
+    semantics = semantics or analyze_prompt_semantics(prompt)
     repo_impact = "remote" if _contains_any(text, ["push", "pull request", "tag", "release", "publish"]) else "local" if _contains_any(text, ["commit", "branch", "repo"]) else "none"
-    security_sensitivity = "critical" if risk_level == "critical" else "high" if risk_level == "high" or "secret" in text or "token" in text else "low" if "auth" in text else "none"
+    security_sensitivity = (
+        "critical"
+        if risk_level == "critical"
+        else "high"
+        if risk_level == "high" or _is_sensitive_analysis(semantics, text)
+        else "low"
+        if "auth" in text
+        else "none"
+    )
     destructiveness = "critical" if _contains_any(text, ["rm -rf", "delete all", "wipe", "drop table", "force push", "truncate table"]) else "hard" if action_danger in {"deployment_operation", "database_operation"} else "soft" if _contains_any(text, ["remove", "delete", "overwrite"]) else "none"
-    execution_scope = "network" if action_danger in {"network_access", "external_service_action", "dependency_install"} else "system" if action_danger in {"deployment_operation", "database_operation", "destructive_operation"} else "repo" if repo_impact != "none" else "module" if _contains_any(text, ["module", "service", "gateway"]) else "single_file" if _contains_any(text, ["function", "file", "loop", "button"]) else "unknown"
+    if action_danger in {"network_access", "external_service_action", "dependency_install"}:
+        execution_scope = "network"
+    elif action_danger in {"deployment_operation", "database_operation", "destructive_operation"}:
+        execution_scope = "system"
+    elif semantics.repository_wide or repo_impact == "remote" or action_danger == "git_operations":
+        execution_scope = "repo"
+    elif semantics.explicit_file_count >= 2:
+        execution_scope = "module"
+    elif semantics.explicit_file_count == 1:
+        execution_scope = "single_file"
+    elif _contains_any(text, ["module", "service", "gateway"]):
+        execution_scope = "module"
+    else:
+        execution_scope = "unknown"
     return repo_impact, security_sensitivity, destructiveness, execution_scope
+
+
+def _task_subdomain(
+    semantics: PromptSemantics,
+    *,
+    category: str,
+    action_danger: str,
+) -> str | None:
+    if category in {"security_audit", "secret_handling", "incident_response"}:
+        value = "security_audit"
+    elif category == "architecture":
+        value = "architecture_design"
+    elif semantics.test_intent in {"positive", "mixed"}:
+        value = "test_execution"
+    elif is_document_comparison(semantics):
+        value = "document_comparison"
+    elif category in {"normal_coding", "complex_coding", "debugging", "dependency_management"}:
+        code_change_text = _NEGATED_CODE_CHANGE_RE.sub(" ", semantics.actionable_text)
+        if _CODE_MODIFICATION_RE.search(code_change_text):
+            value = "code_modification"
+        elif _CODE_GENERATION_RE.search(code_change_text):
+            value = "code_generation"
+        elif action_danger == "read_only_analysis":
+            value = "read_only_analysis"
+        else:
+            return None
+    elif category in {"research", "grant_work", "data_analysis"}:
+        value = "general_research"
+    elif action_danger == "read_only_analysis" and re.search(
+        r"\b(?:analy[sz]e|audit|compare|describe|explain|inspect|read|review|summarize)\b",
+        semantics.actionable_text,
+    ):
+        value = "read_only_analysis"
+    else:
+        return None
+    if value not in TASK_SUBDOMAINS:
+        raise ValueError("task subdomain is outside the controlled vocabulary")
+    return value
 
 
 def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
@@ -529,7 +919,15 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
 
     if override is not None:
         base = categories.get(override.category, categories.get("unknown", {}))
-        complexity = _complexity_for(semantic_prompt, override.category, str(base.get("complexity", "medium")), rules)
+        complexity = _complexity_for(
+            semantic_prompt,
+            override.category,
+            str(base.get("complexity", "medium")),
+            rules,
+            semantics=semantics,
+            action_danger=override.action_danger,
+            risk_level=override.risk,
+        )
         if override.group in {
             "production_changes",
             "database_ops",
@@ -540,7 +938,31 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
             complexity = "medium"
         evidence = _score_level_group(semantic_prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "light")
         context = _score_level_group(semantic_prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
-        repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(semantic_prompt, override.risk, override.action_danger)
+        repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(
+            semantic_prompt,
+            override.risk,
+            override.action_danger,
+            semantics=semantics,
+        )
+        task_subdomain = _task_subdomain(
+            semantics,
+            category=override.category,
+            action_danger=override.action_danger,
+        )
+        semantic_reason_codes = list(semantics.reason_codes)
+        if task_subdomain == "document_comparison":
+            semantic_reason_codes.append("document_comparison_subdomain")
+        if _is_bounded_read_only_document_task(
+            semantics,
+            category=override.category,
+            action_danger=override.action_danger,
+            risk_level=override.risk,
+            rules=rules,
+            base_complexity=str(base.get("complexity", "medium")),
+            current_complexity=complexity,
+        ):
+            semantic_reason_codes.append("bounded_read_only_comparison")
+        semantic_reason_codes = list(dict.fromkeys(semantic_reason_codes))
         warnings = [f"hard_override:{override.group}"]
         if override.confirmation_required:
             warnings.insert(0, "REQUIRES_CONFIRMATION")
@@ -558,23 +980,38 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
             confidence_level="high",
             override=override,
             warnings=warnings,
-            reasons=[override.reason],
+            reasons=[override.reason]
+            + [f"semantic:{code}" for code in semantic_reason_codes],
             repo_impact=repo_impact,
             security_sensitivity=security_sensitivity,
             destructiveness=destructiveness,
             execution_scope=execution_scope,
             safety_constraints=list(semantics.safety_constraints),
+            task_subdomain=task_subdomain,
+            semantic_reason_codes=semantic_reason_codes,
         )
 
-    category, category_scores, confidence, confidence_level, mixed, top_matches = score_categories(semantic_prompt, rules)
+    category, category_scores, confidence, confidence_level, mixed, top_matches = score_categories(
+        semantic_prompt,
+        rules,
+        semantics=semantics,
+    )
     base = categories.get(category, categories.get("unknown", {}))
     base_risk = str(base.get("risk", "low"))
     base_complexity = str(base.get("complexity", "medium"))
     risk_level = _risk_for_category(category, base_risk, semantic_prompt)
-    complexity_level = _complexity_for(semantic_prompt, category, base_complexity, rules)
+    action_danger = _action_danger(semantic_prompt, rules, semantics=semantics)
+    complexity_level = _complexity_for(
+        semantic_prompt,
+        category,
+        base_complexity,
+        rules,
+        semantics=semantics,
+        action_danger=action_danger,
+        risk_level=risk_level,
+    )
     evidence_requirement = _score_level_group(semantic_prompt, rules.evidence_rules.get("levels", {}), {"none": 0, "light": 1, "source_required": 2, "multi_source": 3, "official_source_only": 4}, "none")
     context_requirement = _score_level_group(semantic_prompt, rules.context_rules.get("levels", {}), {"small": 0, "medium": 1, "large": 2, "unknown": 1}, "small")
-    action_danger = _action_danger(semantic_prompt, rules)
     profile = str(base.get("default_profile", "standard"))
     warnings: list[str] = []
     if semantics.safety_constraints:
@@ -604,7 +1041,32 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
     if top_matches:
         reasons.append("matched:" + ",".join(top_matches[0].matched_terms[:5]))
 
-    repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(semantic_prompt, risk_level, action_danger)
+    repo_impact, security_sensitivity, destructiveness, execution_scope = _dimensions(
+        semantic_prompt,
+        risk_level,
+        action_danger,
+        semantics=semantics,
+    )
+    task_subdomain = _task_subdomain(
+        semantics,
+        category=category,
+        action_danger=action_danger,
+    )
+    semantic_reason_codes = list(semantics.reason_codes)
+    if task_subdomain == "document_comparison":
+        semantic_reason_codes.append("document_comparison_subdomain")
+    if _is_bounded_read_only_document_task(
+        semantics,
+        category=category,
+        action_danger=action_danger,
+        risk_level=risk_level,
+        rules=rules,
+        base_complexity=base_complexity,
+        current_complexity=complexity_level,
+    ):
+        semantic_reason_codes.append("bounded_read_only_comparison")
+    semantic_reason_codes = list(dict.fromkeys(semantic_reason_codes))
+    reasons.extend(f"semantic:{code}" for code in semantic_reason_codes)
     return ScoreCard(
         category=category,
         profile=profile,
@@ -625,4 +1087,6 @@ def score(prompt: str, rules: KnowledgeLibrary | None = None) -> ScoreCard:
         destructiveness=destructiveness,
         execution_scope=execution_scope,
         safety_constraints=list(semantics.safety_constraints),
+        task_subdomain=task_subdomain,
+        semantic_reason_codes=semantic_reason_codes,
     )

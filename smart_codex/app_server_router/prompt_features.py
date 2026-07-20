@@ -7,16 +7,24 @@ authority or weakens a Router Core decision.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 import re
 from typing import Iterable
+
+from smart_codex.preprocessor import analyze_prompt_semantics
 
 
 SIZE_CLASSES = ("tiny", "small", "medium", "large", "xlarge", "unknown")
 EFFORT_NAMES = ("minimal", "low", "medium", "high", "xhigh", "max", "ultra")
 
 
+@lru_cache(maxsize=512)
+def _compiled_feature_pattern(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern, flags=re.IGNORECASE)
+
+
 def _has(text: str, patterns: Iterable[str]) -> bool:
-    return any(re.search(pattern, text, flags=re.IGNORECASE) is not None for pattern in patterns)
+    return any(_compiled_feature_pattern(pattern).search(text) is not None for pattern in patterns)
 
 
 def _model_preference(text: str) -> str | None:
@@ -101,8 +109,18 @@ def extract_task_features(
     # same declarative signals recognize both prose (``button label``) and
     # common code/config identifiers (``buttonLabel``) without matching exact
     # prompts or retaining either representation.
-    word_bounded_prompt = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", prompt)
-    text = " ".join(word_bounded_prompt.lower().split())
+    semantics = analyze_prompt_semantics(prompt)
+    word_bounded_prompt = re.sub(
+        r"(?<=[a-z0-9])(?=[A-Z])",
+        " ",
+        prompt,
+    )
+    feature_semantics = (
+        semantics
+        if word_bounded_prompt == prompt
+        else analyze_prompt_semantics(word_bounded_prompt)
+    )
+    text = feature_semantics.actionable_text
     category = str(getattr(decision, "category", "unknown"))
     risk = str(getattr(decision, "risk_level", "low"))
     action_danger = str(getattr(decision, "action_danger", "read_only_analysis"))
@@ -119,32 +137,34 @@ def extract_task_features(
         "release_management",
         "prompt_engineering",
     }
-    coding = category in coding_categories or _has(
+    coding = category in coding_categories or semantics.test_modification_intent or _has(
         text,
         (
             r"\b(?:python|javascript|typescript|rust|java|c#|code|function|class)\b",
             r"\bgo\s+(?:code|function|module|program|package)\b|\.go\b",
             r"\b(?:unit test|pytest|repository|repo|module|api endpoint|button (?:label|text))\b",
             r"\b(?:ui|frontend|css|component|fixture|formatter|route constant|loading message|icon title)\b",
+            r"\b(?:kod|moduł|modul|funkcj\w*|testy|testów|testow)\b",
             r"\b(?:docstring|list comprehension|regular expression|regex|boolean condition|constant declaration)\b",
             r"\bjson\b.*\b(?:normaliz|transform|convert)\w*\b",
             r"\bconfiguration option\b.*\bimplementation\b",
         ),
     )
 
-    edit_intent = _has(
+    edit_intent = semantics.test_modification_intent or _has(
         text,
         (
-            r"\b(?:change|edit|fix|implement|add|remove|rename|refactor|rewrite|patch|update|adjust|replace|prototype)\b",
+            r"\b(?:change|edit|fix|implement|add|append|create|delete|modify|move|remove|rename|refactor|rewrite|patch|update|adjust|replace|prototype)\b",
             r"\b(?:correct|repair)\b.*\b(?:code|function|test|bug)\b",
             r"\b(?:adjustment|correction|modification)\b.*\b(?:code|ui|css|component|file|fixture)\b",
             r"\bmake\b.*\b(?:code|ui|css|component|file|button|label|spacing)\b",
+            r"\b(?:dodaj|edytuj|napraw|przeredaguj|usuń|usun|zmień|zmien|zmodyfikuj)\b",
         ),
     )
     analysis_intent = _has(
         text,
         (
-            r"\b(?:explain|describe|review|analy[sz]e|audit|diagnose|plan|research|summarize|compare)\b",
+            r"\b(?:explain|describe|review|analy[sz]e|audit|diagnose|plan|research|summarize|compare|read|inspect)\b",
             r"\bwithout\s+(?:editing|changing|executing|running)\b",
         ),
     )
@@ -195,7 +215,7 @@ def extract_task_features(
             r"\b(?:medium[- ]sized|multi[- ]file|multi[- ]module|stack trace|synthetic patch)\b",
             r"\bmedium\s+(?:\w+\s+){0,2}(?:module|patch|migration|change)\b",
         ),
-    )
+    ) or semantics.explicit_file_count >= 2
     tiny_context = _has(
         text,
         (
@@ -209,7 +229,7 @@ def extract_task_features(
         context_size = "large"
     elif medium_context or router_context == "medium":
         context_size = "medium"
-    elif tiny_context:
+    elif tiny_context or semantics.explicit_file_count == 1:
         context_size = "tiny"
     elif router_context == "small":
         context_size = "small"
@@ -249,14 +269,10 @@ def extract_task_features(
     else:
         edit_size = "small"
 
-    explicit_test_requirement = _has(
-        text,
-        (
-            r"\b(?:run|execute)\b.*\b(?:test|pytest|test suite)\b",
-            r"\b(?:add|write|repair|fix)\b.*\b(?:unit|integration|regression)?\s*tests?\b",
-            r"\btest[- ]driven\b",
-        ),
-    )
+    # Execution intent is owned by the shared clause-state analyzer. Editing a
+    # test or relying on test evidence is not itself an instruction to execute
+    # tests, particularly when the user explicitly prohibited execution.
+    explicit_test_requirement = semantics.test_execution_requested
     prototype_only = _has(
         text,
         (
@@ -285,13 +301,21 @@ def extract_task_features(
     else:
         test_burden = "tiny"
 
-    web_research = category in {"research", "grant_work"} or _has(
+    explicit_web_research = _has(
         text,
         (
             r"\b(?:web research|search the web|browse|online research|current landscape)\b",
             r"\b(?:latest|current)\b.*\b(?:documentation|programs|sources|information)\b",
             r"\b(?:current official guidance|current official api|current code[- ]formatting tools)\b",
         ),
+    )
+    bounded_local_documents = (
+        1 <= semantics.explicit_file_count <= 2
+        and semantics.explicit_document_count == semantics.explicit_file_count
+        and not explicit_web_research
+    )
+    web_research = explicit_web_research or (
+        category in {"research", "grant_work"} and not bounded_local_documents
     )
     source_verification = _has(
         text,
