@@ -243,6 +243,7 @@ def verify_mount(
     *,
     minimum_free_bytes: int,
     filesystems: list[MountedFilesystem] | None = None,
+    require_writable: bool = True,
 ) -> MountVerification:
     if not root.is_absolute() or root.name != "SmartRouterTelemetry":
         return MountVerification(False, "INVALID_EXTERNAL_ROOT")
@@ -275,19 +276,24 @@ def verify_mount(
         return MountVerification(False, "INTERNAL_FILESYSTEM_FALLBACK")
     if filesystem.uuid.casefold() != expected_uuid.casefold():
         return MountVerification(False, "FILESYSTEM_UUID_MISMATCH", filesystem)
-    if filesystem.read_only or not filesystem.writable:
-        return MountVerification(False, "FILESYSTEM_NOT_WRITABLE", filesystem)
-    if filesystem.available_bytes < minimum_free_bytes:
-        return MountVerification(False, "INSUFFICIENT_EXTERNAL_FREE_SPACE", filesystem)
     existing = root if root.exists() else root.parent
-    if not existing.is_dir() or not os.access(existing, os.W_OK | os.X_OK):
-        return MountVerification(False, "EXTERNAL_ROOT_NOT_WRITABLE", filesystem)
+    if not existing.is_dir():
+        return MountVerification(False, "EXTERNAL_ROOT_NOT_DIRECTORY", filesystem)
+    if require_writable:
+        if filesystem.read_only or not filesystem.writable:
+            return MountVerification(False, "FILESYSTEM_NOT_WRITABLE", filesystem)
+        if filesystem.available_bytes < minimum_free_bytes:
+            return MountVerification(False, "INSUFFICIENT_EXTERNAL_FREE_SPACE", filesystem)
+        if not os.access(existing, os.W_OK | os.X_OK):
+            return MountVerification(False, "EXTERNAL_ROOT_NOT_WRITABLE", filesystem)
+    elif not root.is_dir() or not os.access(root, os.R_OK | os.X_OK):
+        return MountVerification(False, "EXTERNAL_ROOT_NOT_READABLE", filesystem)
     try:
         if root.exists() and root.stat().st_uid != os.getuid():
             return MountVerification(False, "EXTERNAL_ROOT_WRONG_OWNER", filesystem)
-        free = int(shutil.disk_usage(existing).free)
+        free = int(shutil.disk_usage(existing).free) if require_writable else None
     except OSError:
         return MountVerification(False, "EXTERNAL_ROOT_INSPECTION_FAILED", filesystem)
-    if free < minimum_free_bytes:
+    if free is not None and free < minimum_free_bytes:
         return MountVerification(False, "INSUFFICIENT_EXTERNAL_FREE_SPACE", filesystem)
     return MountVerification(True, "VERIFIED", filesystem)

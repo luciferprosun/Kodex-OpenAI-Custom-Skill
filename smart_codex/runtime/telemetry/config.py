@@ -242,14 +242,21 @@ def reset_external_config(path: Path | None = None) -> bool:
 
 
 class ConfiguredMountVerifier:
-    def __init__(self, config: ExternalTelemetryConfig):
+    def __init__(
+        self,
+        config: ExternalTelemetryConfig,
+        *,
+        require_writable: bool = True,
+    ):
         self.config = config
+        self.require_writable = require_writable
 
     def __call__(self) -> MountVerification:
         result = verify_mount(
             self.config.telemetry_root,
             self.config.device_uuid,
             minimum_free_bytes=self.config.limits.min_free_bytes,
+            require_writable=self.require_writable,
         )
         if not result.ok or result.filesystem is None:
             return result
@@ -260,7 +267,11 @@ class ConfiguredMountVerifier:
         return result
 
 
-def configured_storage(*, require_external: bool = False) -> LocalTelemetryStorage:
+def configured_storage(
+    *,
+    require_external: bool = False,
+    read_only: bool = False,
+) -> LocalTelemetryStorage:
     config = load_external_config()
     if config is None:
         if require_external:
@@ -274,6 +285,9 @@ def configured_storage(*, require_external: bool = False) -> LocalTelemetryStora
             outcomes_root=config.telemetry_root / "outcomes",
         ),
         config.limits,
-        mount_verifier=ConfiguredMountVerifier(config),
+        mount_verifier=ConfiguredMountVerifier(
+            config,
+            require_writable=not read_only,
+        ),
         external_root=config.telemetry_root,
     )

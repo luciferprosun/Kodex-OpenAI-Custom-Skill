@@ -185,6 +185,19 @@ smart-codex outcome <run-id> accepted
 smart-codex telemetry summary --by-model
 ```
 
+Render the read-only, metadata-only hackathon demo view without starting a
+server or writing derived files:
+
+```bash
+./scripts/smart-codex telemetry dashboard
+```
+
+The dashboard preserves null as unavailable, keeps human outcomes separate
+from advisory verification, withholds private linkage fields, and visibly
+quarantines known-defective semantic classifier labels. See [Local Telemetry
+Demo View 1A](docs/LOCAL_TELEMETRY_DEMO_VIEW_1A.md) for its panels, privacy
+allowlist, demo sequence, and read-only guarantees.
+
 See [Local Codex Telemetry 2B-1](docs/LOCAL_CODEX_TELEMETRY_2B.md) for the
 schema, privacy model, disk limits, supported event surfaces, missing-value
 rules, and disable procedure. The opt-in external-storage and dual-window

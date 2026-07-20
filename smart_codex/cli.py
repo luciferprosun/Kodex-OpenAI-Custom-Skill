@@ -134,6 +134,7 @@ def telemetry_command(argv: list[str]) -> int:
     from .runtime.telemetry.mounts import discover_storage_candidates
     from .runtime.telemetry.outcome import pending_runs
     from .runtime.telemetry.summary import inspect_run, storage_status, summarize
+    from .runtime.telemetry.dashboard import build_dashboard, render_dashboard
 
     parser = argparse.ArgumentParser(prog="smart-codex telemetry")
     subparsers = parser.add_subparsers(dest="action", required=True)
@@ -158,6 +159,24 @@ def telemetry_command(argv: list[str]) -> int:
     inspect_parser = subparsers.add_parser("inspect")
     inspect_parser.add_argument("run_id")
     inspect_parser.add_argument("--show-task-signature", action="store_true")
+    dashboard_parser = subparsers.add_parser(
+        "dashboard",
+        help="render the read-only local telemetry demo view",
+    )
+    dashboard_parser.add_argument(
+        "--limit",
+        type=int,
+        choices=range(1, 21),
+        default=2,
+        metavar="1..20",
+        help="number of latest validated non-synthetic runs to display (default: 2)",
+    )
+    dashboard_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="print the same privacy-allowlisted view as JSON",
+    )
     args = parser.parse_args(argv)
     if args.action == "storage":
         try:
@@ -222,7 +241,7 @@ def telemetry_command(argv: list[str]) -> int:
             print(json.dumps({"ok": False, "error": category}, indent=2))
             return 2
     try:
-        storage = configured_storage()
+        storage = configured_storage(read_only=args.action == "dashboard")
     except (OSError, TelemetryError) as exc:
         category = getattr(exc, "category", "TELEMETRY_CONFIGURATION_FAILED")
         print(json.dumps({"ok": False, "error": category}, indent=2))
@@ -273,6 +292,18 @@ def telemetry_command(argv: list[str]) -> int:
                 sort_keys=True,
             )
         )
+        return 0
+    if args.action == "dashboard":
+        try:
+            dashboard = build_dashboard(storage, limit=args.limit)
+        except (OSError, TelemetryError) as exc:
+            category = getattr(exc, "category", "DASHBOARD_FAILED")
+            print(json.dumps({"ok": False, "error": category}, indent=2))
+            return 2
+        if args.json_output:
+            print(json.dumps(dashboard, indent=2, sort_keys=True))
+        else:
+            print(render_dashboard(dashboard))
         return 0
     if args.action == "summary":
         grouping = "model" if args.by_model else "task_level" if args.by_task_level else None

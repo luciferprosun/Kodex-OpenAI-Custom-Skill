@@ -2,6 +2,9 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ "${1:-}" == "telemetry" && "${2:-}" == "dashboard" ]]; then
+  export PYTHONDONTWRITEBYTECODE=1
+fi
 if [[ -x "${PROJECT_ROOT}/.venv/bin/python" ]]; then
   PYTHON_BIN="${PROJECT_ROOT}/.venv/bin/python"
 else
