@@ -445,7 +445,7 @@ def test_harmless_security_word_does_not_force_sol() -> None:
     assert routed.effort == "low"
 
 
-def test_luna_never_receives_ultra_even_with_an_explicit_request() -> None:
+def test_ordinary_effort_selection_never_interprets_ultra_as_an_effort() -> None:
     router = calibration_router()
     decision = route_prompt("Correct this sentence for grammar.", dry_run=True)
     features = extract_task_features(
@@ -469,10 +469,10 @@ def test_luna_never_receives_ultra_even_with_an_explicit_request() -> None:
     effort = router.mapper.effort_policy.select(live, profile, features)
 
     assert effort.selected != "ultra"
-    assert effort.delegation_reason is None
+    assert effort.selected in live.ordinary_supported_efforts
 
 
-def test_inflected_delegation_request_receives_ultra_with_a_reason() -> None:
+def test_descriptive_inflected_delegation_language_never_emits_ultra() -> None:
     routed = calibration_router().route_message(
         _tui_message(
             "Describe without executing a large research-and-implementation "
@@ -482,12 +482,9 @@ def test_inflected_delegation_request_receives_ultra_with_a_reason() -> None:
     )
 
     assert routed.route_class in {"terra", "sol"}
-    assert routed.effort == "ultra"
-    assert any(
-        "explicit delegation benefits" in reason
-        and "parallel_independent_workstreams" in reason
-        for reason in routed.reasons
-    )
+    assert routed.effort != "ultra"
+    assert routed.orchestration_mode == "single_agent"
+    assert routed.ultra_recommendation == "not_recommended"
 
 
 def test_explicit_unavailable_spark_preference_falls_back_safely() -> None:

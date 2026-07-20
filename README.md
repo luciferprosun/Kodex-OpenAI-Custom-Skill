@@ -96,7 +96,11 @@ model](docs/app-server/SECURITY_MODEL.md), and
 [rollback](docs/app-server/ROLLBACK.md). Phase 5.3 policy details are in [model
 selection policy](docs/app-server/MODEL_SELECTION_POLICY.md), [calibration
 evaluation](docs/app-server/MODEL_CALIBRATION_EVAL.md), [fallbacks](docs/app-server/MODEL_FALLBACKS.md),
-and [drift/refresh](docs/app-server/MODEL_DRIFT_AND_REFRESH.md).
+and [drift/refresh](docs/app-server/MODEL_DRIFT_AND_REFRESH.md). The RC2
+candidate separates maximum single-agent reasoning (`max`) from approved
+subagent orchestration (`ultra`); see [Ultra admission policy
+1A](docs/app-server/ULTRA_ADMISSION_POLICY_1A.md). The slash-command and trusted
+approval UI remain a later milestone.
 
 ## Installation
 
@@ -202,7 +206,7 @@ The current deterministic classifier policy and its compatibility boundaries
 are documented in [Classifier Semantic Repair
 1A/1B](docs/CLASSIFIER_SEMANTIC_REPAIR_1A.md). The dashboard continues to
 quarantine affected semantic labels until they have independent validation;
-policy version `v0.2` does not bypass that quarantine.
+newer policy provenance, including `v0.3`, does not bypass that quarantine.
 
 See [Local Codex Telemetry 2B-1](docs/LOCAL_CODEX_TELEMETRY_2B.md) for the
 schema, privacy model, disk limits, supported event surfaces, missing-value

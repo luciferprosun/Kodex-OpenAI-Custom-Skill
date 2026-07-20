@@ -98,11 +98,12 @@ matched in all 12 turns.
 Turn 4 exposed loss of the word boundary in a camelCase identifier. The feature
 extractor now inserts identifier word boundaries before case-folding, and a
 regression requires the same class of small JSON UI edit to select Spark / low.
-Turn 12 exposed an English-inflection gap (`delegate` versus `delegated`). The
-general delegation feature now recognizes inflected forms, and a regression
-requires Terra or Sol / `ultra` with the bounded
-`parallel_independent_workstreams` reason. No thirteenth paid turn was started;
-the requested 12-turn ceiling was preserved.
+Turn 12 exposed that delegation language and orchestration structure were not
+modeled separately. The RC2 candidate now treats the historical turn as an
+unapproved admission case: at most Terra or Sol / `max` / single-agent.
+Controlled structural workstreams, hard vetoes, and task-bound approval are
+tested separately before wire Ultra can be emitted. No thirteenth paid turn or
+empirical Ultra run was started; the requested 12-turn ceiling was preserved.
 
 The two protective-skill stops did not alter, reject, or obscure the App Server
 route evidence; they are a retained defense-in-depth behavior of the advisory

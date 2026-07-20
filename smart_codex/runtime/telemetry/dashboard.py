@@ -420,6 +420,8 @@ def build_dashboard(
             "telemetry_authority": "descriptive_not_authoritative",
             "verification_authority": "advisory",
             "protected_effects": "explicit_human_approval_required",
+            "max_semantics": "maximum_single_agent_reasoning",
+            "orchestration_observability": "unavailable_in_schema_2_0_0",
         },
         "label_quality": {
             "status": "quarantined",
@@ -488,6 +490,8 @@ def render_dashboard(snapshot: dict[str, Any]) -> str:
         "  Known semantic-classifier defects are excluded from display values,",
         "  ranking, evaluation, learning, and export.",
         "  Fields: " + ", ".join(snapshot["label_quality"]["fields"]),
+        "  Max means maximum single-agent reasoning; it does not prove orchestration.",
+        "  Orchestration state is unavailable in telemetry schema 2.0.0.",
         "",
     ]
     coverage = snapshot["coverage"]

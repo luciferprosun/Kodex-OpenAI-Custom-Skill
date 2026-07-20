@@ -19,9 +19,31 @@ def test_live_registry_records_only_sanitized_capability_metadata() -> None:
     assert snapshot.codex_version == "codex-cli 0.144.6"
     assert len(snapshot.models) == 5
     assert value.get("gpt-5.6-sol").supported_efforts[-1] == "ultra"  # type: ignore[union-attr]
+    assert value.get("gpt-5.6-sol").ordinary_supported_efforts[-1] == "max"  # type: ignore[union-attr]
+    assert value.get("gpt-5.6-sol").supports_ultra_orchestration is True  # type: ignore[union-attr]
     assert value.get("gpt-5.3-codex-spark").input_modalities == ("text",)  # type: ignore[union-attr]
     assert value.get("codex-auto-review").hidden is True  # type: ignore[union-attr]
     assert value.get("codex-auto-review").routable is False  # type: ignore[union-attr]
+
+
+def test_gpt_56_live_observation_fixture_matches_codex_01446() -> None:
+    value = registry()
+    sol = value.get("gpt-5.6-sol")
+    terra = value.get("gpt-5.6-terra")
+    luna = value.get("gpt-5.6-luna")
+    assert sol is not None and terra is not None and luna is not None
+
+    assert sol.default_effort == "low"
+    assert terra.default_effort == "medium"
+    assert luna.default_effort == "medium"
+    assert sol.service_tiers == terra.service_tiers == luna.service_tiers == ("priority",)
+    assert sol.supports_personality is False
+    assert terra.supports_personality is False
+    assert luna.supports_personality is False
+    assert sol.supports_ultra_orchestration is True
+    assert terra.supports_ultra_orchestration is True
+    assert luna.supports_ultra_orchestration is False
+    assert "max" in luna.ordinary_supported_efforts
 
 
 def test_deprecated_model_records_upgrade_target() -> None:

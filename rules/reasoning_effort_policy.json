@@ -1,7 +1,7 @@
 {
-  "schema_version": "0.3.0",
-  "description": "Reasoning effort is selected independently from model identity and action authority.",
-  "ladder": ["minimal", "low", "medium", "high", "xhigh", "max", "ultra"],
+  "schema_version": "0.4.0",
+  "description": "Ordinary single-agent reasoning effort is selected independently from model identity, orchestration, and action authority.",
+  "ladder": ["minimal", "low", "medium", "high", "xhigh", "max"],
   "profile_default": {
     "spark": "low",
     "luna": "low",
@@ -14,8 +14,8 @@
   "profile_default_ceiling": {
     "spark": "medium",
     "luna": "max",
-    "terra": "ultra",
-    "sol": "ultra",
+    "terra": "max",
+    "sol": "max",
     "compatibility": "xhigh",
     "legacy_terra": "xhigh",
     "legacy_luna": "xhigh"
@@ -39,8 +39,5 @@
     "security_audit": "high",
     "incident_response": "high",
     "unknown": "medium"
-  },
-  "ultra_allowed_profiles": ["terra", "sol"],
-  "ultra_requires": ["delegation", "parallel_workstreams", "non_deterministic"],
-  "luna_forbidden_efforts": ["ultra"]
+  }
 }

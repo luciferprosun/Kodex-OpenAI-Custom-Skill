@@ -27,8 +27,20 @@ def model(
     hidden: bool = False,
     upgrade: str | None = None,
     is_default: bool = False,
+    default_effort: str | None = None,
+    service_tiers: Iterable[str] = (),
+    default_service_tier: str | None = None,
+    supports_personality: bool = False,
 ) -> dict[str, object]:
     effort_values = tuple(efforts)
+    tier_values = tuple(service_tiers)
+    selected_default = default_effort or (
+        "medium" if "medium" in effort_values else effort_values[0]
+    )
+    if selected_default not in effort_values:
+        raise ValueError("test fixture default effort must be supported")
+    if default_service_tier is not None and default_service_tier not in tier_values:
+        raise ValueError("test fixture default service tier must be supported")
     return {
         "id": model_id,
         "model": model_id,
@@ -42,12 +54,15 @@ def model(
             {"reasoningEffort": item, "description": EFFORTS[item]}
             for item in effort_values
         ],
-        "defaultReasoningEffort": "medium" if "medium" in effort_values else effort_values[0],
+        "defaultReasoningEffort": selected_default,
         "inputModalities": list(modalities),
-        "supportsPersonality": True,
+        "supportsPersonality": supports_personality,
         "additionalSpeedTiers": [],
-        "serviceTiers": [],
-        "defaultServiceTier": None,
+        "serviceTiers": [
+            {"id": item, "description": f"{item} service tier"}
+            for item in tier_values
+        ],
+        "defaultServiceTier": default_service_tier,
         "isDefault": is_default,
     }
 
@@ -59,6 +74,8 @@ def live_model_data() -> list[dict[str, object]]:
             "GPT-5.6-Sol",
             "Latest frontier agentic coding model.",
             efforts=("low", "medium", "high", "xhigh", "max", "ultra"),
+            default_effort="low",
+            service_tiers=("priority",),
             is_default=True,
         ),
         model(
@@ -66,12 +83,16 @@ def live_model_data() -> list[dict[str, object]]:
             "GPT-5.6-Terra",
             "Balanced agentic coding model for everyday work.",
             efforts=("low", "medium", "high", "xhigh", "max", "ultra"),
+            default_effort="medium",
+            service_tiers=("priority",),
         ),
         model(
             "gpt-5.6-luna",
             "GPT-5.6-Luna",
             "Fast and affordable agentic coding model.",
             efforts=("low", "medium", "high", "xhigh", "max"),
+            default_effort="medium",
+            service_tiers=("priority",),
         ),
         model(
             "gpt-5.3-codex-spark",

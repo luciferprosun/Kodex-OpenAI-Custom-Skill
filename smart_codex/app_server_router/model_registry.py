@@ -50,6 +50,23 @@ class LiveModel:
     def routable(self) -> bool:
         return self.available and not self.hidden
 
+    @property
+    def ordinary_supported_efforts(self) -> tuple[str, ...]:
+        """Return live-supported single-agent efforts only.
+
+        The current App Server protocol encodes approved subagent orchestration
+        as ``ultra`` in the reasoning-effort field.  Keeping it out of this
+        view prevents ordinary effort fallback from selecting orchestration.
+        """
+
+        return tuple(value for value in self.supported_efforts if value != "ultra")
+
+    @property
+    def supports_ultra_orchestration(self) -> bool:
+        """Whether the live capability response advertises wire Ultra."""
+
+        return "ultra" in self.supported_efforts
+
     def supports(self, required_modalities: Iterable[str]) -> bool:
         supported = set(self.input_modalities)
         return all(item in supported for item in required_modalities)

@@ -1,5 +1,10 @@
 # Classifier Semantic Repair 1A/1B
 
+> Historical milestone note: this document records the classifier repair under
+> policy `model-policy-calibration-v0.2`. The RC2 Ultra-admission candidate uses
+> explicit `v0.3` provenance; v0.2 remains accepted as historical provenance
+> and is not promoted or rewritten.
+
 This milestone repairs deterministic classifier semantics without changing
 routing authority, telemetry storage, or the telemetry schema. Historical
 records are append-only and are not reclassified.

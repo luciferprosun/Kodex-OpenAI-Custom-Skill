@@ -86,6 +86,9 @@ def test_dashboard_projects_valid_run_and_human_outcome_without_private_linkage(
     assert view["quality"]["human_outcome"]["outcome"] == "accepted-with-edits"
     assert "Unavailable (not zero)" in rendered
     assert "LABEL QUALITY: QUARANTINED" in rendered
+    assert dashboard["posture"]["max_semantics"] == "maximum_single_agent_reasoning"
+    assert dashboard["posture"]["orchestration_observability"] == "unavailable_in_schema_2_0_0"
+    assert "Max means maximum single-agent reasoning" in rendered
     assert "Routing, telemetry, and verification are advisory" in rendered
 
     for private_field in (

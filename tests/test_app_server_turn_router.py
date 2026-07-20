@@ -141,18 +141,20 @@ def test_false_positive_gmail_case_uses_luna_with_external_approval() -> None:
     assert routed.approval_policy == "on-request"
 
 
-def test_ultra_requires_supported_model_concrete_delegation_and_non_eval() -> None:
+def test_ultra_keywords_and_ambiguous_delegation_never_emit_ultra() -> None:
     prompt = "Redesign this architecture and delegate analysis to multiple agents in parallel."
     routed = turn_router().route_message(turn_message(prompt))
     assert routed.selected_model == "gpt-5.6-sol"
-    assert routed.effort == "ultra"
-    assert any("explicit delegation" in reason for reason in routed.reasons)
+    assert routed.effort == "max"
+    assert routed.orchestration_mode == "single_agent"
+    assert routed.ultra_recommendation == "not_recommended"
 
     deterministic = turn_router().route_message(
         turn_message(prompt + " This is a deterministic eval case requiring reproducibility.")
     )
-    assert deterministic.effort != "ultra"
-    assert any("suppressed" in reason for reason in deterministic.reasons)
+    assert deterministic.effort == "max"
+    assert deterministic.orchestration_mode == "single_agent"
+    assert "deterministic_evaluation_veto" in deterministic.orchestration_reason_codes
 
 
 def test_unsupported_effort_resolves_to_nearest_live_effort() -> None:

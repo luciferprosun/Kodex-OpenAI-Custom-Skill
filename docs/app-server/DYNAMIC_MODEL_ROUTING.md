@@ -89,11 +89,18 @@ low/medium complexity and risk, and no destructive/secret/deployment/database
 action. If Spark is absent or unsuitable, selection falls back to Luna, Terra,
 then Sol.
 
-`ultra` is selected only when the live model advertises it, a complex supported
-category contains a concrete delegation signal, and the prompt is not a
-deterministic/reproducibility eval. The reason is recorded as sanitized policy
-evidence. All other unsupported efforts resolve to the nearest advertised live
-effort.
+Ordinary reasoning effort ends at `max`, which always means single-agent
+reasoning. Ultra is a separate orchestration decision. A structurally eligible
+plan stays on Max/single-agent with `recommended`/`pending` state until a
+short-lived task-bound human approval matches the versioned SHA-256 binding of
+the complete original `turn/start` request and relevant session model state.
+Explicit prohibitions and non-executing orchestration mentions remain hard
+vetoes, and write admission separately proves worker merge, push, and
+history-rewrite restrictions. Only then does the local rewrite use wire `ultra`
+consistently in the top-level and existing collaboration-mode effort fields.
+The current manager does not yet expose a trusted approval UI, so canonical
+live turns cannot launch Ultra in this milestone. See
+[`ULTRA_ADMISSION_POLICY_1A.md`](ULTRA_ADMISSION_POLICY_1A.md).
 
 ## Safety mapping
 
@@ -178,6 +185,12 @@ and retained protective-skill stops are documented in
 [`MODEL_CALIBRATION_EVAL.md`](MODEL_CALIBRATION_EVAL.md#original-tui-12-turn-soak).
 
 ## Known limitations
+
+- No slash command or trusted live approval collector is implemented for Ultra.
+- Telemetry schema 2.0.0 cannot distinguish Max from orchestration state; the
+  dashboard therefore states that Max is single-agent and orchestration is
+  unavailable rather than inferring it.
+- No empirical paid Ultra or subagent execution was performed for RC2.
 
 - WebSocket transport is experimental and unsupported.
 - Registry metadata is refreshed at manager startup, not during a process.

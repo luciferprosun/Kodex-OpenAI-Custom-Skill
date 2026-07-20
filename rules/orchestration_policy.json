@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "model-policy-calibration-v0.3",
+  "description": "Ultra is approved multi-agent orchestration, not an ordinary reasoning-effort rung.",
+  "default_orchestration_mode": "single_agent",
+  "ultra_orchestration_mode": "ultra_subagents",
+  "wire_ultra_reasoning_effort": "ultra",
+  "ordinary_ultra_fallback_effort": "max",
+  "ultra_allowed_profiles": ["terra", "sol"],
+  "minimum_worker_count": 2,
+  "maximum_worker_count": 4,
+  "maximum_delegation_depth": 1,
+  "recursive_delegation_allowed": false,
+  "coordination_architecture": "centralized_orchestrator_worker",
+  "peer_to_peer_swarm_allowed": false,
+  "approval_ttl_seconds": 300,
+  "live_model_list_authoritative": true,
+  "telemetry_can_approve": false,
+  "telemetry_can_launch": false
+}

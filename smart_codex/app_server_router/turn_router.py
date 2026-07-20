@@ -3,16 +3,33 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
+import hashlib
+import json
+import math
 from typing import Any
 
 from smart_codex.router import RoutingDecision, route_prompt
 
 from .model_policy import CandidateScore
+from .orchestration_policy import (
+    EFFECTIVE_TURN_CONTEXT_SCHEMA_VERSION,
+    UltraApprovalEvidence,
+    UltraProposal,
+)
 from .policy_mapper import AppliedPolicy, PolicyError, PolicyMapper
 
 
 class RoutingFailure(RuntimeError):
     """Sanitized failure raised instead of forwarding an unclassified turn."""
+
+
+@dataclass(frozen=True)
+class EffectiveTurnContext:
+    """Immutable, privacy-preserving approval binding for one routed turn."""
+
+    schema_version: str
+    canonical_bytes: bytes
+    context_hash: str
 
 
 @dataclass(frozen=True)
@@ -46,6 +63,25 @@ class RoutedTurn:
     task_subdomain: str | None = None
     semantic_reason_codes: tuple[str, ...] = ()
     policy_version: str | None = None
+    ordinary_reasoning_effort: str = "low"
+    orchestration_mode: str = "single_agent"
+    ultra_recommendation: str = "not_recommended"
+    ultra_approval: str = "not_requested"
+    planned_worker_count: int = 0
+    workstream_count: str = "0"
+    controlled_workstream_categories: tuple[str, ...] = ()
+    dependency_shape: str = "unknown"
+    parallel_benefit: str = "none"
+    shared_state_risk: str = "unknown"
+    orchestration_work_mode: str = "read_heavy"
+    write_isolation: str = "not_applicable"
+    orchestration_resource_class: str = "ordinary"
+    ultra_human_approval_required: bool = False
+    maximum_delegation_depth: int = 1
+    recursive_delegation_allowed: bool = False
+    orchestration_reason_codes: tuple[str, ...] = ()
+    orchestration_fallback_reason_code: str | None = None
+    ultra_proposal: UltraProposal | None = None
 
 
 def _safe_original_model(value: object) -> str | None:
@@ -56,6 +92,111 @@ def _safe_original_model(value: object) -> str | None:
     if not all(character.isalnum() or character in "._-" for character in value):
         return None
     return value
+
+
+def _validate_effective_turn_value(value: object, active: set[int]) -> None:
+    """Accept only deterministic JSON values and reject cycles fail closed."""
+
+    if value is None or type(value) in {bool, int}:
+        return
+    if type(value) is float:
+        if not math.isfinite(value):
+            raise RoutingFailure("effective turn context contains a non-finite number")
+        return
+    if type(value) is str:
+        try:
+            value.encode("utf-8")
+        except UnicodeEncodeError as exc:
+            raise RoutingFailure("effective turn context contains invalid text") from exc
+        return
+    if type(value) not in {dict, list}:
+        raise RoutingFailure("effective turn context contains an unsupported value")
+
+    identity = id(value)
+    if identity in active:
+        raise RoutingFailure("effective turn context contains a cycle")
+    active.add(identity)
+    try:
+        if type(value) is dict:
+            for key, item in value.items():
+                if type(key) is not str:
+                    raise RoutingFailure(
+                        "effective turn context contains a non-string mapping key"
+                    )
+                _validate_effective_turn_value(key, active)
+                _validate_effective_turn_value(item, active)
+        else:
+            for item in value:
+                _validate_effective_turn_value(item, active)
+    finally:
+        active.remove(identity)
+
+
+def canonical_effective_turn_context(
+    message: object,
+    *,
+    previous_model: str | None = None,
+) -> bytes:
+    """Serialize every incoming execution-relevant turn value canonically.
+
+    The complete original ``turn/start`` message is bound, including ordered
+    inputs and every field the transparent proxy forwards. Session model state
+    is included separately because it can affect model selection without being
+    present in the request. Router-derived output fields are bound separately
+    by the Ultra proposal decision signature.
+    """
+
+    if type(message) is not dict:
+        raise RoutingFailure("effective turn context request is malformed")
+    if previous_model is not None and type(previous_model) is not str:
+        raise RoutingFailure("effective turn context previous model is malformed")
+    payload = {
+        "schema_version": EFFECTIVE_TURN_CONTEXT_SCHEMA_VERSION,
+        "turn_start_request": message,
+        "session_state": {"previous_model": previous_model},
+    }
+    _validate_effective_turn_value(payload, set())
+    try:
+        canonical = json.dumps(
+            payload,
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return canonical.encode("utf-8")
+    except (TypeError, ValueError, UnicodeEncodeError) as exc:
+        raise RoutingFailure("effective turn context cannot be canonicalized") from exc
+
+
+def effective_turn_context_hash(
+    message: object,
+    *,
+    previous_model: str | None = None,
+) -> str:
+    """Return the SHA-256 binding without exposing turn contents."""
+
+    canonical = canonical_effective_turn_context(
+        message,
+        previous_model=previous_model,
+    )
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _effective_turn_context(
+    message: object,
+    *,
+    previous_model: str | None = None,
+) -> EffectiveTurnContext:
+    canonical = canonical_effective_turn_context(
+        message,
+        previous_model=previous_model,
+    )
+    return EffectiveTurnContext(
+        schema_version=EFFECTIVE_TURN_CONTEXT_SCHEMA_VERSION,
+        canonical_bytes=canonical,
+        context_hash=hashlib.sha256(canonical).hexdigest(),
+    )
 
 
 def _apply_collaboration_mode_overrides(
@@ -156,6 +297,8 @@ class TurnRouter:
         message: object,
         *,
         previous_model: str | None = None,
+        ultra_approval: UltraApprovalEvidence | None = None,
+        now_epoch_seconds: int | None = None,
     ) -> RoutedTurn:
         if not isinstance(message, dict) or message.get("method") != "turn/start":
             raise RoutingFailure("only turn/start can be routed")
@@ -164,12 +307,18 @@ class TurnRouter:
             raise RoutingFailure("turn/start request id is malformed")
         raw_params = message.get("params")
         prompt, modalities = extract_turn_input(raw_params)
+        if not isinstance(raw_params, dict):
+            raise RoutingFailure("turn/start params are malformed")
         supports_routed_context = _has_supported_routed_context(raw_params)
         params_for_previous = raw_params if isinstance(raw_params, dict) else {}
         original_for_policy = _safe_original_model(params_for_previous.get("model"))
         if original_for_policy is not None and self.mapper.registry.get(original_for_policy) is None:
             original_for_policy = None
         effective_previous = previous_model or original_for_policy
+        effective_context = _effective_turn_context(
+            message,
+            previous_model=previous_model,
+        )
         try:
             decision: RoutingDecision = route_prompt(prompt, dry_run=True)
             applied: AppliedPolicy = self.mapper.apply(
@@ -178,6 +327,12 @@ class TurnRouter:
                 required_modalities=modalities,
                 previous_model=effective_previous,
                 supports_routed_context=supports_routed_context,
+                task_signature=decision.prompt_hash,
+                effective_turn_context_schema_version=effective_context.schema_version,
+                effective_turn_context_hash=effective_context.context_hash,
+                policy_version=decision.policy_version or "unknown",
+                ultra_approval=ultra_approval,
+                now_epoch_seconds=now_epoch_seconds,
             )
         except (PolicyError, ValueError, RuntimeError) as exc:
             raise RoutingFailure("turn/start could not be classified safely") from exc
@@ -254,4 +409,27 @@ class TurnRouter:
             semantic_reason_codes=tuple(decision.semantic_reason_codes),
             policy_version=decision.policy_version,
             verification_available=None,
+            ordinary_reasoning_effort=applied.ordinary_reasoning_effort,
+            orchestration_mode=applied.orchestration_mode,
+            ultra_recommendation=applied.ultra_recommendation,
+            ultra_approval=applied.ultra_approval,
+            planned_worker_count=applied.planned_worker_count,
+            workstream_count=applied.workstream_count,
+            controlled_workstream_categories=(
+                applied.controlled_workstream_categories
+            ),
+            dependency_shape=applied.dependency_shape,
+            parallel_benefit=applied.parallel_benefit,
+            shared_state_risk=applied.shared_state_risk,
+            orchestration_work_mode=applied.orchestration_work_mode,
+            write_isolation=applied.write_isolation,
+            orchestration_resource_class=applied.orchestration_resource_class,
+            ultra_human_approval_required=applied.ultra_human_approval_required,
+            maximum_delegation_depth=applied.maximum_delegation_depth,
+            recursive_delegation_allowed=applied.recursive_delegation_allowed,
+            orchestration_reason_codes=applied.orchestration_reason_codes,
+            orchestration_fallback_reason_code=(
+                applied.orchestration_fallback_reason_code
+            ),
+            ultra_proposal=applied.ultra_proposal,
         )

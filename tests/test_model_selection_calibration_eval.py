@@ -89,7 +89,7 @@ def test_curated_model_selection_eval_meets_phase_5_3_targets() -> None:
         "terra_coding": 35,
         "terra_research": 20,
         "sol_frontier": 25,
-        "ultra_delegation": 10,
+        "ultra_admission_pending": 10,
         "fallback_migration": 10,
     }
 
@@ -124,11 +124,7 @@ def test_curated_model_selection_eval_meets_phase_5_3_targets() -> None:
                 model=routed.selected_model,
                 effort_supported=routed.effort in selected.supported_efforts,
                 model_available=router.mapper.registry.is_routable(selected),
-                delegation_reason=(
-                    "parallel_independent_workstreams"
-                    if any("explicit delegation" in reason for reason in routed.reasons)
-                    else None
-                ),
+                orchestration_mode=routed.orchestration_mode,
             )
         )
 
@@ -141,4 +137,4 @@ def test_curated_model_selection_eval_meets_phase_5_3_targets() -> None:
     assert metrics.critical_under_routing == 0
     assert metrics.unsupported_efforts == 0
     assert metrics.unavailable_selections == 0
-    assert metrics.ultra_without_delegation_reason == 0
+    assert metrics.ultra_without_approved_orchestration == 0

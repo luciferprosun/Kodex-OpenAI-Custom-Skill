@@ -665,7 +665,7 @@ def test_repeated_cumulative_events_do_not_invent_request_or_retry_counts() -> N
     assert metrics.duplicate_event_count == 1
 
 
-def test_new_decisions_and_records_use_policy_v02(tmp_path) -> None:
+def test_new_decisions_and_records_use_policy_v03(tmp_path) -> None:
     service, storage = enabled_service(tmp_path)
     decision = route_prompt(TARGET_COMPARISON)
     started = service.start_from_decision(task=TARGET_COMPARISON, decision=decision)
@@ -673,7 +673,7 @@ def test_new_decisions_and_records_use_policy_v02(tmp_path) -> None:
     assert started.run.finish(status="completed").appended is True
     record = records(storage, "run")[0]
 
-    assert MODEL_POLICY_VERSION == "model-policy-calibration-v0.2"
+    assert MODEL_POLICY_VERSION == "model-policy-calibration-v0.3"
     assert ROUTER_POLICY_VERSION == MODEL_POLICY_VERSION
     assert decision.policy_version == MODEL_POLICY_VERSION
     assert record["router_policy_version"] == MODEL_POLICY_VERSION
@@ -688,11 +688,18 @@ def test_new_decisions_and_records_use_policy_v02(tmp_path) -> None:
     assert "document_comparison" not in serialized
 
 
-def test_historical_v01_record_remains_valid_and_dashboard_quarantined(tmp_path) -> None:
+@pytest.mark.parametrize(
+    "historical_policy_version",
+    ["model-policy-calibration-v0.1", "model-policy-calibration-v0.2"],
+)
+def test_historical_policy_records_remain_valid_and_dashboard_quarantined(
+    tmp_path,
+    historical_policy_version: str,
+) -> None:
     _, storage = enabled_service(tmp_path)
     historical_service = TelemetryService(
         storage,
-        router_policy_version="model-policy-calibration-v0.1",
+        router_policy_version=historical_policy_version,
     )
     run = start_basic(
         historical_service,
@@ -705,7 +712,7 @@ def test_historical_v01_record_remains_valid_and_dashboard_quarantined(tmp_path)
 
     snapshot = build_dashboard(storage, limit=1)
     serialized = json.dumps(snapshot, sort_keys=True)
-    assert record["router_policy_version"] == "model-policy-calibration-v0.1"
+    assert record["router_policy_version"] == historical_policy_version
     assert snapshot["label_quality"]["status"] == "quarantined"
     assert "run_tests" not in serialized
 
@@ -713,6 +720,7 @@ def test_historical_v01_record_remains_valid_and_dashboard_quarantined(tmp_path)
 @pytest.mark.parametrize(
     ("provenance", "expected"),
     [
+        ("model-policy-calibration-v0.3", "model-policy-calibration-v0.3"),
         ("model-policy-calibration-v0.2", "model-policy-calibration-v0.2"),
         ("model-policy-calibration-v0.1", "model-policy-calibration-v0.1"),
         (None, "unknown"),

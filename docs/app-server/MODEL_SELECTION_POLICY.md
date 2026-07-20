@@ -17,9 +17,12 @@ not a permanent model catalog.
 3. `prompt_features.py` derives coarse workload features in memory.
 4. `capability_filter.py` rejects incompatible live candidates.
 5. `model_policy.py` scores the remaining candidates.
-6. `effort_policy.py` selects an independently justified live-supported effort.
-7. Hysteresis decides whether a marginal model change is worth making.
-8. The proxy rewrites only supported `turn/start` fields and forwards the turn.
+6. `effort_policy.py` selects an independently justified ordinary
+   single-agent effort, ending at `max`.
+7. `orchestration_policy.py` separately analyzes workstream structure and
+   applies Ultra admission, veto, and task-bound approval rules.
+8. Hysteresis decides whether a marginal model change is worth making.
+9. The proxy rewrites only supported `turn/start` fields and forwards the turn.
 
 Prompt text is never added to the model registry, score objects, routing event
 logs, launcher arguments, or a persistent cache.
@@ -54,7 +57,7 @@ it unsafe or impossible to use. Rejection reasons include:
 - future family model whose live effort/modal shape does not match the known
   family profile.
 
-The installed `0.144.4` `model/list` schema does not expose a context-window
+The installed `0.144.6` `model/list` schema does not expose a context-window
 field. Exact known-model context classes therefore come from versioned policy
 metadata checked against the official Codex registry. A future family match is
 assigned a conservative `small` context class unless an explicit reviewed
@@ -67,10 +70,10 @@ override exists. No context capability is inferred from a display name alone.
 Luna is preferred for direct writing transformations, grammar, concise email
 drafts, simple summaries/classification, harmless documentation, short code
 explanations, deterministic scripts, simple tests, and small isolated fixes.
-Typical effort is `low` or `medium`. Luna is excluded from high architecture,
-broad repository understanding, high ambiguity, deep security reasoning,
-delegation, and unsupported modality/effort combinations. Luna never receives
-`ultra`.
+Typical effort is `low` or `medium`, and live Luna supports ordinary `max`.
+Luna is excluded from high architecture, broad repository understanding, high
+ambiguity, deep security reasoning, and unsupported modality/effort
+combinations. Its live record does not advertise Ultra orchestration.
 
 ### Spark
 
@@ -95,8 +98,9 @@ Terra is the default for normal professional work: ordinary bugs and features,
 several-file changes, test repair, maintenance, medium refactors, dependency
 updates, code review, implementation plus documentation, bounded research, and
 ordinary connector/tool workflows. Effort is normally `medium` or `high`, with
-`xhigh` reserved for unusually complex but non-frontier work. `Ultra` requires
-an explicit, reproducible delegation benefit.
+`xhigh`/`max` reserved for unusually complex work. Terra can be an Ultra
+orchestration host only when live support, structural admission, and a matching
+task-bound human approval all pass.
 
 ### Sol
 
@@ -104,9 +108,9 @@ Sol is preferred for high architectural depth, broad cross-module refactors,
 hard debugging with uncertain causes, deep security analysis, difficult
 mathematics, large-context synthesis, final audits, ambiguous mixed-domain
 work, novel algorithms, difficult incidents, and strategic research. Effort is
-normally `high`/`xhigh`; `max` is for the hardest bounded work and final audits.
-`Ultra` requires independent parallel workstreams for which delegation is
-materially beneficial.
+normally `high`/`xhigh`; `max` is maximum single-agent reasoning for the
+hardest bounded work and final audits. Sol can be an Ultra orchestration host
+only under the same live capability, structural, and approval gates as Terra.
 
 Side effects, connector use, or human approval do not by themselves select Sol.
 The model-selection dimension never broadens sandbox or action authority.
@@ -140,10 +144,33 @@ Effort is selected independently from model identity and risk:
 | `high` | multi-file work, deeper debugging, substantial sourced research |
 | `xhigh` | architecture, broad refactors, difficult analysis/security |
 | `max` | hardest bounded work, final audits, difficult mathematics |
-| `ultra` | only justified parallel delegation on a supported live model |
 
 If the preferred effort is absent, the nearest supported live effort is used.
-The router never emits an effort not present in that model's live record.
+The ordinary fallback ladder never includes Ultra. The router never emits an
+effort not present in that model's live record.
+
+## Ultra orchestration
+
+Ultra is not an ordinary effort rung. Internally the router retains ordinary
+effort `max` and separately chooses `single_agent` or `ultra_subagents`. The
+current installed wire protocol encodes an approved `ultra_subagents` decision
+as `ultra` in both precedence-bearing effort fields.
+
+Difficulty alone, agent-related words, or a generic `on-request` approval never
+admit Ultra. Admission requires at least two substantive independent bounded
+workstreams, parallel dependency shape, material benefit, large duration, a
+central coordinator, low enough shared-state risk, and a reviewed live profile.
+Sequential, indivisible, deterministic, cost-minimizing, ambiguous, recursive,
+peer-to-peer, and overlapping-write plans are vetoed. Write-heavy admission
+also requires disjoint ownership, isolated worktrees, and separate clause-local
+proof that workers cannot merge, push, or rewrite history. Explicit Ultra,
+subagent, or orchestration prohibitions and non-executing quoted/example
+language remain hard vetoes. Eligible work remains Max/single-agent until a
+versioned short-lived approval matches the exact complete effective-turn
+context, task, model, worker count, controlled plan, policy, sandbox, and
+approval policy. Non-boolean approval inputs and legacy weak evidence fail
+closed.
+See [Ultra admission policy 1A](ULTRA_ADMISSION_POLICY_1A.md).
 
 ## Hysteresis
 
@@ -158,11 +185,13 @@ reason to remain on Sol.
 
 - `rules/model_selection_policy.json`
 - `rules/reasoning_effort_policy.json`
+- `rules/orchestration_policy.json`
 - `rules/model_fallback_policy.json`
 - `smart_codex/app_server_router/prompt_features.py`
 - `smart_codex/app_server_router/capability_filter.py`
 - `smart_codex/app_server_router/model_policy.py`
 - `smart_codex/app_server_router/effort_policy.py`
+- `smart_codex/app_server_router/orchestration_policy.py`
 - `smart_codex/app_server_router/routing_explanation.py`
 
 The official App Server interface documents per-turn overrides and streamed

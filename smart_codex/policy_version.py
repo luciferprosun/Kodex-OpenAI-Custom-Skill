@@ -1,10 +1,15 @@
 """Canonical SmartRouter policy identities and provenance validation."""
 
-MODEL_POLICY_VERSION = "model-policy-calibration-v0.2"
+MODEL_POLICY_VERSION = "model-policy-calibration-v0.3"
+PREVIOUS_MODEL_POLICY_VERSION = "model-policy-calibration-v0.2"
 LEGACY_MODEL_POLICY_VERSION = "model-policy-calibration-v0.1"
 UNKNOWN_POLICY_VERSION = "unknown"
 SUPPORTED_MODEL_POLICY_VERSIONS = frozenset(
-    {LEGACY_MODEL_POLICY_VERSION, MODEL_POLICY_VERSION}
+    {
+        LEGACY_MODEL_POLICY_VERSION,
+        PREVIOUS_MODEL_POLICY_VERSION,
+        MODEL_POLICY_VERSION,
+    }
 )
 
 

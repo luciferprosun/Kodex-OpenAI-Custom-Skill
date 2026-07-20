@@ -15,7 +15,7 @@ from smart_codex.preprocessor import analyze_prompt_semantics
 
 
 SIZE_CLASSES = ("tiny", "small", "medium", "large", "xlarge", "unknown")
-EFFORT_NAMES = ("minimal", "low", "medium", "high", "xhigh", "max", "ultra")
+EFFORT_NAMES = ("minimal", "low", "medium", "high", "xhigh", "max")
 
 
 @lru_cache(maxsize=512)
@@ -42,8 +42,8 @@ def _model_preference(text: str) -> str | None:
 def _effort_preference(text: str) -> str | None:
     patterns = (
         r"\b(?:reasoning\s+)?effort\s*(?:=|:|to|at)?\s*"
-        r"(minimal|low|medium|high|xhigh|max|ultra)\b",
-        r"\buse\s+(minimal|low|medium|high|xhigh|max|ultra)\s+"
+        r"(minimal|low|medium|high|xhigh|max)\b",
+        r"\buse\s+(minimal|low|medium|high|xhigh|max)\s+"
         r"(?:reasoning|effort)\b",
     )
     for pattern in patterns:
@@ -195,7 +195,7 @@ def extract_task_features(
         text,
         (
             r"\b(?:million[- ]token|multiple repositories|many repositories|dozens of services)\b",
-            r"\b(?:huge|very large)\s+(?:monorepo|corpus|context)\b",
+            r"\b(?:huge|very large)\s+(?:document\s+)?(?:monorepo|corpus|context)\b",
         ),
     )
     large_context = _has(

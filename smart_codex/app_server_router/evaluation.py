@@ -30,7 +30,7 @@ class EvalOutcome:
     model: str
     effort_supported: bool
     model_available: bool
-    delegation_reason: str | None
+    orchestration_mode: str
 
 
 @dataclass(frozen=True)
@@ -45,7 +45,7 @@ class EvaluationMetrics:
     critical_under_routing: int
     unsupported_efforts: int
     unavailable_selections: int
-    ultra_without_delegation_reason: int
+    ultra_without_approved_orchestration: int
 
 
 def load_eval_cases(path: Path) -> tuple[EvalCase, ...]:
@@ -122,7 +122,7 @@ def summarize_evaluation(
             critical_under += 1
         unsupported += int(not outcome.effort_supported)
         unavailable += int(not outcome.model_available)
-        if outcome.effort == "ultra" and outcome.delegation_reason is None:
+        if outcome.effort == "ultra" and outcome.orchestration_mode != "ultra_subagents":
             ultra_without_reason += 1
 
     def percentage(groups: tuple[str, ...]) -> float:
@@ -141,7 +141,7 @@ def summarize_evaluation(
         critical_under_routing=critical_under,
         unsupported_efforts=unsupported,
         unavailable_selections=unavailable,
-        ultra_without_delegation_reason=ultra_without_reason,
+        ultra_without_approved_orchestration=ultra_without_reason,
     )
 
 

@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 from typing import Any, Iterable, Mapping
 
+from smart_codex.policy_version import MODEL_POLICY_VERSION
+
 from .model_registry import LiveModel, ModelRegistry
 from .effort_policy import EffortPolicy, EffortPolicyError, EffortSelection
 from .model_policy import (
@@ -16,6 +18,14 @@ from .model_policy import (
     ModelSelection,
     default_fallback_policy_path,
     default_selection_policy_path,
+)
+from .orchestration_policy import (
+    OrchestrationDecision,
+    OrchestrationPolicy,
+    OrchestrationPolicyError,
+    UltraApprovalEvidence,
+    UltraProposal,
+    analyze_orchestration_structure,
 )
 from .prompt_features import TaskFeatures, extract_task_features
 
@@ -78,6 +88,25 @@ class AppliedPolicy:
     drift_warnings: tuple[str, ...] = ()
     migration_warning: str | None = None
     test_instruction: str | None = None
+    ordinary_reasoning_effort: str = "low"
+    orchestration_mode: str = "single_agent"
+    ultra_recommendation: str = "not_recommended"
+    ultra_approval: str = "not_requested"
+    planned_worker_count: int = 0
+    workstream_count: str = "0"
+    controlled_workstream_categories: tuple[str, ...] = ()
+    dependency_shape: str = "unknown"
+    parallel_benefit: str = "none"
+    shared_state_risk: str = "unknown"
+    orchestration_work_mode: str = "read_heavy"
+    write_isolation: str = "not_applicable"
+    orchestration_resource_class: str = "ordinary"
+    ultra_human_approval_required: bool = False
+    maximum_delegation_depth: int = 1
+    recursive_delegation_allowed: bool = False
+    orchestration_reason_codes: tuple[str, ...] = ()
+    orchestration_fallback_reason_code: str | None = None
+    ultra_proposal: UltraProposal | None = None
 
 
 SPARK_TEST_INSTRUCTION = (
@@ -92,6 +121,10 @@ def _default_policy_path() -> Path:
 
 def _default_effort_policy_path() -> Path:
     return Path(__file__).resolve().parents[2] / "rules" / "reasoning_effort_policy.json"
+
+
+def _default_orchestration_policy_path() -> Path:
+    return Path(__file__).resolve().parents[2] / "rules" / "orchestration_policy.json"
 
 
 def _string_list(
@@ -125,7 +158,6 @@ def _load_policy(path: Path | None = None) -> dict[str, Any]:
         "effort_by_category",
         "rapid_edit_signals",
         "deep_research_signals",
-        "delegation_signals",
         "deterministic_eval_signals",
         "local_policy",
     }
@@ -188,7 +220,6 @@ def _load_policy(path: Path | None = None) -> dict[str, Any]:
     for signal_field in (
         "rapid_edit_signals",
         "deep_research_signals",
-        "delegation_signals",
         "deterministic_eval_signals",
     ):
         for pattern in _string_list(value[signal_field], signal_field, allow_empty=True):
@@ -247,6 +278,7 @@ class PolicyMapper:
         policy_path: Path | None = None,
         selection_policy_path: Path | None = None,
         effort_policy_path: Path | None = None,
+        orchestration_policy_path: Path | None = None,
         fallback_policy_path: Path | None = None,
         allowed_models: tuple[str, ...] | None = None,
         context_capacity_overrides: Mapping[str, str] | None = None,
@@ -264,6 +296,13 @@ class PolicyMapper:
         self.effort_policy = EffortPolicy(
             _load_json_policy(effort_policy_path or _default_effort_policy_path())
         )
+        self.orchestration_policy = OrchestrationPolicy(
+            _load_json_policy(
+                orchestration_policy_path or _default_orchestration_policy_path()
+            )
+        )
+        if self.orchestration_policy.policy_version != MODEL_POLICY_VERSION:
+            raise PolicyError("orchestration policy provenance does not match current policy")
 
     def apply(
         self,
@@ -273,6 +312,12 @@ class PolicyMapper:
         required_modalities: Iterable[str],
         previous_model: str | None = None,
         supports_routed_context: bool = False,
+        task_signature: str | None = None,
+        effective_turn_context_schema_version: str | None = None,
+        effective_turn_context_hash: str | None = None,
+        policy_version: str = "unknown",
+        ultra_approval: UltraApprovalEvidence | None = None,
+        now_epoch_seconds: int | None = None,
     ) -> AppliedPolicy:
         category = str(getattr(decision, "category", "unknown"))
         features: TaskFeatures = extract_task_features(
@@ -286,17 +331,50 @@ class PolicyMapper:
                 previous_model=previous_model,
                 supports_routed_context=supports_routed_context,
             )
+            orchestration_analysis = analyze_orchestration_structure(prompt, features)
+            orchestration_assessment = self.orchestration_policy.assess(
+                selection.selected.model,
+                selection.selected.profile,
+                features,
+                orchestration_analysis,
+            )
             effort_selection: EffortSelection = self.effort_policy.select(
                 selection.selected.model,
                 selection.selected.profile,
                 features,
+                force_max=orchestration_assessment.force_max_single_agent,
+                force_max_reason=(
+                    orchestration_assessment.fallback_reason_code
+                    or "ultra_candidate_max_single_agent"
+                ),
             )
-        except (ModelPolicyError, EffortPolicyError) as exc:
+        except (ModelPolicyError, EffortPolicyError, OrchestrationPolicyError) as exc:
             raise PolicyError("dynamic model policy could not produce a safe live route") from exc
 
         route_class = selection.selected.profile.name
         model = selection.selected.model
-        effort = effort_selection.selected
+        sandbox_mode = self._resolve_sandbox(str(getattr(decision, "sandbox_mode", "read-only")))
+        approval = self._resolve_approval(getattr(decision, "approval_policy", "on-request"))
+        try:
+            orchestration: OrchestrationDecision = self.orchestration_policy.decide(
+                analysis=orchestration_analysis,
+                assessment=orchestration_assessment,
+                ordinary_reasoning_effort=effort_selection.selected,
+                selected_model=model.model,
+                task_signature=task_signature,
+                effective_turn_context_schema_version=(
+                    effective_turn_context_schema_version
+                ),
+                effective_turn_context_hash=effective_turn_context_hash,
+                policy_version=policy_version,
+                sandbox_mode=sandbox_mode,
+                approval_policy=approval,
+                approval_evidence=ultra_approval,
+                now_epoch_seconds=now_epoch_seconds,
+            )
+        except OrchestrationPolicyError as exc:
+            raise PolicyError("orchestration policy could not produce a safe route") from exc
+        effort = orchestration.wire_reasoning_effort
         reasons = [
             f"Router Core category {category} is evaluated independently from authority",
             selection.explanation.summary,
@@ -307,13 +385,15 @@ class PolicyMapper:
             reasons.append(
                 f"unsupported effort {effort_selection.desired} resolved to nearest live effort {effort_selection.selected}"
             )
-        if effort_selection.delegation_reason is not None:
+        reasons.append(f"orchestration mode {orchestration.orchestration_mode}")
+        reasons.extend(
+            f"orchestration reason {reason}"
+            for reason in orchestration.reason_codes
+        )
+        if orchestration.fallback_reason_code is not None:
             reasons.append(
-                "explicit delegation benefits this complex task: "
-                + effort_selection.delegation_reason
+                f"orchestration fallback {orchestration.fallback_reason_code}"
             )
-        elif features.need_for_delegation and features.deterministic_eval:
-            reasons.append("delegation suppressed for deterministic evaluation")
         if selection.selected.migration_warning is not None:
             reasons.append(selection.selected.migration_warning)
         if any(
@@ -324,8 +404,6 @@ class PolicyMapper:
             reasons.append("live upgrade target replaces a deprecated candidate")
         reasons.extend(f"capability drift {warning}" for warning in selection.drift_warnings)
 
-        sandbox_mode = self._resolve_sandbox(str(getattr(decision, "sandbox_mode", "read-only")))
-        approval = self._resolve_approval(getattr(decision, "approval_policy", "on-request"))
         sandbox_policy = self._wire_sandbox(sandbox_mode)
         return AppliedPolicy(
             route_class=route_class,
@@ -350,6 +428,27 @@ class PolicyMapper:
             test_instruction=(
                 SPARK_TEST_INSTRUCTION if selection.requires_test_instruction else None
             ),
+            ordinary_reasoning_effort=orchestration.ordinary_reasoning_effort,
+            orchestration_mode=orchestration.orchestration_mode,
+            ultra_recommendation=orchestration.ultra_recommendation,
+            ultra_approval=orchestration.ultra_approval,
+            planned_worker_count=orchestration.planned_worker_count,
+            workstream_count=orchestration.workstream_count,
+            controlled_workstream_categories=(
+                orchestration.controlled_workstream_categories
+            ),
+            dependency_shape=orchestration.dependency_shape,
+            parallel_benefit=orchestration.parallel_benefit,
+            shared_state_risk=orchestration.shared_state_risk,
+            orchestration_work_mode=orchestration.work_mode,
+            write_isolation=orchestration.write_isolation,
+            orchestration_resource_class=orchestration.resource_class,
+            ultra_human_approval_required=orchestration.human_approval_required,
+            maximum_delegation_depth=orchestration.max_delegation_depth,
+            recursive_delegation_allowed=orchestration.recursive_delegation_allowed,
+            orchestration_reason_codes=orchestration.reason_codes,
+            orchestration_fallback_reason_code=orchestration.fallback_reason_code,
+            ultra_proposal=orchestration.proposal,
         )
 
     def _resolve_sandbox(self, requested: str) -> str:
