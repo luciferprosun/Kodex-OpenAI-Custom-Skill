@@ -33,14 +33,14 @@ def main() -> int:
         root = str(_repository_root())
         if root not in sys.path:
             sys.path.insert(0, root)
-        from smart_codex.codex_hook_adapter import handle_pre_tool_use
+        from smart_codex.session_hook_bridge import route_pre_tool_use
 
         raw_input = sys.stdin.read()
         try:
             payload = json.loads(raw_input)
         except (json.JSONDecodeError, UnicodeError):
             payload = {}
-        response = handle_pre_tool_use(payload)
+        response = route_pre_tool_use(payload)
         output = json.dumps(response, ensure_ascii=True, separators=(",", ":"))
     except Exception:
         output = json.dumps(FALLBACK, ensure_ascii=True, separators=(",", ":"))

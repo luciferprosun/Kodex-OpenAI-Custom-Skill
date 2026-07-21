@@ -4,7 +4,7 @@
 
 Kodex OpenAI Custom Skill combines a Smart Prompt Check, Task Router, and Model Configuration Selector for Codex repository work. Its deterministic Router Core classifies task weight, category, complexity, risk, action danger, context, and evidence requirements, then recommends a conservative profile, sandbox, and approval policy.
 
-The repository-local Codex custom skill invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. Phases through 5.3 are complete, including the calibrated dynamic model/effort policy, its 180-case evaluation, and a 12-turn routed-TUI soak. Phase 6 plugin packaging is next and has not started.
+The repository-local Codex custom skill invokes the tested Router Core through a stdin-only adapter and renders a `SMART ROUTER DECISION` before task work. The local session-control layer adds an installable wrapper and independent router/telemetry switches without patching the official Codex runtime.
 
 Skill and hook recommendations remain advisory. The opt-in App Server manager
 adds a separate localhost layer that applies actual per-turn model, effort,
@@ -29,6 +29,7 @@ The internal Python package, import paths, rules, and standalone commands intent
 - A privacy-safe routing metadata logger.
 - Disabled-by-default, append-only local Codex run telemetry with operator-authored outcomes.
 - An isolated, opt-in App Server proxy for actual per-turn model rotation in the original Codex TUI.
+- A separate `codex-smart` launcher and `smart-routerctl` local session-control CLI.
 
 ## What It Is Not
 
@@ -76,6 +77,46 @@ intercept every Codex tool. See
 for architecture, privacy guarantees, exact definitions, known gaps, and the
 manual acceptance procedure.
 
+## Live Codex session controls
+
+The router control plane is live. Automatic per-turn model execution is not
+enabled in this release.
+
+After installing this repository in a local Python environment, launch the
+unmodified official Codex runtime through the separate wrapper:
+
+```bash
+codex-smart
+```
+
+The wrapper forwards normal Codex arguments and process I/O unchanged. It does
+not replace the `codex` command. Use the repo-native skill surface inside a
+trusted `codex-smart` session:
+
+```text
+$smart-router status
+$smart-router on
+$telemetry start
+$telemetry stop
+$smart-router off
+```
+
+Or use the deterministic direct CLI:
+
+```bash
+smart-routerctl smart-router on --telemetry
+smart-routerctl status --json
+smart-routerctl telemetry stop
+smart-routerctl smart-router off
+```
+
+Router and research telemetry are independent switches. Session state is local
+under the XDG state directory, missing or malformed state defaults to OFF/OFF,
+and research markers contain metadata only. This implementation uses native
+skills and the built-in `/hooks` review surface. It does not register or claim
+bare `/smart-router` or `/telemetry` commands. See [Live Codex Session Control
+1A](docs/app-server/LIVE_CODEX_SESSION_CONTROL_1A.md).
+
 ## Opt-in App Server routed TUI
 
 Actual per-turn model and reasoning-effort rotation is available through the
@@ -110,16 +151,16 @@ From the repository root:
 python -m pip install -e .
 ```
 
-After local installation, use the router command directly:
+After local installation, use the advisory router command directly:
 
 ```bash
 smart-codex --explain "fix frontend bug"
 ```
 
-An optional standalone command can be used for daily work:
+Launch the official Codex runtime through the independent session-control wrapper:
 
 ```bash
-codex-smart --explain "audit repo for secrets"
+codex-smart --no-alt-screen
 ```
 
 Do not replace or mutate the official `codex` executable.
@@ -246,7 +287,7 @@ closed as `no_route`.
 - `smart-codex` never uses `shell=True`.
 - Commands are built as argument lists.
 - The legacy standalone execute path passes its prompt as one argument; routed TUI prompts stay inside App Server frames and never enter launcher argv.
-- Local `codex` wrapper execution calls the preserved `codex-real` entry point to avoid recursion.
+- `codex-smart` resolves and `exec`s the separate official `codex` executable, rejects recursive resolution, and never replaces the system command.
 - V0 rejects `danger-full-access`.
 - Risk levels are `low`, `medium`, `high`, and `critical`.
 - High-risk and critical-risk routes use `read-only` sandbox and `on-request` approval.

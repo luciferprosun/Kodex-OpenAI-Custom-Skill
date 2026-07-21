@@ -27,14 +27,14 @@ def main() -> int:
         root = str(_repository_root())
         if root not in sys.path:
             sys.path.insert(0, root)
-        from smart_codex.codex_hook_adapter import handle_user_prompt_submit
+        from smart_codex.session_hook_bridge import route_user_prompt_submit
 
         raw_input = sys.stdin.read()
         try:
             payload = json.loads(raw_input)
         except (json.JSONDecodeError, UnicodeError):
             payload = {}
-        response = handle_user_prompt_submit(payload)
+        response = route_user_prompt_submit(payload)
         output = json.dumps(response, ensure_ascii=True, separators=(",", ":"))
     except Exception:
         output = json.dumps(FALLBACK, ensure_ascii=True, separators=(",", ":"))

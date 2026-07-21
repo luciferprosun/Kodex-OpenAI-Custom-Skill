@@ -7,9 +7,16 @@ the deterministic Router Core and the root `rules/` Knowledge Library as the
 only executable routing policy. They do not modify Codex, global Codex
 configuration, or the normal human approval flow.
 
+Session Control 1A now gates all three adapters through the local
+`smart-codex-session-control-v1` state. They run only when the official Codex
+session was launched through `codex-smart` and Smart Router is explicitly ON.
+OFF, missing, or malformed state returns `{}` and leaves normal Codex behavior
+unchanged. This gate adds no model, Ultra, subagent, provider, or approval
+execution path.
+
 ## Codex version tested
 
-The implementation was developed against `codex-cli 0.144.4`, with the stable
+The implementation was revalidated against `codex-cli 0.144.6`, with the stable
 `hooks` feature enabled. The input, output, discovery, and trust contracts were
 checked against the current
 [official Codex Hooks documentation](https://learn.chatgpt.com/docs/hooks) and
@@ -19,7 +26,9 @@ the installed release before implementation.
 
 The project configuration in `.codex/hooks.json` registers three command
 hooks. Each Python entrypoint reads one JSON object from standard input, adds
-only the repository root to `sys.path`, and calls one handler in
+only the repository root to `sys.path`, and calls
+`smart_codex.session_hook_bridge`. The bridge reads only the wrapper marker and
+local router-enabled boolean before delegating to the original handler in
 `smart_codex.codex_hook_adapter`.
 
 The adapter validates the documented event payload, creates one in-memory
@@ -153,7 +162,7 @@ The definitions to review are:
 
 | Event | Matcher | Command | Timeout | Status message |
 | --- | --- | --- | ---: | --- |
-| `UserPromptSubmit` | none | `/usr/bin/python3 "$(git rev-parse --show-toplevel)/.codex/hooks/user_prompt_submit.py"` | 15 s | `Routing submitted prompt` |
+| `UserPromptSubmit` | none | `/usr/bin/python3 "$(git rev-parse --show-toplevel)/.codex/hooks/user_prompt_submit.py"` | 15 s | `Checking Smart Router session gate` |
 | `PreToolUse` | `^(Bash\|apply_patch\|Edit\|Write\|mcp__.*)$` | `/usr/bin/python3 "$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use.py"` | 15 s | `Checking proposed tool action` |
 | `PermissionRequest` | `^(Bash\|apply_patch\|Edit\|Write\|mcp__.*)$` | `/usr/bin/python3 "$(git rev-parse --show-toplevel)/.codex/hooks/permission_request.py"` | 15 s | `Reviewing permission request` |
 
@@ -162,12 +171,13 @@ the current Git repository root and contain no user-home-specific location.
 
 ## Review and trust procedure
 
-1. Start a fresh Codex session from the repository root without any hook-trust
-   bypass option.
+1. Start a fresh `codex-smart` session from the repository root without any
+   hook-trust bypass option.
 2. Open `/hooks`.
 3. Confirm that the source is project-local and compare all three definitions
    with the table above and `.codex/hooks.json`.
-4. Review the three entrypoints and `smart_codex/codex_hook_adapter.py`.
+4. Review the three entrypoints, `smart_codex/session_hook_bridge.py`, and
+   `smart_codex/codex_hook_adapter.py`.
 5. Only the human operator may trust the reviewed definitions.
 6. Start another fresh session after trust so the accepted definitions are
    loaded normally.
@@ -179,8 +189,9 @@ new review. No trust state is stored in this repository.
 
 After the human trusts the definitions in `/hooks`, use a fresh session and:
 
-1. Submit `Explain the current repository status. Do not modify files.` and
-   confirm that `UserPromptSubmit` adds a sanitized router decision.
+1. Run `$smart-router on`, then submit `Explain the current repository status.
+   Do not modify files.` and confirm that `UserPromptSubmit` adds a sanitized
+   router decision.
 2. Request `git status --short` and confirm that `PreToolUse` does not deny it
    while normal sandbox behavior remains active.
 3. Analyze, but do not execute, `git push --force origin main`; validate the
@@ -200,11 +211,12 @@ of the pending human acceptance.
 
 ## Disable and rollback procedure
 
-Disable the project hooks through `/hooks`, then start a fresh Codex session and
-confirm that they are no longer active. To remove the implementation, revert
-the Phase 5 commit and verify that `.codex/hooks.json` and the three entrypoints
-are absent. No global configuration, trust-store edit, binary replacement, or
-plugin removal is required.
+Run `smart-routerctl smart-router off` to disable the local session gate. To
+disable the project definitions themselves, use `/hooks`, then start a fresh
+Codex session and confirm that they are no longer active. To remove the
+implementation, revert the Phase 5 commit and verify that `.codex/hooks.json`
+and the three entrypoints are absent. No global configuration, trust-store
+edit, binary replacement, or plugin removal is required.
 
 ## Known interception gaps
 

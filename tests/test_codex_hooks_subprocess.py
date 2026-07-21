@@ -8,6 +8,12 @@ import sys
 
 import pytest
 
+from smart_codex.session_control import (
+    WRAPPER_MODE_ENV,
+    WRAPPER_MODE_VALUE,
+    SessionControlStore,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 HOOK_DIR = ROOT / ".codex" / "hooks"
@@ -34,7 +40,13 @@ def run_hook(
     raw_input: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     environment = os.environ.copy()
-    environment["HOME"] = str(home)
+    state_base = home.parent / f"{home.name}-xdg-state"
+    SessionControlStore(
+        state_base / "smart-codex" / "session-control",
+        repository_root=ROOT,
+    ).set_router(True)
+    environment["XDG_STATE_HOME"] = str(state_base)
+    environment[WRAPPER_MODE_ENV] = WRAPPER_MODE_VALUE
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     encoded = raw_input if raw_input is not None else json.dumps(payload)
     return subprocess.run(

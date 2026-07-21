@@ -13,7 +13,7 @@ EXPECTED_SCRIPTS = {
     "PermissionRequest": "permission_request.py",
 }
 EXPECTED_STATUS = {
-    "UserPromptSubmit": "Routing submitted prompt",
+    "UserPromptSubmit": "Checking Smart Router session gate",
     "PreToolUse": "Checking proposed tool action",
     "PermissionRequest": "Reviewing permission request",
 }
