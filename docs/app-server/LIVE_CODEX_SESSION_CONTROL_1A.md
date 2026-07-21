@@ -2,8 +2,8 @@
 
 ## Status
 
-The router control plane is live. Automatic per-turn model execution is not
-enabled in this release.
+The router control plane is live and demo-ready. Automatic per-turn model
+execution is not enabled in this release.
 
 This milestone adds a local control surface around the unmodified official
 Codex CLI. It does not replace `codex`, patch Codex, connect a provider, apply
@@ -22,7 +22,9 @@ model recommendations, admit Ultra, or spawn subagents.
   by `codex-smart`. OFF, missing, or malformed state returns control to normal
   Codex behavior.
 - Research-capture START and STOP create metadata-only local lifecycle markers.
-  They do not create SmartRouter task records.
+- While capture is ON, the reviewed `UserPromptSubmit`, `PostToolUse`, and
+  `Stop` hooks bridge the turn into the existing SmartRouter telemetry schema
+  2.0.0. No second telemetry schema or storage platform is introduced.
 
 ## Install or activate
 
@@ -79,6 +81,15 @@ observable from the state file.
 Repeated ON, OFF, START, and STOP actions are idempotent. Repeated START keeps
 the current telemetry session instead of rotating it.
 
+Status is read-only and reports the actual package, policy, and telemetry
+schema versions together with these explicit boundaries:
+
+```text
+Automatic Model Execution: OFF
+Ultra Automatic Execution: OFF
+Automatic Policy Learning: OFF
+```
+
 ## Native Codex command surface
 
 The installed `codex-cli 0.144.6` supports repository-native skills. In a
@@ -104,8 +115,9 @@ trusting project-local hook definitions. Hook trust remains an explicit human
 action.
 
 Arbitrary bare slash-command registration is not an official extension point
-used by this implementation. Therefore these commands are **not** claimed or
-registered:
+used by this implementation. This release does not register or claim that
+surface: these commands are **not** claimed or
+registered by this release:
 
 ```text
 /smart-router
@@ -154,8 +166,9 @@ smart-routerctl reset
 
 ## Selective research telemetry
 
-This is a gate, not a second run-telemetry system. START and STOP markers live
-under the same local state directory in `research-markers/`. They contain only:
+This is a gate over the existing run-telemetry system, not a second telemetry
+system. START and STOP markers live under the same local state directory in
+`research-markers/`. They contain only:
 
 - marker and telemetry-session identifiers;
 - transition (`capture_started` or `capture_stopped`);
@@ -166,15 +179,29 @@ under the same local state directory in `research-markers/`. They contain only:
 
 They contain no prompts, responses, attachments, image data, tool payloads,
 provider output, credentials, environment dumps, or inferred human ratings.
-The existing telemetry schema remains `2.0.0` and is not modified by this
-control layer. Research telemetry cannot enable the router, approve an action,
+For an active turn, a temporary envelope contains only the unsealed metadata
+record, HMAC turn/tool identifiers, the capture-session identifier, and a
+monotonic start value. `Stop` seals and validates that record through the
+existing collector and append-only storage, then removes the envelope.
+
+The final record preserves schema `2.0.0`, record hashing, exact-field
+validation, HMAC task/session/workspace identities, and separate human outcome
+events. The hook protocol does not expose provider token usage, provider
+request counts, or retry lifecycle evidence, so those fields remain `null`.
+Tool counts are recorded only after `PostToolUse` and duplicate tool IDs are
+deduplicated. Research telemetry cannot enable the router, approve an action,
 change policy, or launch work.
+
+If the configured sink is unavailable, status reports a controlled `DEGRADED`
+state and the hook emits a sanitized telemetry warning. The router decision and
+normal Codex execution path remain usable. No successful delivery is
+fabricated.
 
 ## Hook behavior
 
-The installed runtime advertises stable hooks and the repository already has
-reviewable `UserPromptSubmit`, `PreToolUse`, and `PermissionRequest` adapters.
-The new bridge checks two facts:
+The installed runtime advertises stable hooks and the repository contains
+reviewable `UserPromptSubmit`, `PreToolUse`, `PostToolUse`,
+`PermissionRequest`, and `Stop` adapters. The bridge checks two facts:
 
 1. the session was launched through `codex-smart`;
 2. the exact local `router_enabled` value is `true`.
@@ -183,6 +210,8 @@ Only then does it call the existing deterministic hook adapter. Router OFF does
 not block a normal prompt, tool request, or permission request. Router ON still
 produces only bounded advisory context or the pre-existing fail-closed safety
 denials. It never changes model, reasoning effort, sandbox, or approval state.
+Telemetry ON may classify a prompt for record metadata even when Router is OFF,
+but that classification is never added to model context or applied to dispatch.
 
 The Ultra hardening contracts remain separate and unchanged:
 
@@ -238,6 +267,17 @@ smart-routerctl smart-router off
 Every status display says `Automatic Model Execution: OFF` and `Ultra
 Automatic Execution: OFF`.
 
+For a repeatable no-provider proof, run:
+
+```bash
+./scripts/smart-router-demo-closure
+```
+
+It creates temporary local state, demonstrates all four switch combinations,
+runs the real classifier and hook bridge, validates one synthetic schema-2.0.0
+record, and deletes the temporary directory. It is labeled `LOCAL MOCKED HOOK
+FLOW` and does not claim a model execution or provider response.
+
 ## Disable and uninstall
 
 Turn both controls off:
@@ -254,6 +294,8 @@ used for installation. Neither action modifies the official Codex package.
 ## Deferred next step
 
 A later, separately reviewed milestone may connect advisory recommendations to
-an explicit live per-turn execution boundary. It must preserve task-bound Ultra
-approval, orchestration vetoes, privacy, and human authority. No such automatic
-execution exists in Session Control 1A.
+an explicit live per-turn execution boundary and enrich hook records from a
+stable provider-usage event surface. It must preserve task-bound Ultra
+approval, orchestration vetoes, privacy, and human authority. No automatic
+model execution, autonomous learning, or telemetry-driven policy mutation
+exists in this release.

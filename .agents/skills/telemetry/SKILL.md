@@ -1,6 +1,6 @@
 ---
 name: telemetry
-description: Control metadata-only local Smart Codex research capture with the exact actions start, stop, or status. Use only when the user explicitly invokes $telemetry; this skill never captures prompt content.
+description: Control metadata-only local Smart Codex research capture through the existing telemetry schema with the exact actions start, stop, or status. Use only when the user explicitly invokes $telemetry; this skill never persists prompt content.
 ---
 
 # Research Telemetry Session Control
@@ -24,6 +24,7 @@ python .agents/skills/telemetry/scripts/control.py status
 ```
 
 Return the controller output exactly. This skill changes only the selective,
-metadata-only research-capture gate. It does not enable the router, collect
-prompt or response content, select a model, call a provider, or grant execution
-authority.
+metadata-only research-capture gate. When the gate is ON, reviewed hooks reuse
+the existing schema-2.0.0 collector and privacy validator. The skill does not
+enable the router, persist prompt or response content, select a model, call a
+provider, or grant execution authority.

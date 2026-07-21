@@ -70,11 +70,25 @@ class TelemetryRun:
         *,
         storage: LocalTelemetryStorage,
         salt: bytes,
+        started_monotonic_ns: int | None = None,
     ):
         self.record = record
         self.storage = storage
         self.salt = salt
-        self._started_monotonic = time.monotonic_ns()
+        if (
+            started_monotonic_ns is not None
+            and (
+                isinstance(started_monotonic_ns, bool)
+                or not isinstance(started_monotonic_ns, int)
+                or started_monotonic_ns < 0
+            )
+        ):
+            raise ValueError("INVALID_TELEMETRY_MONOTONIC_START")
+        self._started_monotonic = (
+            time.monotonic_ns()
+            if started_monotonic_ns is None
+            else started_monotonic_ns
+        )
         self._finished = False
         self._result: FinishResult | None = None
         self.events = CodexEventAccumulator(

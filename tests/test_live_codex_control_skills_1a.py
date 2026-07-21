@@ -148,7 +148,7 @@ def test_documentation_states_the_exact_native_and_execution_boundaries() -> Non
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     required = (
-        "The router control plane is live. Automatic per-turn model execution is not",
+        "The router control plane is live and demo-ready. Automatic per-turn model",
         "$smart-router on",
         "$telemetry start",
         "smart-routerctl smart-router on --telemetry",

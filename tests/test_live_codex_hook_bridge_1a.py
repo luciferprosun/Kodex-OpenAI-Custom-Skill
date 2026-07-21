@@ -10,6 +10,7 @@ from smart_codex.session_control import (
     WRAPPER_MODE_VALUE,
     SessionControlStore,
 )
+from smart_codex.runtime.telemetry.hook_capture import HookCaptureResult
 from smart_codex.session_hook_bridge import (
     route_permission_request,
     route_pre_tool_use,
@@ -85,7 +86,21 @@ def test_normal_codex_without_wrapper_marker_remains_unmodified(tmp_path: Path) 
 def test_telemetry_switch_alone_does_not_enable_router_hooks(tmp_path: Path) -> None:
     store = store_at(tmp_path)
     store.set_telemetry(True)
-    assert route_user_prompt_submit(user_payload("synthetic task"), store=store, environ=WRAPPER_ENV) == {}
+    observed: list[str] = []
+
+    class RecordingCapture:
+        def start_prompt(self, payload: object, *, task: str, decision: object) -> HookCaptureResult:
+            del payload, decision
+            observed.append(task)
+            return HookCaptureResult()
+
+    assert route_user_prompt_submit(
+        user_payload("synthetic task"),
+        store=store,
+        environ=WRAPPER_ENV,
+        telemetry=RecordingCapture(),  # type: ignore[arg-type]
+    ) == {}
+    assert observed == ["synthetic task"]
 
 
 def test_router_on_preserves_existing_pre_tool_and_permission_denials(tmp_path: Path) -> None:

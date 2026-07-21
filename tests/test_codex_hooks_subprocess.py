@@ -121,12 +121,39 @@ def test_permission_request_subprocess_denies_without_input_leak(
     assert list(tmp_path.iterdir()) == []
 
 
+def test_post_tool_and_stop_hooks_are_noops_when_capture_is_off(
+    tmp_path: Path,
+) -> None:
+    post_payload = {
+        **common_payload("PostToolUse"),
+        "tool_name": "Bash",
+        "tool_use_id": "subprocess-tool-001",
+        "tool_input": {"command": CANARY},
+        "tool_response": CANARY,
+    }
+    stop_payload = {
+        **common_payload("Stop"),
+        "last_assistant_message": CANARY,
+    }
+
+    post = run_hook("post_tool_use.py", post_payload, tmp_path)
+    stopped = run_hook("stop.py", stop_payload, tmp_path)
+
+    assert_private_result(post, CANARY)
+    assert_private_result(stopped, CANARY)
+    assert json.loads(post.stdout) == {}
+    assert json.loads(stopped.stdout) == {}
+    assert list(tmp_path.iterdir()) == []
+
+
 @pytest.mark.parametrize(
     ("script", "event", "expected_event"),
     [
         ("user_prompt_submit.py", "UserPromptSubmit", None),
         ("pre_tool_use.py", "PreToolUse", "PreToolUse"),
         ("permission_request.py", "PermissionRequest", "PermissionRequest"),
+        ("post_tool_use.py", "PostToolUse", "non_blocking"),
+        ("stop.py", "Stop", "non_blocking"),
     ],
 )
 def test_malformed_json_fails_closed_without_canary_leak(
@@ -141,6 +168,8 @@ def test_malformed_json_fails_closed_without_canary_leak(
 
     if expected_event is None:
         assert result["decision"] == "block"
+    elif expected_event == "non_blocking":
+        assert result == {}
     else:
         assert result["hookSpecificOutput"]["hookEventName"] == expected_event
     assert list(tmp_path.iterdir()) == []
@@ -153,6 +182,8 @@ def test_entrypoints_read_stdin_once_and_launch_no_external_processes() -> None:
             "user_prompt_submit.py",
             "pre_tool_use.py",
             "permission_request.py",
+            "post_tool_use.py",
+            "stop.py",
         )
     ]
     adapter_source = (ROOT / "smart_codex" / "codex_hook_adapter.py").read_text(

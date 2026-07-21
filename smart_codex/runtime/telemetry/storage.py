@@ -86,11 +86,13 @@ class LocalTelemetryStorage:
         *,
         mount_verifier: Callable[[], object] | None = None,
         external_root: Path | None = None,
+        activation_reader: Callable[[], bool] | None = None,
     ):
         self.paths = paths or TelemetryPaths.default()
         self.limits = limits or StorageLimits()
         self.mount_verifier = mount_verifier
         self.external_root = external_root
+        self.activation_reader = activation_reader
 
     @property
     def external(self) -> bool:
@@ -129,6 +131,12 @@ class LocalTelemetryStorage:
             os.chmod(summaries, 0o700)
 
     def enabled(self) -> bool:
+        if self.activation_reader is not None:
+            try:
+                value = self.activation_reader()
+            except Exception:
+                return False
+            return value is True
         if self.verify_mount() is not None:
             return False
         path = self.paths.state_file
@@ -143,12 +151,16 @@ class LocalTelemetryStorage:
         return state.get("schema_version") == SCHEMA_VERSION and state.get("enabled") is True
 
     def set_enabled(self, enabled: bool) -> None:
+        if type(enabled) is not bool:
+            raise TelemetryStorageError("TELEMETRY_STATE_BOOLEAN_INVALID")
+        if self.activation_reader is not None:
+            raise TelemetryStorageError("SESSION_GATED_STORAGE_STATE")
         self._ensure_root()
         if self.paths.state_file.is_symlink():
             raise TelemetryStorageError("STATE_FILE_SYMLINK")
         state = {
             "schema_version": SCHEMA_VERSION,
-            "enabled": bool(enabled),
+            "enabled": enabled,
             "updated_at": utc_now(),
         }
         temporary = self.paths.root / f".state-{uuid.uuid4()}.tmp"

@@ -194,6 +194,32 @@ def _additional_context(decision: NormalizedDecision) -> str:
     return context
 
 
+def classify_user_prompt(payload: object) -> tuple[str, object, NormalizedDecision]:
+    """Return one validated prompt classification for hook consumers.
+
+    The raw prompt is returned only to the in-process caller. Persistence and
+    hook output remain the responsibility of the privacy-bounded consumers.
+    """
+
+    data = _validate_common(payload, "UserPromptSubmit")
+    prompt = data.get("prompt")
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise HookPayloadError
+    decision = route_prompt(prompt, dry_run=True)
+    return prompt, decision, _normalize_decision(decision)
+
+
+def render_user_prompt_context(decision: NormalizedDecision) -> dict[str, Any]:
+    """Render the existing advisory hook response from a normalized decision."""
+
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "UserPromptSubmit",
+            "additionalContext": _additional_context(decision),
+        }
+    }
+
+
 def _tool_action(payload: dict[str, Any], *, require_tool_use_id: bool) -> str:
     tool_name = _require_nonempty_string(payload, "tool_name")
     if require_tool_use_id:
@@ -235,17 +261,8 @@ def _must_deny(decision: NormalizedDecision) -> bool:
 def handle_user_prompt_submit(payload: object) -> dict[str, Any]:
     """Classify one full prompt and return sanitized developer context."""
     try:
-        data = _validate_common(payload, "UserPromptSubmit")
-        prompt = data.get("prompt")
-        if not isinstance(prompt, str) or not prompt.strip():
-            raise HookPayloadError
-        decision = _normalize_decision(route_prompt(prompt, dry_run=True))
-        return {
-            "hookSpecificOutput": {
-                "hookEventName": "UserPromptSubmit",
-                "additionalContext": _additional_context(decision),
-            }
-        }
+        _, _, decision = classify_user_prompt(payload)
+        return render_user_prompt_context(decision)
     except Exception:
         return _static_copy(USER_PROMPT_FAILURE)
 

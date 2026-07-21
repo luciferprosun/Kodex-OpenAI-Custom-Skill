@@ -17,6 +17,7 @@ dependencies = []
 smart-codex = "smart_codex.cli:main"
 smart-routerctl = "smart_codex.session_cli:main"
 codex-smart = "smart_codex.codex_smart:main"
+smart-router-demo-closure = "smart_codex.demo_closure:main"
 
 [tool.setuptools.packages.find]
 include = ["smart_codex*"]

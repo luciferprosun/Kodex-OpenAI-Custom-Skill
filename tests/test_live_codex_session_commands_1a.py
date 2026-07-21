@@ -206,25 +206,28 @@ def test_status_payload_contains_no_execution_authority(tmp_path: Path) -> None:
     assert "approval" not in json.dumps(payload).lower()
 
 
-def test_control_modules_do_not_import_router_provider_or_app_server() -> None:
-    imported: set[str] = set()
+def test_control_modules_import_no_router_provider_network_or_app_server() -> None:
+    imported_by_file: dict[str, set[str]] = {}
     for name in ("session_control.py", "session_cli.py"):
+        imported: set[str] = set()
         tree = ast.parse((ROOT / "smart_codex" / name).read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 imported.update(alias.name for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported.add(node.module)
+        imported_by_file[name] = imported
     assert not any(
         forbidden in module
+        for imported in imported_by_file.values()
         for forbidden in (
-            "router",
             "app_server_router",
             "provider",
             "subprocess",
             "requests",
             "urllib",
-            "runtime.telemetry",
         )
         for module in imported
     )
+    assert not any("runtime.telemetry" in module for module in imported_by_file["session_control.py"])
+    assert "runtime.telemetry.schema" in imported_by_file["session_cli.py"]

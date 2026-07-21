@@ -6,16 +6,26 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / ".codex" / "hooks.json"
-REQUIRED_EVENTS = {"UserPromptSubmit", "PreToolUse", "PermissionRequest"}
+REQUIRED_EVENTS = {
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "PermissionRequest",
+    "Stop",
+}
 EXPECTED_SCRIPTS = {
     "UserPromptSubmit": "user_prompt_submit.py",
     "PreToolUse": "pre_tool_use.py",
+    "PostToolUse": "post_tool_use.py",
     "PermissionRequest": "permission_request.py",
+    "Stop": "stop.py",
 }
 EXPECTED_STATUS = {
     "UserPromptSubmit": "Checking Smart Router session gate",
     "PreToolUse": "Checking proposed tool action",
+    "PostToolUse": "Recording bounded tool metadata",
     "PermissionRequest": "Reviewing permission request",
+    "Stop": "Finalizing bounded Smart Router telemetry",
 }
 
 
@@ -23,7 +33,7 @@ def load_config() -> dict:
     return json.loads(CONFIG.read_text(encoding="utf-8"))
 
 
-def test_project_hooks_config_has_only_phase_5_events() -> None:
+def test_project_hooks_config_has_only_reviewed_router_and_capture_events() -> None:
     config = load_config()
 
     assert set(config) == {"hooks"}
@@ -58,8 +68,10 @@ def test_matchers_follow_the_installed_release_aliases() -> None:
     hooks = load_config()["hooks"]
 
     assert "matcher" not in hooks["UserPromptSubmit"][0]
+    assert "matcher" not in hooks["Stop"][0]
     expected = "^(Bash|apply_patch|Edit|Write|mcp__.*)$"
     assert hooks["PreToolUse"][0]["matcher"] == expected
+    assert hooks["PostToolUse"][0]["matcher"] == expected
     assert hooks["PermissionRequest"][0]["matcher"] == expected
 
 

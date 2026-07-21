@@ -79,8 +79,10 @@ manual acceptance procedure.
 
 ## Live Codex session controls
 
-The router control plane is live. Automatic per-turn model execution is not
-enabled in this release.
+The router control plane is live and demo-ready. Automatic per-turn model
+execution is not enabled in this release: the normal Codex hook path receives
+the existing bounded routing recommendation before dispatch, while the
+official runtime retains its selected model.
 
 After installing this repository in a local Python environment, launch the
 unmodified official Codex runtime through the separate wrapper:
@@ -112,10 +114,24 @@ smart-routerctl smart-router off
 
 Router and research telemetry are independent switches. Session state is local
 under the XDG state directory, missing or malformed state defaults to OFF/OFF,
-and research markers contain metadata only. This implementation uses native
-skills and the built-in `/hooks` review surface. It does not register or claim
-bare `/smart-router` or `/telemetry` commands. See [Live Codex Session Control
-1A](docs/app-server/LIVE_CODEX_SESSION_CONTROL_1A.md).
+and research markers contain metadata only. When telemetry is ON, reviewed
+`UserPromptSubmit`, `PostToolUse`, and `Stop` hooks complete a privacy-validated
+record through the existing telemetry schema 2.0.0. Provider-only counters
+remain unavailable instead of being fabricated. This implementation uses
+native skills and the built-in `/hooks` review surface. It does not register or
+claim bare `/smart-router` or `/telemetry` commands. See [Live Codex Session
+Control 1A](docs/app-server/LIVE_CODEX_SESSION_CONTROL_1A.md).
+
+Run the local provider-free demo smoke flow with:
+
+```bash
+./scripts/smart-router-demo-closure
+```
+
+The smoke flow is explicitly synthetic and uses temporary local state. It
+executes the real classifier, hook gate, existing telemetry collector,
+schema/hash validator, and independent controls, but it does not call a model
+or provider. Automatic policy learning remains OFF.
 
 ## Opt-in App Server routed TUI
 
@@ -218,6 +234,19 @@ action:
 smart-codex telemetry enable
 smart-codex telemetry status
 ```
+
+Those legacy commands remain the storage gate for standalone `smart-codex`
+execution and the opt-in App Server path. In a `codex-smart` session, the
+canonical per-session capture switch is instead:
+
+```bash
+smart-routerctl telemetry start
+smart-routerctl telemetry stop
+```
+
+It reuses the same storage, collector, validator, privacy scanner, record hash,
+and schema. It does not create a competing telemetry format or update routing
+policy.
 
 The module stores only validated numeric and categorical metadata in bounded,
 append-only local JSONL. It does not store prompts, responses, source code,

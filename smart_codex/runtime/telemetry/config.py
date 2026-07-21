@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 import stat
-from typing import Any
+from typing import Any, Callable
 import uuid
 
 from .errors import TelemetryStorageError
@@ -271,12 +271,13 @@ def configured_storage(
     *,
     require_external: bool = False,
     read_only: bool = False,
+    activation_reader: Callable[[], bool] | None = None,
 ) -> LocalTelemetryStorage:
     config = load_external_config()
     if config is None:
         if require_external:
             raise TelemetryStorageError("EXTERNAL_STORAGE_NOT_CONFIGURED")
-        return LocalTelemetryStorage()
+        return LocalTelemetryStorage(activation_reader=activation_reader)
     salt = Path.home() / ".local" / "state" / "smart-codex" / "telemetry_salt"
     return LocalTelemetryStorage(
         TelemetryPaths(
@@ -290,4 +291,5 @@ def configured_storage(
             require_writable=not read_only,
         ),
         external_root=config.telemetry_root,
+        activation_reader=activation_reader,
     )
